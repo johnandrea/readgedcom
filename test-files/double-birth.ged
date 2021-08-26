@@ -1,0 +1,41 @@
+0 HEAD
+1 SOUR RootsMagic
+2 NAME RootsMagic
+2 VERS 7.6.5.0
+1 SUBM @SUB1@
+1 FILE double-birth.ged
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @SUB1@ SUBM
+1 NAME John A Andrea
+0 @I957@ INDI
+1 NAME Testing A /Person/
+2 GIVN Testing A
+2 SURN Person
+1 SEX M
+1 BIRT
+2 DATE 1882
+2 NOTE from gravestone
+1 DEAT
+2 DATE 1929
+2 NOTE from gravestone
+1 BIRT
+2 PLAC Lebanon
+2 NOTE Second birth record.
+1 FAMS @F321@
+0 @I986@ INDI
+1 NAME Annie /Person/
+2 GIVN Annie
+2 SURN Person
+1 SEX F
+1 BIRT
+2 DATE 1888
+1 DEAT
+2 DATE 1962
+1 FAMS @F321@
+0 @F321@ FAM
+1 HUSB @I957@
+1 WIFE @I986@
+0 TRLR

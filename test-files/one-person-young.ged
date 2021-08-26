@@ -1,0 +1,37 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SOUR Manually-Creation
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME John A Andrea
+0 @I3@ INDI
+1 NAME Tester C /Person/
+2 GIVN Tester C
+2 SURN Person
+1 SEX M
+1 _UID 12345
+1 CHAN
+2 DATE 18 AUG 2021
+1 BIRT
+2 DATE 17 OCT 2001
+2 PLAC Canada
+2 NOTE I have
+3 CONC  the
+3 CONC  certificate.
+1 EVEN
+2 TYPE Living
+2 DATE 14 APR 2010
+2 PLAC Canada
+2 NOTE From census.
+1 EVEN
+2 TYPE Living
+2 DATE 9 MAY 2013
+2 PLAC Canada
+2 NOTE from work records.
+1 EVEN 3.7
+2 TYPE custom
+2 DATE 23 NOV 2014
+0 TRLR
