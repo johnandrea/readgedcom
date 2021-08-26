@@ -1,0 +1,253 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SOUR Manually-Creation
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME John A Andrea
+0 @I32@ INDI
+1 NAME
+1 SEX M
+1 BIRT
+2 DATE 14 DEC 1895
+2 PLAC York Cottage, Sandringham, Norfolk, England
+1 DEAT
+2 DATE 6 FEB 1952
+2 PLAC Sandringham, Norfolk, England
+1 BURI
+2 DATE 11 MAR 1952
+2 PLAC St. George Chap., Windsor, England
+1 FAMS @F12@
+0 @I51@ INDI
+1 NAME Elizabeth Angela Marguerite /Bowes-Lyon/ Lady
+2 GIVN Liz
+2 SURN
+1 SEX F
+1 BIRT
+2 DATE 4 AUG 1900
+2 PLAC London, England
+1 CHR
+2 DATE 23 SEP 1900
+1 FAMS @F12@
+0 @I52@ INDI
+1 NAME Elizabeth_II Alexandra Mary /Windsor/ Queen of England
+1 SEX F
+1 BIRT
+2 DATE 21 APR 1926
+2 PLAC 17 Bruton St., London, W1, England
+1 FAMC @F12@
+1 FAMS @F14@
+0 @I53@ INDI
+1 NAME Margaret Rose /Windsor/ Princess
+1 SEX F
+1 BIRT
+2 DATE 21 AUG 1930
+2 PLAC Glamis Castle, Angus, Scotland
+1 FAMC @F12@
+1 FAMS @F13@
+0 @I54@ INDI
+1 NAME Anthony Charles Robert /Armstrong-Jones/ Earl of Snowdon
+1 SEX M
+1 BIRT
+2 DATE 7 MAR 1930
+1 FAMS @F13@
+1 FAMS @F1410@
+0 @I55@ INDI
+1 NAME David Albert Charles /Armstrong-Jones/ Vicount Linley
+1 SEX M
+1 BIRT
+2 DATE 3 NOV 1961
+1 FAMC @F13@
+0 @I56@ INDI
+1 NAME Sarah Frances Elizabeth /Armstrong-Jones/ Lady
+1 SEX F
+1 BIRT
+2 DATE 1 MAY 1964
+1 FAMC @F13@
+0 @I57@ INDI
+1 NAME Philip /Mountbatten/ Prince
+1 SEX M
+1 BIRT
+2 DATE 10 JUN 1921
+2 PLAC Isle of Kerkira, Mon Repos, Corfu, Greece
+1 FAMS @F14@
+0 @I58@ INDI
+1 NAME Charles Philip Arthur /Windsor/ Prince
+1 SEX M
+1 BIRT
+2 DATE 14 NOV 1948
+2 PLAC Buckingham, Palace, London, England
+1 CHR
+2 DATE 15 DEC 1948
+2 PLAC Buckingham, Palace, Music Room, England
+1 FAMC @F14@
+1 FAMS @F16@
+0 @I59@ INDI
+1 NAME Anne Elizabeth Alice /Windsor/ Princess
+1 SEX F
+1 BIRT
+2 DATE 15 AUG 1950
+2 PLAC Clarence House, St. James, England
+1 CHR
+2 DATE 21 OCT 1950
+2 PLAC England
+1 FAMC @F14@
+1 FAMS @F15@
+0 @I60@ INDI
+1 NAME Andrew Albert Christian /Windsor/ Duke of York
+1 SEX M
+1 BIRT
+2 DATE 19 FEB 1960
+2 PLAC Belgian Suite, Buckingham, Palace, England
+1 FAMC @F14@
+1 FAMS @F53@
+0 @I61@ INDI
+1 NAME Edward Anthony Richard /Windsor/ Prince
+1 SEX M
+1 BIRT
+2 DATE 10 MAR 1964
+2 PLAC Buckingham, Palace, London, England
+1 CHR
+2 DATE 2 MAY 1964
+1 FAMC @F14@
+0 @I62@ INDI
+1 NAME Mark Anthony Peter /Phillips/ Captain
+1 SEX M
+1 BIRT
+2 DATE 22 SEP 1948
+1 FAMS @F15@
+0 @I63@ INDI
+1 NAME Peter Mark Andrew /Phillips/
+1 SEX M
+1 BIRT
+2 DATE 15 NOV 1977
+2 PLAC St. Mary's Hosp., Paddington, London, England
+1 CHR
+2 DATE 22 DEC 1977
+2 PLAC Music Room, Buckingham, Palace, England
+1 FAMC @F15@
+0 @I64@ INDI
+1 NAME Zara Anne Elizabeth /Phillips/
+1 SEX F
+1 BIRT
+2 DATE 15 MAY 1981
+2 PLAC St. Marys Hosp., Paddington, London, England
+1 FAMC @F15@
+0 @I65@ INDI
+1 NAME Diana Frances /Spencer/ Lady
+1 SEX F
+1 BIRT
+2 DATE 1 JUL 1961
+2 PLAC Park House, Sandringham, Norfolk, England
+1 CHR
+2 PLAC Sandringham, Church, Norfolk, England
+1 DEAT
+2 DATE 6 SEP 1997
+2 PLAC Paris, France
+1 FAMS @F16@
+1 CHAN
+2 DATE 2 MAR 2005
+0 @I115@ INDI
+1 NAME William Arthur Philip /Windsor/ Prince
+1 SEX M
+1 BIRT
+2 DATE 21 JUN 1982
+2 PLAC St. Mary's Hosp., Paddington, London, England
+1 CHR
+2 DATE 4 AUG 1982
+2 PLAC Music Room, Buckingham, Palace, England
+1 FAMC @F16@
+0 @I116@ INDI
+1 NAME Henry Charles Albert /Windsor/ Prince
+1 SEX M
+1 BIRT
+2 DATE 15 SEP 1984
+2 PLAC St. Mary's Hosp., Paddington, London, England
+1 FAMC @F16@
+0 @I168@ INDI
+1 NAME Sarah Margaret /Ferguson/ Duchess of York
+1 SEX F
+1 BIRT
+2 DATE 15 OCT 1959
+2 PLAC 27 Welbech St., Marylebone, London, England
+1 FAMS @F53@
+0 @I827@ INDI
+1 NAME Beatrice Elizabeth Mary /Windsor/ Princess
+1 SEX F
+1 BIRT
+2 DATE 8 AUG 1988
+2 PLAC Portland Hosp., England
+1 FAMC @F53@
+0 @I2958@ INDI
+1 NAME Eugenie Victoria Helena /Windsor/ Princess
+1 SEX F
+1 BIRT
+2 DATE 23 MAR 1990
+2 PLAC London, England
+1 CHR
+2 DATE 23 DEC 1990
+2 PLAC Sandringham, England
+1 FAMC @F53@
+0 @I2978@ INDI
+1 NAME Frances /Armstrong-Jones/ Lady
+1 SEX F
+1 BIRT
+2 DATE 17 JUL 1979
+1 FAMC @F1410@
+0 @F12@ FAM
+1 HUSB @I32@
+1 WIFE @I51@
+1 MARR
+2 DATE 26 APR 1923
+1 CHIL @I52@
+1 CHIL @I53@
+0 @F13@ FAM
+1 HUSB @I54@
+1 WIFE @I53@
+1 MARR
+2 DATE 6 MAY 1960
+2 PLAC Westminster, Cathedral, London, England
+1 CHIL @I55@
+1 CHIL @I56@
+0 @F14@ FAM
+1 HUSB @I57@
+1 WIFE @I52@
+1 MARR
+2 DATE 20 NOV 1947
+2 PLAC Westminster, Abbey, London, England
+1 CHIL @I58@
+1 CHIL @I59@
+1 CHIL @I60@
+1 CHIL @I61@
+0 @F15@ FAM
+1 HUSB @I62@
+1 WIFE @I59@
+1 MARR
+2 DATE 14 NOV 1973
+2 PLAC Westminster, Abbey, London, England
+1 CHIL @I63@
+1 CHIL @I64@
+0 @F16@ FAM
+1 HUSB @I58@
+1 WIFE @I65@
+1 MARR
+2 DATE 29 JUL 1981
+2 PLAC St. Paul's, Cathedral, London, England
+1 CHIL @I115@
+1 CHIL @I116@
+0 @F53@ FAM
+1 HUSB @I60@
+1 WIFE @I168@
+1 MARR
+2 DATE 23 JUL 1986
+2 PLAC Westminster, Abbey, London, England
+1 CHIL @I827@
+1 CHIL @I2958@
+0 @F1410@ FAM
+1 HUSB @I54@
+1 MARR
+2 DATE 17 DEC 1978
+1 CHIL @I2978@
+0 TRLR
