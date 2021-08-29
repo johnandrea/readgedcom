@@ -84,7 +84,7 @@ EVENT_PRIMARY_TAG = '_prim'
 EVENT_PRIMARY_VALUE = 'y'
 EVENT_PROOF_TAG = '_proof'
 EVENT_PROOF_DEFAULT = 'other'
-EVENT_PROOF_VALUES = {'disproven':-1, EVENT_PROOF_DEFAULT:0, 'proven':1 }
+EVENT_PROOF_VALUES = {'disproven':0, EVENT_PROOF_DEFAULT:1, 'proven':2 }
 
 # Name sub-parts in order of display appearance
 LEVEL2_NAMES = ['npfx', 'givn', 'surn', 'nsfx']
