@@ -31,7 +31,7 @@ for indi in data['individuals']:
     print( indi )
     pprint.pprint( data['individuals'][indi] )
 
-readgedcom.output_original( '5.5.1', data, 'old.out' )
+readgedcom.output_original( data, 'old.out' )
 
 readgedcom.set_privatize_flag( data )
 
