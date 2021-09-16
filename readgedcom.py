@@ -1,28 +1,47 @@
-# Parse a gedcom file into a data structure.
-#
-# The input file should be well formed as this code only checks for
-# a few structural errors. A verification program can be found here:
-# https://chronoplexsoftware.com/gedcomvalidator/
-#   Fixable mistakes are corrected as the data is parsed into the data structure.
-# If the option to output a privatized file is taken, the mistakes from the
-# original input will also go into the new file.
-#
-# Some trouble messages go to stderr.
-# If something really bad is encountered an exception is thrown.
-#
-# This code handles only the Gregorian calendar with epoch setting of BCE
-#
-# Specs at https://gedcom.io/specs/
-#
-# This code is released under the MIT License: https://opensource.org/licenses/MIT
-# Copyright (c) 2021 John A. Andrea
+"""
+Read a GEDCOM file into a data structure, parse into a dict of
+individuals and families for simplified handling; converting to
+HTML pages, JSON data, etc.
+
+Public functions:
+    data = read_file( gedcom_file_name )
+
+    output_original( data, out_file_name )
+
+    set_privitize_flag( data )
+
+    output_privitized( data, out_file_name )
+
+    report_individual_double_facts( data )
+
+    report_family_double_facts( data )
+
+
+The input file should be well formed as this code only checks for
+a few structural errors. A verification program can be found here:
+https://chronoplexsoftware.com/gedcomvalidator/
+   Fixable mistakes are corrected as the data is parsed into the data structure.
+If the option to output a privatized file is taken, the mistakes from the
+original input will also go into the new file.
+
+Some trouble messages go to stderr.
+If something really bad is encountered an exception is thrown.
+
+This code handles only the Gregorian calendar with epoch setting of BCE
+
+Specs at https://gedcom.io/specs/
+
+This code is released under the MIT License: https://opensource.org/licenses/MIT
+Copyright (c) 2021 John A. Andrea
+v0.9
+"""
 
 import sys
 import copy
 import re
 import datetime
 
-# v7.0 requires this character sequence at the start of the file.
+# GEDCOM v7.0 requires this character sequence at the start of the file.
 # It may also be present in older versions (RootsMagic does include it).
 FILE_LEAD_CHAR = '\ufeff'
 
@@ -30,7 +49,7 @@ FILE_LEAD_CHAR = '\ufeff'
 SUPPORTED_VERSIONS = [ '5.5', '5.5.1', '7.0.x' ]
 
 # Section types, listed in order or at least header first and trailer last.
-# Some are not valid in 5.5.x, but that's ok if they are not found.
+# Some are not valid in GEDCOM 5.5.x, but that's ok if they are not found.
 # Including a RootsMagic specific: _evdef
 SECT_HEAD = 'head'
 SECT_INDI = 'indi'
@@ -42,10 +61,10 @@ SECTION_NAMES = [SECT_HEAD, 'subm', SECT_INDI, SECT_FAM, 'obje', 'repo', 'snote'
 PARSED_INDI = 'individuals'
 PARSED_FAM = ' families'
 
-# From 7.0.1 spec pg 40
+# From GEDCOM 7.0.1 spec pg 40
 FAM_EVENT_TAGS = ['anul','cens','div','divf','enga','marb','marc','marl','mars','marr','even']
 
-# From 7.0.1 spec pg 44
+# From GEDCOM 7.0.1 spec pg 44
 INDI_EVENT_TAGS = ['bapm','barm','basm','bles','buri','cens','chra','conf','crem','deat','emig','fcom','grad','immi','natu','ordn','prob','reti','will','adop','birt','chr','even']
 
 # Other individual tags of interest placed into parsed section,
@@ -61,30 +80,30 @@ OTHER_FAM_TAGS = []
 # A warning will be output if a second record is detected.
 
 # Individual records which are only allowed to occur once.
-# An exception will be thrown if a duplicate is found.
 # However they will still be placed into a parsed array to be consistent
 # with the other facts/events.
+# An exception will be thrown if a duplicate is found.
 # Use of a validator is recommended.
 ONCE_INDI_TAGS = ['sex', 'exid']
 
-# Family items once.
-# See the individual for individuals.
+# Family items allowed only once.
+# See the description of individuals only once.
 ONCE_FAM_TAGS = ['husb','wife']
 
 # There are other important records, such as birth and death which are allowed
-# to occur more than once.
+# to occur more than once (research purposes).
 # A meta-structure will be added to each individual pointing to the "best" event,
 # the first one, or the first proven one, or the first primary one.
 BEST_EVENT_KEY = 'best-events'
 
 # Tags for proof and primary in the case of multiple event records.
 # These are RootsMagic specific. A future version might try to detect the product
-# which produced the export.
+# which exported the GEDCOM file.
 EVENT_PRIMARY_TAG = '_prim'
 EVENT_PRIMARY_VALUE = 'y'
 EVENT_PROOF_TAG = '_proof'
 EVENT_PROOF_DEFAULT = 'other'
-EVENT_PROOF_VALUES = {'disproven':0, EVENT_PROOF_DEFAULT:1, 'proven':2 }
+EVENT_PROOF_VALUES = {'disproven':0, EVENT_PROOF_DEFAULT:1, 'proven':2}
 
 # Name sub-parts in order of display appearance
 LEVEL2_NAMES = ['npfx', 'givn', 'surn', 'nsfx']
@@ -92,7 +111,7 @@ LEVEL2_NAMES = ['npfx', 'givn', 'surn', 'nsfx']
 # This code doesn't deal with calendars, but need to know what to look for
 CALENDAR_NAMES = [ 'gregorian', 'hebrew', 'julian', 'french_r' ]
 
-# From 7.0.3 spec pg 21
+# From GEDCOM 7.0.3 spec pg 21
 DATE_MODIFIERS = [ 'abt', 'aft', 'bef', 'cal', 'est' ]
 
 # Alternate date modifiers which are not in the spec but might be in use.
@@ -107,7 +126,7 @@ ALT_DATE_MODIFIERS = {'about':'abt', 'after':'aft', 'before':'bef',
 # The semi-standard replacement for an unknown name
 UNKNOWN_NAME = '[-?-]'  #those are supposted to be en-dashes - will update later
 
-# Names, zero included in the zero'th index location for lookup 1 based
+# Names. zero included in the zero'th index location for one-based indexing
 MONTH_NAMES = ['zero','jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
 
 # Month name to number. "may" is not included twice.
@@ -124,7 +143,7 @@ DATE_ERR = 'Malformed date:'
 DATA_ERR = 'GEDCOM error. Use a validator. '
 DATA_WARN = 'Warning. Use a validator. '
 
-# dd mmm yyyy
+# dd mmm yyyy - same format as gedcom
 TODAY = datetime.datetime.now().strftime("%d %b %Y")
 
 # Settings for the privatize flag
@@ -142,15 +161,41 @@ SELF_CONSISTENCY_ERR = 'Program code inconsistency:'
 version = ''
 
 
+def convert_to_unicode( text ):
+    """ Convert common utf-8 encoded characters to unicode for the various display of names etc."""
+    text = text.replace( '\xe7', '\\u00e7' ) #c cedilia
+    text = text.replace( '\xe9', '\\u00e9' ) #e acute
+    text = text.replace( '\xc9', '\\u00c9' ) #E acute
+    text = text.replace( '\xe8', '\\u00e8' ) #e agrave
+    text = text.replace( '\xe1', '\\u00e1' ) #a acute
+    text = text.replace( '\xc1', '\\u00c1' ) #A acute
+    text = text.replace( '\xe0', '\\u00e0' ) #a agrave
+    return text
+
+
+def convert_to_html( text ):
+    """ Convert common utf-8 encoded characters to html for the various display of names etc."""
+    text = text.replace( '<', '&lt;' )
+    text = text.replace( '>', '&gt;' )
+    text = text.replace( '\xe7', '&#231;' ) #c cedilia
+    text = text.replace( '\xe9', '&#233;' ) #e acute
+    text = text.replace( '\xc9', '&#201;' ) #E acute
+    text = text.replace( '\xe8', '&#232;' ) #e agrave
+    text = text.replace( '\xe1', '&#225;' ) #a acute
+    text = text.replace( '\xc1', '&#193;' ) #A acute
+    text = text.replace( '\xe0', '&#224;' ) #a agrave
+    return text
+
+
 def string_like_int( s ):
-    # If a string contains a non-digit - it doesn't look like an integer
+    """ Given a string, return test if it contains only digits. """
     if re.search( r'\D', s ):
        return False
     return True
 
 
 def comparable_before_today( years_ago ):
-    # Return yyyymmdd for a date years ago.
+    """ Given a number of years before now, return yyyymmdd as that date."""
     # The leap year approximation is ok, this isn't for exact comparisons.
     leap_days = years_ago % 4
     old_date = datetime.datetime.now() - datetime.timedelta( days = (365 * years_ago) + leap_days )
@@ -158,22 +203,25 @@ def comparable_before_today( years_ago ):
 
 
 def strip_lead_chars( line ):
+    """ Remove the file start characters from the file's first line."""
     return line.replace( FILE_LEAD_CHAR, '' )
 
 
 def month_name_to_number( month_name ):
-	if month_name and month_name.lower() in MONTH_NUMBERS:
-		return MONTH_NUMBERS[month_name.lower()]
-	return 0
+    """ Using the dict of month names, return the int month number, else zero if not found."""
+    if month_name and month_name.lower() in MONTH_NUMBERS:
+       return MONTH_NUMBERS[month_name.lower()]
+    return 0
 
 
 def add_file_back_ref( file_tag, file_index, parsed_section ):
-    # Map back from the parsed section to the correcponding record in the
-    # data read from directly from the input file.
+    """ Map back from the parsed section to the correcponding record in the
+        data read from directly from the input file."""
     parsed_section['file_record'] = { 'key':file_tag, 'index':file_index }
 
 
 def copy_section( from_sect, to_sect, data ):
+    """ Copy a portion of the data frmo one section to another."""
     if from_sect in SECTION_NAMES:
        if from_sect in data:
           data[to_sect] = copy.deepcopy( data[from_sect] )
@@ -189,31 +237,45 @@ def copy_section( from_sect, to_sect, data ):
 
 
 def extract_indi_id( tag ):
-    # Spec says "@" + xref + "@", so remove the @ and change to lowercase leaving the "i"
-    # Ex. from "@i123@" get "i123"
+    """ Use the id as the xref which the spec. defines as "@" + xref + "@".
+        Rmove the @ and change to lowercase leaving the "i"
+        Ex. from "@i123@" get "i123"."""
     return tag.replace( '@', '' ).lower().replace( ' ', '' )
 
 
 def extract_fam_id( tag ):
-    # See extract_indi_id
+    """ Sumilar to extract_indi_id. """
     return tag.replace( '@', '' ).lower().replace( ' ', '' )
 
 
 def output_sub_section( level, outf ):
+    """ Print a portion of the data to the output file handle."""
     print( level['in'], file=outf )
     for sub_level in level['sub']:
         output_sub_section( sub_level, outf )
 
 
 def output_section( section, outf ):
-    # Output the original un-parsed data
+    """ Output a portion of the data to the given file handle. """
     for level in section:
         output_sub_section( level, outf )
 
 
-def output_original( version, data, file ):
-    # Essentially a file copy operation of what was in the input file.
-    # Except that the major sections might be written in a different order.
+def output_original( data, file ):
+    """
+    Output the original data (unmodified) to the given file handle.
+    Essentially copying the input gedcom file.
+
+    Parameters:
+        data: data structure retured from the function read_file.
+        file: name of the output file.
+    """
+
+    assert isinstance( data, dict ), 'Non-dict passed as the data parameter.'
+    assert isinstance( file, str ), 'Non-string passed as the filename parameter.'
+
+    global version
+
     with open( file, 'w' ) as outf:
          if not version.startswith( '5' ):
             print( FILE_LEAD_CHAR, end='' )
@@ -223,7 +285,8 @@ def output_original( version, data, file ):
 
 
 def get_parsed_year( data ):
-    # "data" should be the part of the parsed section down to the "date" index
+    """ Return only the year portion from the given data section, or an empty string.
+        The "data" should be the part of the parsed section down to the "date" index."""
 
     value = ''
 
@@ -243,15 +306,14 @@ def get_parsed_year( data ):
 
 
 def get_reduced_date( lookup, parsed_data ):
-    # Get just the year portion of a date from the parsed data
-    #
+    """ Return the date for the given data section, or an empty string.
+        The event to lookfor is in lookup['key'] and lookup['index']
+        where the index is the i'th instance of the event named by the key. """
+
     # It must exist in the parsed data if the event existed in the input file
     # except that it might exist in an empty state with sub-records
 
     value = ''
-
-    # The back reference should exist
-    # from the input data record to the parsed data related to that record.
 
     k = lookup['key']
     i = lookup['index']
@@ -263,6 +325,7 @@ def get_reduced_date( lookup, parsed_data ):
 
 
 def output_section_no_dates( section, outf ):
+    """ Print a section of the data to the file handle, skipping any date sub-sections."""
     for level in section:
         if level['tag'] != 'date':
            print( level['in'], file=outf )
@@ -270,8 +333,10 @@ def output_section_no_dates( section, outf ):
 
 
 def output_privatized_section( level0, priv_setting, event_list, parsed_data, outf ):
-    # 'level0' is in the non-parsed section
-    # 'parsed_data' is the parsed section for this individual or family
+    """ Print data to the given file handle with the data reduced based on the privitize setting.
+        'level0' is the un-parsed section correcponding to the
+        'parsed_data' section for an individual or family.
+        'event_list' contains the names of events which are likely to contain dates."""
 
     print( level0['in'], file=outf )
     for level1 in level0['sub']:
@@ -310,26 +375,45 @@ def output_privatized_section( level0, priv_setting, event_list, parsed_data, ou
 
 
 def output_privatized_indi( level0, priv_setting, data_section, outf ):
+    """ Print an individual to the output handle, in privitized format."""
     output_privatized_section( level0, priv_setting, INDI_EVENT_TAGS, data_section, outf )
 
 
 def output_privatized_fam( level0, priv_setting, data_section, outf ):
+    """ Print a family to the output handle, in privitized format."""
     output_privatized_section( level0, priv_setting, FAM_EVENT_TAGS, data_section, outf )
 
 
 def check_section_priv( item, data ):
+    """ Return the value of the privitization flag for the given individual or family."""
     return data[item][PRIVATIZE_FLAG]
 
 
 def check_fam_priv( fam, data ):
+    """ Return the value of the privitization flag for the given family. """
     return check_section_priv( extract_fam_id( fam ), data[PARSED_FAM] )
 
 
 def check_indi_priv( indi, data ):
+    """ Return the value of the privitization flag for the given individual. """
     return check_section_priv( extract_indi_id( indi ), data[PARSED_INDI] )
 
 
 def output_privatized( data, file ):
+    """"
+    Print the data to the given file name. Some data will not be output.
+
+    Parameters:
+        data: the data structure returned from the function read_file.
+        file: name of the file to contain the output.
+
+    See the function set_privitize_flag for the settings.
+    set_privitize_flag is optional, but should be called if this output function is used.
+    """
+
+    assert isinstance( data, dict ), 'Non-dict passed as data parameter'
+    assert isinstance( file, str ), 'Non-string passed as the filename parameter'
+
     # Working with the original input lines
     # some will be dropped and some dates will be modified
     # based on the privatize setting for each person and family.
@@ -366,6 +450,9 @@ def output_privatized( data, file ):
 
 
 def confirm_gedcom_version( data ):
+    """ Return the GEDCOM version number as detected in the input file.
+        Raise ValueError exception if no version or unsupported version."""
+
     # This should be called as soon as a non-header section is found
     # to ensure the remainder of the file can be handled.
     # The old versions (pre 5.5) have less well defined structures.
@@ -406,31 +493,30 @@ def confirm_gedcom_version( data ):
 
 
 def line_values( input_line ):
-    # Return a dict of
-    # {
-    #  in:exact input line from the file,
-    #  tag: the second item on the input line lowercased,
-    #  value: input line after tag (or None),
-    #  sub: empty array to be used for sub elements
-    #  parsed: { key:'string', index:int }
-    #         as a map into the parsed section,
-    #         not all lines are in parsed section
-    # }
-    #
+    """
+    For the given line from the GEDCOM file return a dict of
+        {
+          in: exact input line from the file,
+          tag: the second item on the input line lowercased,
+          value: input line after tag (or None),
+          sub: empty array to be used for sub elements
+        }.
+    """
+
     # example:
     # 1 CHAR IBM WINDOWS
     # becomes
-    # { n:x, in:'1 CHAR IBM WINDOWS', tag:'char', value:'IBM WINDOWS', sub:[] }
+    # { in:'1 CHAR IBM WINDOWS', tag:'char', value:'IBM WINDOWS', sub:[] }
     #
     # example:
     # 0 @I32@ INDI
     # becomes
-    # { n:x, in:'0 @I32@ INDI', tag:'@i32@', value:'INDI', sub:[] }
+    # { in:'0 @I32@ INDI', tag:'@i32@', value:'INDI', sub:[] }
     #
     # example:
     # 2 DATE 14 DEC 1895
     # becomes
-    # { n:x, in:'2 DATE 14 DEC 1895', tag:'date', value:'14 DEC 1895', sub:[] }
+    # { in:'2 DATE 14 DEC 1895', tag:'date', value:'14 DEC 1895', sub:[] }
 
     data = dict()
 
@@ -448,19 +534,26 @@ def line_values( input_line ):
 
 
 def date_to_comparable( given ):
-    # Convert a date to a string of format "yyyymmdd" which is used
-    # in comparison with other such dates.
-    #
-    # The prefix may contain "gregorian"
-    # the suffix may contain "bce"
-    # otherwise the date should be well formed, i.e. valid digits and valid month name. See the gedcom spec.
-    # Given 7 nov 1996 return 19961107 as a string
-    # given nov 1996 return 19961101
-    # given 1996 return 19960101
-    # given "" return ""
-    #
-    # A malformed portion may be converted to a "1", or might throw an exception
-    # if the bad date crash flag is set.
+    """
+    Convert a date to a string of format 'yyyymmdd' for comparison with other dates.
+
+    The prefix may contain 'gregorian',
+    the suffix may contain 'bce',
+    otherwise the date should be well formed, i.e. valid digits and valid month name.
+    See the GEDCOM spec.
+
+    A malformed portion may be converted to a "1", or might throw an exception
+    if the crash_on_bad_date flag is True.
+    """
+
+    # examples:
+    # '7 nov 1996' returns '19961107'
+    # 'nov 1996' returns '19961101'
+    # '1996' returns '19960101'
+    # '' returns ''
+    # 'seven nov 1996' returns '19961101' or throws ValueError
+    # '7 never 1996' returns '19960107' or throws ValueError
+    # '7 nov ninesix' returns '00011107' or throws ValueError
 
     default_day = 1
     default_month = 1
@@ -552,21 +645,22 @@ def date_to_comparable( given ):
 
 
 def date_to_structure( given ):
-    # Dates can be saved in a variety of formats: 7.0.1 spec pg 22
-    # A year is required or the whole date must be empty
-    # return a dict containing a structure with ranges and modifiers
-    # containing:
-    # - given
-    # - is_known - the date contains at least a year, that is: not empty
-    #              This is because a date sub-structure can contain date hints
-    #              even though its not exactly known.
-    # - is_range - spec'ed as datePeriod or between/and dateRange
-    # - min { modifier:, value, year }
-    # - max { modifier:, value, year }
-    #   where modifier is blank, "bef", "aft", "abt", etc.
-    #   where value is a string in comparable format yyyymmyy
-    #   where year is an int.
-    # If date is not given as a range, min and max are set to the same values.
+    """
+    Given a GEDCOM date (see 7.0.1 spec pg 22) return a dict with a structure of the date.
+        {
+          is_known: boolean, False for an empty date,
+          given: copy of date,
+          is_range: True if date spec'ed as datePeriod or between/and dateRange,
+          min: { modifier:, value:, year: },
+          max: { modifier:, value:, year: }
+        }
+    where modifier is one of '', 'bef', 'aft', 'abt', etc.
+    where value is a string in comparable format 'yyyymmdd',
+    where year is an int.
+
+    If date is not a range, min and max are set to the same values.
+    If is_known is False there are no other items in the returned dict.
+    """
 
     value = dict()
     value['is_known'] = False
@@ -635,35 +729,9 @@ def date_to_structure( given ):
     return value
 
 
-def convert_to_unicode( text ):
-    # The file was opened with utf-8 encoding, so these alt characters come in as high bit values.
-    # These are the characters in my family, more could be added.
-    text = text.replace( '\xe7', '\\u00e7' ) #c cedilia
-    text = text.replace( '\xe9', '\\u00e9' ) #e acute
-    text = text.replace( '\xc9', '\\u00c9' ) #E acute
-    text = text.replace( '\xe8', '\\u00e8' ) #e agrave
-    text = text.replace( '\xe1', '\\u00e1' ) #a acute
-    text = text.replace( '\xc1', '\\u00c1' ) #A acute
-    text = text.replace( '\xe0', '\\u00e0' ) #a agrave
-    return text
-
-
-def convert_to_html( text ):
-    # The file was opened with utf-8 encoding, so these alt characters come in as high bit values.
-    # These are the characters in my family, more could be added.
-    text = text.replace( '<', '&lt;' )
-    text = text.replace( '>', '&gt;' )
-    text = text.replace( '\xe7', '&#231;' ) #c cedilia
-    text = text.replace( '\xe9', '&#233;' ) #e acute
-    text = text.replace( '\xc9', '&#201;' ) #E acute
-    text = text.replace( '\xe8', '&#232;' ) #e agrave
-    text = text.replace( '\xe1', '&#225;' ) #a acute
-    text = text.replace( '\xc1', '&#193;' ) #A acute
-    text = text.replace( '\xe0', '&#224;' ) #a agrave
-    return text
-
-
 def get_note( level2 ):
+    """ Return the note of an event. Continuation lines concatinated to a single string."""
+
     # Pre version 7.0 the note lines were short; requiring continuation lines.
     #
     # There are rules about adding spaces and not stripping spaces from continuation lines. I'm not sure I'm handling that correctly.
@@ -685,28 +753,33 @@ def get_note( level2 ):
 
 
 def set_best_events( event_list, always_first_list, out_data ):
+    """ For events with multiple instances within a single individual or family
+        Set the index of the "best" instance based on the proof and primary settings."""
+
     # Note that custom event records with the tag "even" are not included
     # because of the the associated even.type
 
     out_data[BEST_EVENT_KEY] = dict()
 
-    # find the smallest of the options
-    smallest = min( EVENT_PROOF_VALUES.values() ) - 1
-
-    # No further tests for the "best" of these ones
-    # Strictly here for consistency
+    # No further tests for the "best" of these ones. Always set to index zero.
+    # Set for consistency with all events.
     for tag in always_first_list:
         if tag in out_data:
            out_data[BEST_EVENT_KEY][tag] = 0
+
+
+    # Initial value is smaller than the smallest of all in order for the first test
+    # to pick up the first item tested.
+    smallest = min( EVENT_PROOF_VALUES.values() ) - 1
 
     for tag in event_list:
         if tag != 'even':
            if tag in out_data:
               found_best = 0
               if len( out_data[tag] ) > 1:
-                 # what if there is a disproven marked as primary - choose any other
+                 # If there is a disproven marked as primary - choose any other.
 
-                 # find the best: disproven having lowest value, proven is highest
+                 # Find the best: disproven having lowest value, proven is highest
                  value_best = smallest
                  for i, section in enumerate( out_data[tag] ):
                      value = EVENT_PROOF_VALUES[EVENT_PROOF_DEFAULT]
@@ -726,14 +799,17 @@ def set_best_events( event_list, always_first_list, out_data ):
 
 
 def handle_event_dates( value ):
+    """ Parse a event date. Special case for an Ancestry non-standard value."""
     if value:
        if value.lower() == 'unknown':
-          # This is an Ancestry mistake, not sure of the symantics
+          # This is an Ancestry mistake, not sure of the semantics
           value = "bef " + TODAY
     return date_to_structure( value )
 
 
 def handle_event_tag( tag, level1, out_data ):
+    """ Parse an individual or family event record."""
+
     # An event record look like this
     #
     #1 BIRT
@@ -785,6 +861,8 @@ def handle_event_tag( tag, level1, out_data ):
 
 
 def handle_custom_event( tag, level1, out_data ):
+    """ Parse an individual or family custom event."""
+
     # A custom event might look like this
     #
     #1 EVEN 118 cM 2%
@@ -812,19 +890,21 @@ def handle_custom_event( tag, level1, out_data ):
 
 
 def extra_name_parts( name, out_data ):
-    # If may be more appropriate to use the name translation in the
-    # gedcom data, but only of the records for text/plain and text/html
-    # parts exist.
+    """ Set additional elements for various uses of the name in HTML, JSON, etc."""
+
+    # It may be more appropriate to use the name translation records (see GEDCOM spec.)
+    # but only if those records for text/plain and text/html parts exist. Instead, just
+    # do the conversion here.
 
     out_data['display'] = name
 
-    # there may be unicode/non-utf-8 chars
+    # There may be unicode/non-utf-8 chars
     out_data['html'] = convert_to_html( name )
     out_data['unicode'] = convert_to_unicode( name )
 
 
 def handle_name_tag( tag, level1, out_data ):
-    # Second occurance of the name tag is for the alternate name.
+    """ Parse the name record. Ensuring a name exists and seconds become alternate names."""
 
     names = dict()
 
@@ -874,6 +954,8 @@ def handle_name_tag( tag, level1, out_data ):
 
 
 def ensure_not_twice( tag_list, sect_type, ref_id, data ):
+    """ Throw ValueError if an impossible second record is found. """
+
     for tag in tag_list:
         if tag in data:
            if len(data[tag]) > 1:
@@ -881,7 +963,7 @@ def ensure_not_twice( tag_list, sect_type, ref_id, data ):
 
 
 def parse_family( level0, out_data ):
-    # From the input file date, build up the parsed structure.
+    """ Parse a family record from the input section to the parsed families section."""
 
     # Use this flag on output of modified data
     out_data[PRIVATIZE_FLAG] = PRIVATIZE_OFF
@@ -907,8 +989,8 @@ def parse_family( level0, out_data ):
            out_data[tag].append( value )
 
         elif tag == 'even':
-           # broken out specially because its custom style
-           # must be handled before the test for general event list
+           # Broken out specially because its custom style must
+           # be handled before the below test for general event list.
            handle_custom_event( tag, level1, out_data )
 
         elif tag in FAM_EVENT_TAGS:
@@ -923,6 +1005,7 @@ def parse_family( level0, out_data ):
 
 
 def setup_parsed_families( sect, psect, data ):
+    """ Parse all families. """
     for i, level0 in enumerate( data[sect] ):
         fam = extract_fam_id( level0['tag'] )
         data[psect][fam] = dict()
@@ -932,7 +1015,7 @@ def setup_parsed_families( sect, psect, data ):
 
 
 def parse_individual( level0, out_data ):
-    # From the input data, build up the parsed structure.
+    """ Parse an individual record from the input section to the parsed individuals section."""
 
     # Use this flag on output of modified data
     out_data[PRIVATIZE_FLAG] = PRIVATIZE_OFF
@@ -955,16 +1038,16 @@ def parse_individual( level0, out_data ):
            handle_name_tag( tag, level1, out_data )
 
         elif tag in ['fams', 'famc']:
-           # these two broken out specially because they use the id extraction
-           # must be handled before the test for other-indi-tags
+           # These two broken out specially because they use the id extraction
+           # must be handled before the test for other-indi-tags.
            out_data[tag].append( extract_fam_id( value ) )
 
         elif tag in OTHER_INDI_TAGS:
            out_data[tag].append( value )
 
         elif tag == 'even':
-           # this one broken out specially because its a custom event
-           # must be handled before the test for regular events
+           # This one broken out specially because its a custom event
+           # must be handled before the below test for regular events.
            handle_custom_event( tag, level1, out_data )
 
         elif tag in INDI_EVENT_TAGS:
@@ -990,6 +1073,7 @@ def parse_individual( level0, out_data ):
 
 
 def setup_parsed_individuals( sect, psect, data ):
+    """ Parse all individuals. """
     for i, level0 in enumerate( data[sect] ):
         indi = extract_indi_id( level0['tag'] )
         data[psect][indi] = dict()
@@ -999,12 +1083,13 @@ def setup_parsed_individuals( sect, psect, data ):
 
 
 def setup_parsed_sections( data ):
+    """ Parse input records into the parsed sections of the data structure."""
     setup_parsed_families( SECT_FAM, PARSED_FAM, data )
     setup_parsed_individuals( SECT_INDI, PARSED_INDI, data )
 
 
 def check_parsed_sections( data ):
-    # Check xrefs from individuals to families, vise versa, etc.
+    """ Check xref existance from individuals to families and vise versa."""
 
     isect = PARSED_INDI
     fsect = PARSED_FAM
@@ -1033,7 +1118,7 @@ def check_parsed_sections( data ):
 
 
 def ensure_int_values( the_list ):
-    # Part of the self consistency checks.
+    """ Part of the self consistency checks."""
     message = ''
     if isinstance(the_list,dict):
        comma = ' '
@@ -1046,7 +1131,7 @@ def ensure_int_values( the_list ):
 
 
 def ensure_lowercase_values( the_list ):
-    # Part of the self consistency checks.
+    """ Part of the self consistency checks."""
     message = ''
     if isinstance(the_list,dict):
        comma = ' '
@@ -1063,7 +1148,7 @@ def ensure_lowercase_values( the_list ):
 
 
 def ensure_lowercase_elements( the_list ):
-    # Part of the self consistency checks.
+    """ Part of the self consistency checks."""
     message = ''
     if isinstance(the_list,(dict,list)):
        comma = ' '
@@ -1079,7 +1164,7 @@ def ensure_lowercase_elements( the_list ):
 
 
 def ensure_lowercase_constants():
-    # Part of the self consistency checks.
+    """ Part of the self consistency checks. Throw ValueError on very bad mistakes."""
     code = SELF_CONSISTENCY_ERR
 
     # Because tags, dates, etc. are converted to lowercase when parsing.
@@ -1133,6 +1218,8 @@ def ensure_lowercase_constants():
 
 
 def compute_privatize_flag( death_limit, birth_limit, data ):
+    """ Use the event dates and date limits to compute a privitization flag setting."""
+
     # Default to complete privatization for everyone.
     result = PRIVATIZE_MAX
 
@@ -1186,38 +1273,40 @@ def compute_privatize_flag( death_limit, birth_limit, data ):
 
 
 def set_privatize_flag( data, years_since_death=20, max_lifetime=104 ):
-    # Used to output the original data, but skipping some records based on
-    # the years since the person has died.
-    #
-    # Parameters are:
-    #
-    # years_since_death -> 20 is a reasonable value.
-    #                   If the person died before this many years: -> OFF
-    #                      no hiding events
-    #                   If the person died since this many years: -> MIM
-    #                      show only years rather than exact dates
-    #
-    # max_lifetime -> the longest that any person is expected to live.
-    #                 105 is a resonable value. It a person was born that many years
-    #                 ago, assume they are now deceased. The years_since_death
-    #                 test is then applied.
-    #
-    # If a person has no death record and was born less than max_lifetime (or no
-    # birth record) assume they are still living: -> MAX
-    #     hide event dates and related sub-structures
-    #     and show events occured with a flagged event such as "1 BIRT Y".
-    #
-    # The setting is OFF for everyone unless this routine is called.
-    #
+    """
+    Set the privitization for all individuals which is used to hide data via the
+    output_privitized function.
+
+    The default setting for everyone is off.
+
+    Parameters:
+       data: the data structure returned from the read_file function
+
+       years_since_death: (default: 20)
+               If the person died before this many years: -> off
+                      i.e. no hiding events
+               If the person died since this many years: -> minimum
+                      i.e. show only years rather than exact dates
+
+       max_lifetime: (default 104)
+               If a person was born that many years ago, assume they are now deceased.
+               The years_since_death test is then applied.
+
+    If a person has no death record and was born less than max_lifetime (or no
+    birth record) assume they are still living: -> maximum
+          i.e. hide event dates and related sub-structures
+               but show events occured with a flagged event such as "1 BIRT Y".
+
+    AssertError will be thrown if the parameters are not integers.
+    """
+
+    assert isinstance(data,dict), 'Passed data is not a dict'
+    assert isinstance(years_since_death,int), 'years_since_death is not an int'
+    assert isinstance(max_lifetime,int), 'max_lifetime is not an int'
+
     # It is possible to guess that ancestors might be deceased based on births of
     # descendants - those calculations are not made, only the known event facts
     # are considered.
-
-    if SELF_CONSISTENCY_CHECKS:
-       if not isinstance(years_since_death,int):
-          raise ValueError( SELF_CONSISTENCY_ERR + 'years_since_death is not an int' )
-       if not isinstance(max_lifetime,int):
-          raise ValueError( SELF_CONSISTENCY_ERR + 'max_lifetime is not an int' )
 
     compare_with_death = comparable_before_today( years_since_death )
     compare_with_birth = comparable_before_today( years_since_death + max_lifetime )
@@ -1239,6 +1328,13 @@ def set_privatize_flag( data, years_since_death=20, max_lifetime=104 ):
 
 
 def read_in_data( inf, data ):
+    """
+    Read data from the input handle into the data structure.
+    At most 5 record levels will be handled.
+    Warnings will be printed to std-err for recoverable errors.
+    ValueError will be thrown if an unknown file section is detected.
+    """
+
     global version
 
     # The tag at the most recent level 0 and level 1, etc.
@@ -1263,7 +1359,7 @@ def read_in_data( inf, data ):
         if n_line == 1:
            line = strip_lead_chars( line )
 
-        # pre 7.0, line leading spaces were allowed
+        # GEDCOM pre-7.0, line leading spaces were allowed
 
         line = line.replace( '\t', ' ' ).strip()
 
@@ -1364,7 +1460,17 @@ def read_in_data( inf, data ):
 
 
 def read_file( datafile ):
-    # From "datafile" name into returned dict.
+    """
+    Return a dict containing the GEDCOM data in the file.
+    Parameter:
+       file: name of the data file.
+
+    The calling program should ensure the existance of the file.
+    Warnings will be printed to std-err.
+    ValueError will be thrown for non-recoverable data errors.
+    """
+    assert isinstance( datafile, str ), 'Non-string passed as the filename'
+
     # See the related document for the format of the dict.
 
     if SELF_CONSISTENCY_CHECKS:
@@ -1409,3 +1515,68 @@ def read_file( datafile ):
     check_parsed_sections( data )
 
     return data
+
+
+def report_double_facts( data, is_indi, check_list ):
+    """ Print events or other records occur more than once."""
+    assert isinstance( check_list, list ), 'Report-double-facts procedure passed a non-list'
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+
+    for owner in data.keys():
+        name = owner
+        if is_indi:
+           if 'name' in data[owner]:
+              name += ' / ' + data[owner]['name'][0]['display']
+        for item in check_list:
+            if isinstance( item, str ):
+               item = item.lower()
+               if item != 'even' and item in data[owner]:
+                  n = len( data[owner][item] )
+                  if n > 1:
+                     print( name, 'has', n, item )
+
+
+def report_individual_double_facts( data, check_list=None ):
+    """
+    Print to std-out any individual events which occur more than once.
+    Parameters:
+       data: the dict returned from the function read_date
+       check_list: (default all events) a list of the record types to check.
+                   Note that custom events are not tested.
+
+    An assert error is thrown if a non-list is passed.
+
+    Not necessarily used for checking errors but also for getting statistics.
+    For instance: find those with alternate names with
+        report_individual_double_facts( data, ['name'] )
+    Find those with multiple birth type records:
+        report_individual_double_facts( data, ['birt','bapm','chr'] )
+    """
+
+    if check_list is None:
+       # this trick is needed for default lists, i.e. defaulted as none
+       check_list = INDI_EVENT_TAGS
+    report_double_facts( data[PARSED_INDI], True, check_list )
+
+
+def report_family_double_facts( data, check_list=None ):
+    """
+    Print to std-out any family events which occur more than once.
+    Parameters:
+       data: the dict returned from the function read_date
+       check_list: (default all events) a list of the record types to check.
+                   Note that custom events are not tested.
+
+    An assert error is thrown if a non-list is passed.
+
+    Not necessarily used for checking errors but also for getting statistics.
+    For instance: count the number of children for all families
+        report_family_double_facts( data, ['chil'] )
+    Find families with nultiple engagements:
+        report_family_double_facts( data, ['enga'] )
+    """
+
+    if check_list is None:
+       # this trick is needed for default lists, i.e. defaulted as none
+       check_list = FAM_EVENT_TAGS
+    report_double_facts( data[PARSED_FAM], False, check_list )
