@@ -27,13 +27,13 @@ original input will also go into the new file.
 Some trouble messages go to stderr.
 If something really bad is encountered an exception is thrown.
 
-This code handles only the Gregorian calendar with epoch setting of BCE
+This code handles only the Gregorian calendar with optional epoch setting of BCE.
 
 Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.91
+v0.9.2
 """
 
 import sys
@@ -67,20 +67,17 @@ FAM_EVENT_TAGS = ['anul','cens','div','divf','enga','marb','marc','marl','mars',
 # From GEDCOM 7.0.1 spec pg 44
 INDI_EVENT_TAGS = ['bapm','barm','basm','bles','buri','cens','chra','conf','crem','deat','emig','fcom','grad','immi','natu','ordn','prob','reti','will','adop','birt','chr','even']
 
-# Other individual tags of interest placed into parsed section,
+# Other individual tags of interest placed into the parsed section,
 # in addition to the event tags and of course the name(s)
 OTHER_INDI_TAGS = ['sex', 'exid', 'fams', 'famc']
 
-# Other family tag of interest placed into parsed section,
+# Other family tag of interest placed into the parsed section,
 # in addition to the event tags
 FAM_MEMBER_TAGS = ['husb', 'wife', 'chil']
 OTHER_FAM_TAGS = []
 
-# The spec says these items can occur more than once.
-# A warning will be output if a second record is detected.
-
 # Individual records which are only allowed to occur once.
-# However they will still be placed into a parsed array to be consistent
+# However they will still be placed into an array to be consistent
 # with the other facts/events.
 # An exception will be thrown if a duplicate is found.
 # Use of a validator is recommended.
@@ -109,6 +106,7 @@ EVENT_PROOF_VALUES = {'disproven':0, EVENT_PROOF_DEFAULT:1, 'proven':2}
 LEVEL2_NAMES = ['npfx', 'givn', 'surn', 'nsfx']
 
 # This code doesn't deal with calendars, but need to know what to look for
+# in case of words before a date.
 CALENDAR_NAMES = [ 'gregorian', 'hebrew', 'julian', 'french_r' ]
 
 # From GEDCOM 7.0.3 spec pg 21
