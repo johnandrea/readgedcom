@@ -4,15 +4,22 @@ A library for reading and parsing genealogy GEDCOM files.
 
 ## Features
 
-- Requires Python 3.6+
 - Returns a structure that can be scanned and manipulated.
 - Single file.
 
+## Limitations
+
+- Requires Python 3.6+
+- GEDCOM versions 5.5, 5.5.1, 7.0.x
+- Input file should be well formed. Check with a validator such as
+ https://chronoplexsoftware.com/gedcomvalidator/
+- Maximum of 5 levels of sub-structures
+- No mechanism to output parsed data as a new GEDCOM after manipulation. Instead
+ use a genealogy program.
 
 ## Installation
 
 No installation process. Copy the file next to your application which uses the library.
-
 
 ## Usage
 
