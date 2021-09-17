@@ -33,7 +33,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9
+v0.91
 """
 
 import sys
@@ -533,9 +533,13 @@ def line_values( input_line ):
     return data
 
 
-def date_to_comparable( given ):
+def date_to_comparable( original ):
     """
     Convert a date to a string of format 'yyyymmdd' for comparison with other dates.
+    Returns a tuple:
+       ( 'yyyymmdd', malformed )
+
+    where "malformed" is True if the original had to be repaired to be usable.
 
     The prefix may contain 'gregorian',
     the suffix may contain 'bce',
@@ -544,6 +548,7 @@ def date_to_comparable( given ):
 
     A malformed portion may be converted to a "1", or might throw an exception
     if the crash_on_bad_date flag is True.
+    ValueError is thrown for a non-gregorian calendar.
     """
 
     # examples:
@@ -560,8 +565,9 @@ def date_to_comparable( given ):
     default_year = 1
 
     result = None
+    malformed = False
 
-    date = given.lower().replace( '  ', ' ' ).replace( '  ', ' ' ).strip()
+    date = original.lower().replace( '  ', ' ' ).replace( '  ', ' ' ).strip()
     date = re.sub( r'^gregorian', '', date ).strip() #ignore this calendar
     date = re.sub( r'bce$', '', date ).strip() #ignore this epoch
 
@@ -590,8 +596,9 @@ def date_to_comparable( given ):
 
        else:
           if CRASH_ON_BAD_DATE:
-             raise ValueError( DATE_ERR + ':' + str(given) )
-          print( DATE_ERR, given, ': setting to', year, month, day, file=sys.stderr )
+             raise ValueError( DATE_ERR + ':' + str(original) )
+          malformed = True
+          print( DATE_ERR, original, ': setting to', year, month, day, file=sys.stderr )
 
        if isinstance(day,str):
           #i.e. has been extracted from the given date string
@@ -600,79 +607,96 @@ def date_to_comparable( given ):
              if day < 1 or day > 31:
                 day = default_day
                 if CRASH_ON_BAD_DATE:
-                   raise ValueError( DATE_ERR + ':' + str(given) )
-                print( DATE_ERR, given, ': setting day to', day, file=sys.stderr )
+                   raise ValueError( DATE_ERR + ':' + str(original) )
+                malformed = True
+                print( DATE_ERR, original, ': setting day to', day, file=sys.stderr )
           else:
              if CRASH_ON_BAD_DATE:
-                raise ValueError( DATE_ERR + ':' + str(given) )
+                raise ValueError( DATE_ERR + ':' + str(original) )
              day = default_day
-             print( DATE_ERR, given, ': setting day to', day, file=sys.stderr )
+             malformed = True
+             print( DATE_ERR, original, ': setting day to', day, file=sys.stderr )
 
        if isinstance(month,str):
           #i.e. has been extracted from the given date string
           if month in MONTH_NUMBERS:
              month = month_name_to_number( month )
           else:
-             print( DATE_ERR, given, ': attempting to correct', file=sys.stderr )
+             malformed = True
+             print( DATE_ERR, original, ': attempting to correct', file=sys.stderr )
              month = month.replace( '-', '' ).replace( '.', '' )
              if month in MONTH_NUMBERS:
                 month = month_name_to_number( month )
              else:
                 if CRASH_ON_BAD_DATE:
-                   raise ValueError( DATE_ERR + ':' + str(given) )
+                   raise ValueError( DATE_ERR + ':' + str(original) )
                 month = default_month
-                print( DATE_ERR, given, ': setting month to number', month, file=sys.stderr )
+                print( DATE_ERR, original, ': setting month to number', month, file=sys.stderr )
 
        if isinstance(year,str):
           #i.e. has been extracted from the given date string
           if string_like_int( year ):
              year = int( year )
           else:
-             print( DATE_ERR, given, ': attempting to correct', file=sys.stderr )
+             malformed = True
+             print( DATE_ERR, original, ': attempting to correct', file=sys.stderr )
              # Ancestry mistakes
              year = year.replace( '-', '' ).replace( '.', '' )
              if string_like_int( year ):
                 year = int( year )
              else:
                 if CRASH_ON_BAD_DATE:
-                   raise ValueError( DATE_ERR + ':' + str(given) )
+                   raise ValueError( DATE_ERR + ':' + str(original) )
                 year = default_year
-                print( DATE_ERR, given, ': setting year to:', year, file=sys.stderr )
+                print( DATE_ERR, original, ': setting year to:', year, file=sys.stderr )
 
-       result = '%4d%02d%02d' % ( year, month, day )
+       result = '%04d%02d%02d' % ( year, month, day )
 
-    return result
+    return ( result, malformed )
 
 
-def date_to_structure( given ):
+def date_comparable_results( original, key, date_data ):
+    """ Get the results from the to-comparable conversion and set into the date data values."""
+    results = date_to_comparable( original )
+
+    date_data[key]['value'] = results[0]
+
+    # Set true if false
+    if not date_data['malformed']:
+       date_data['malformed'] = results[1]
+
+
+def date_to_structure( original ):
     """
     Given a GEDCOM date (see 7.0.1 spec pg 22) return a dict with a structure of the date.
         {
           is_known: boolean, False for an empty date,
-          given: copy of date,
-          is_range: True if date spec'ed as datePeriod or between/and dateRange,
+          in: copy of original date from the input file,
+          malformed: True if the original was "repaired" - meaning quality is low,
+          is_range: True if date spec'ed as datePeriod or a between/and dateRange,
           min: { modifier:, value:, year: },
           max: { modifier:, value:, year: }
         }
     where modifier is one of '', 'bef', 'aft', 'abt', etc.
     where value is a string in comparable format 'yyyymmdd',
-    where year is an int.
+    and year is an int.
 
     If date is not a range, min and max are set to the same values.
-    If is_known is False there are no other items in the returned dict.
+    If is_known is False, it is the only item in the returned dict.
     """
 
     value = dict()
     value['is_known'] = False
 
-    if given:
-       given = given.lower().replace( '  ', ' ' ).replace( '  ', ' ' ).strip()
+    if original:
+       original = original.lower().replace( '  ', ' ' ).replace( '  ', ' ' ).strip()
 
-    if given:
+    if original:
        value['is_known'] = True
 
        value['is_range'] = False
-       value['given'] = given
+       value['in'] = original
+       value['malformed'] = False
        value['min'] = dict()
        value['max'] = dict()
        value['min']['modifier'] = ''
@@ -681,41 +705,41 @@ def date_to_structure( given ):
        # Ranges cannot contain modifiers such as before, after, etc.,
        # use the "from" / "to", etc. instead
 
-       if 'from ' in given and ' to ' in given:
+       if 'from ' in original and ' to ' in original:
           value['is_range'] = True
-          parts = given.replace( 'from ', '' ).split( ' to ' )
-          value['min']['value'] = date_to_comparable( parts[0] )
-          value['max']['value'] = date_to_comparable( parts[1] )
+          parts = original.replace( 'from ', '' ).split( ' to ' )
+          date_comparable_results( parts[0], 'min', value )
+          date_comparable_results( parts[1], 'max', value )
           value['min']['modifier'] = 'from'
           value['max']['modifier'] = 'to'
 
-       elif 'bet ' in given and ' and ' in given:
+       elif 'bet ' in original and ' and ' in original:
           value['is_range'] = True
-          parts = given.replace( 'bet ', '' ).split( ' and ' )
-          value['min']['value'] = date_to_comparable( parts[0] )
-          value['max']['value'] = date_to_comparable( parts[1] )
+          parts = original.replace( 'bet ', '' ).split( ' and ' )
+          date_comparable_results( parts[0], 'min', value )
+          date_comparable_results( parts[1], 'max', value )
           value['min']['modifier'] = 'bet'
           value['max']['modifier'] = 'and'
 
-       elif given.startswith( 'to ' ):
+       elif original.startswith( 'to ' ):
           # Seems like this specifies everything up to the date
           # why use this instead of 'before'
-          value['min']['value'] = date_to_comparable( given.replace( 'to ', '' ) )
+          date_comparable_results( original.replace( 'to ', '' ), 'min', value )
           value['min']['modifier'] = 'to'
           for item in ['value','modifier']:
               value['max'][item] = value['min'][item]
 
        else:
-          parts = given.split()
+          parts = original.split()
 
           if parts[0] in DATE_MODIFIERS:
              value['min']['modifier'] = parts[0]
-             given = given.replace( parts[0] + ' ', '' )
+             original = original.replace( parts[0] + ' ', '' )
           elif parts[0] in ALT_DATE_MODIFIERS:
              value['min']['modifier'] = ALT_DATE_MODIFIERS[parts[0]]
-             given = given.replace( parts[0] + ' ', '' )
+             original = original.replace( parts[0] + ' ', '' )
 
-          value['min']['value'] = date_to_comparable( given )
+          date_comparable_results( original, 'min', value )
 
           for item in ['value','modifier']:
               value['max'][item] = value['min'][item]
@@ -734,9 +758,10 @@ def get_note( level2 ):
 
     # Pre version 7.0 the note lines were short; requiring continuation lines.
     #
-    # There are rules about adding spaces and not stripping spaces from continuation lines. I'm not sure I'm handling that correctly.
+    # There are rules about adding spaces and not stripping spaces from continuation lines.
+    # I'm not sure I'm handling that correctly.
     #
-    # v7.0.1 introduces the "cont" tag which might require newlines between records
+    # GEDCOM 7.0.1 introduces the "cont" tag which might require newlines between records.
 
     value = ''
     if level2['value']:
@@ -753,7 +778,7 @@ def get_note( level2 ):
 
 
 def set_best_events( event_list, always_first_list, out_data ):
-    """ For events with multiple instances within a single individual or family
+    """ For each event with multiple instances within a single individual or family
         Set the index of the "best" instance based on the proof and primary settings."""
 
     # Note that custom event records with the tag "even" are not included
@@ -867,7 +892,7 @@ def handle_custom_event( tag, level1, out_data ):
     #
     #1 EVEN 118 cM 2%
     #2 TYPE dna
-    #2 DATE 1 aug 2021
+    #2 DATE 1 Aug 2021
 
     values = dict()
     values['value'] = level1['value']
@@ -898,7 +923,7 @@ def extra_name_parts( name, out_data ):
 
     out_data['display'] = name
 
-    # There may be unicode/non-utf-8 chars
+    # There may be unicode/non-UTF-8 chars
     out_data['html'] = convert_to_html( name )
     out_data['unicode'] = convert_to_unicode( name )
 
@@ -1519,7 +1544,7 @@ def read_file( datafile ):
 
 def report_double_facts( data, is_indi, check_list ):
     """ Print events or other records occur more than once."""
-    assert isinstance( check_list, list ), 'Report-double-facts procedure passed a non-list'
+    assert isinstance( check_list, list ), 'Non-list passwd as check_list parameter'
     assert isinstance( data, dict ), 'Non-dict passed as data'
 
     for owner in data.keys():
