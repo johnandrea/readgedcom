@@ -61,7 +61,7 @@ pprint.pprint( data )
 
 ### Advanced Usage
 
-a script to output the descendants of a selected individual (by EXID)
+A script to output the descendants of a selected individual (by EXID)
 into a JSON file.
 
  ```
@@ -85,4 +85,4 @@ The data returned from the function read_file is a Python dict.
 
 ## Bug reports
 
-This code is provided without support and warranty.
+This code is provided with neither support nor warranty.
