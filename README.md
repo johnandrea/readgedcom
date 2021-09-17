@@ -25,6 +25,8 @@ output_original( data, out_file_name )
 
 set_privitize_flag( data )
 
+unset_privitize_flag( data )
+
 output_privitized( data, out_file_name )
 
 report_individual_double_facts( data )

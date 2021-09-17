@@ -10,6 +10,8 @@ Public functions:
 
     set_privitize_flag( data )
 
+    unset_privitize_flag( data )
+
     output_privitized( data, out_file_name )
 
     report_individual_double_facts( data )
@@ -33,7 +35,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9.2
+v0.9.3
 """
 
 import sys
@@ -1293,6 +1295,23 @@ def compute_privatize_flag( death_limit, birth_limit, data ):
                     break
 
     return result
+
+
+def single_privitize_flag( flag_value, data ):
+    """ Set the same privacy flag for everyone. """
+    assert isinstance( flag_value, int ), 'Non-int passed as privacy flag'
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+
+    for indi in data[PARSED_INDI]:
+        data[PARSED_INDI][indi][PRIVATIZE_FLAG] = flag_value
+
+    for fam in data[PARSED_FAM]:
+        data[PARSED_FAM][fam][PRIVATIZE_FLAG] = flag_value
+
+
+def unset_privitize_flag( data ):
+    """ Turn off the privitize for everyone."""
+    single_privitize_flag( PRIVATIZE_OFF, data )
 
 
 def set_privatize_flag( data, years_since_death=20, max_lifetime=104 ):
