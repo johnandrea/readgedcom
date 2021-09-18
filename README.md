@@ -36,6 +36,8 @@ unset_privitize_flag( data )
 
 output_privitized( data, out_file_name )
 
+find_individuals( data, search_tag, search_value, operation )
+
 report_individual_double_facts( data )
 
 report_family_double_facts( data )
@@ -70,10 +72,35 @@ pprint.pprint( data )
 
 ### Advanced Usage
 
+A script to find anyone with the name "Anne" born before 1960.
+```
+#!/usr/bin/python3
+
+import sys
+import readgedcom
+
+datafile = sys.argv[1]
+
+data = readgedcom.read_file( sys.argv[1] )
+
+found_name = readgedcom.find_individuals( data, 'name', 'Anne ', 'in' )
+found_age = readgedcom.find_individuals( data, 'birt.date', '19600101', '<' )
+
+# intersection of the two lists
+found_both = [item for item in found_name if item in found_age]
+
+for indi in found_both:
+    print( '' )
+    print( f )
+    print( data[readgedcom.PARSED_INDI][indi]['name'][0]['value'] )
+    print( data[readgedcom.PARSED_INDI][indi]['birt'][0]['date']['in'] )
+```
+
+
 A script to output the descendants of a selected individual (by EXID)
 into a JSON file.
 
- ```
+```
 #!/usr/bin/python3
 
 import sys

@@ -35,7 +35,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9.3
+v0.9.4
 """
 
 import sys
@@ -273,6 +273,7 @@ def output_original( data, file ):
 
     assert isinstance( data, dict ), 'Non-dict passed as the data parameter.'
     assert isinstance( file, str ), 'Non-string passed as the filename parameter.'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
 
     global version
 
@@ -413,6 +414,7 @@ def output_privatized( data, file ):
 
     assert isinstance( data, dict ), 'Non-dict passed as data parameter'
     assert isinstance( file, str ), 'Non-string passed as the filename parameter'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
 
     # Working with the original input lines
     # some will be dropped and some dates will be modified
@@ -1311,6 +1313,8 @@ def single_privitize_flag( flag_value, data ):
 
 def unset_privitize_flag( data ):
     """ Turn off the privitize for everyone."""
+    assert isinstance(data,dict), 'Passed data is not a dict'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
     single_privitize_flag( PRIVATIZE_OFF, data )
 
 
@@ -1345,6 +1349,7 @@ def set_privatize_flag( data, years_since_death=20, max_lifetime=104 ):
     assert isinstance(data,dict), 'Passed data is not a dict'
     assert isinstance(years_since_death,int), 'years_since_death is not an int'
     assert isinstance(max_lifetime,int), 'max_lifetime is not an int'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
 
     # It is possible to guess that ancestors might be deceased based on births of
     # descendants - those calculations are not made, only the known event facts
@@ -1561,8 +1566,7 @@ def read_file( datafile ):
 
 def report_double_facts( data, is_indi, check_list ):
     """ Print events or other records occur more than once."""
-    assert isinstance( check_list, list ), 'Non-list passwd as check_list parameter'
-    assert isinstance( data, dict ), 'Non-dict passed as data'
+    assert isinstance( check_list, list ), 'Non-list passed as check_list parameter'
 
     for owner in data.keys():
         name = owner
@@ -1594,6 +1598,8 @@ def report_individual_double_facts( data, check_list=None ):
     Find those with multiple birth type records:
         report_individual_double_facts( data, ['birt','bapm','chr'] )
     """
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
 
     if check_list is None:
        # this trick is needed for default lists, i.e. defaulted as none
@@ -1617,8 +1623,133 @@ def report_family_double_facts( data, check_list=None ):
     Find families with nultiple engagements:
         report_family_double_facts( data, ['enga'] )
     """
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
 
     if check_list is None:
        # this trick is needed for default lists, i.e. defaulted as none
        check_list = FAM_EVENT_TAGS
     report_double_facts( data[PARSED_FAM], False, check_list )
+
+
+def match_individual( indi_data, tag, subtag, search_value, operation ):
+    """ Return True if individual's data matches the search condition."""
+
+    def compare( have, want, op ):
+        result = False
+        if op in ['=','==']:
+           result = have == want
+        elif op in ['!','!=','not =','not=']:
+           result = have != want
+        elif op == '<':
+           result = have < want
+        elif op in ['<=','=<']:
+           result = have <= want
+        elif op == '>':
+           result = have > want
+        elif op in ['>=','=>']:
+           result = have >= want
+        elif op == 'in':
+           result = want in have
+        elif op in ['!in','not in']:
+           result = want not in have
+        return result
+
+    found = False
+
+    if tag == 'name':
+       # look in name and alt-names
+       for contents in indi_data[tag]:
+           if compare( contents['value'], search_value, operation ):
+              found = True
+              break
+
+    elif tag in ['fams','famc']:
+       # look at all the elements
+       for value in indi_data[tag]:
+           if compare( value, search_value, operation ):
+              found = True
+              break
+
+    elif isinstance( indi_data[tag], list ):
+       # its a list, determine the best one
+       best = 0
+       if 'best' in indi_data:
+          if tag in indi_data['best']:
+             best = indi_data['best'][tag]
+
+       if tag in INDI_EVENT_TAGS:
+          # events have dates and places, if not specified then skip it
+          if subtag:
+             if subtag in indi_data[tag][best]:
+                if subtag == 'date':
+                   if indi_data[tag][best]['date']['is_known']:
+                      value = indi_data[tag][best]['date']['min']['value']
+                   else:
+                      value = indi_data[tag][best][subtag]
+       else:
+         # plain list such as sex,exid, etc. not an event
+         value = indi_data[tag][best]
+
+       if isinstance(value,str):
+          found = compare( value, search_value, operation )
+
+    return found
+
+
+def find_individuals( data, search_tag, search_value, operation='=' ):
+    """
+    Return a list of ids of the individual which match the search conditions.
+    Parameters:
+        data: as returned from read_file
+        search_tag: tag such as "name", "fams", "exid", etc.
+                    For events the sub-tags may be specified such as
+                    "birt.date", "deat.plac", etc.
+        search_value: for matching against the data. Must be a string.
+                    For dates specify as "yyyymmdd".
+        operation: (default "=") matching condition, one of
+                    "=", "!=", ">", ">=", "<", "<=", "in", "not in".
+
+    In the case of date ranges, the minimum data is used.
+    In the case of multiple events, the "best" event instance is used.
+    Custom events never matched (in this version).
+    """
+
+    OPERATORS = ['=','==','!','!=','not =', 'not=', '<','<=','=<','>','>=','=>','in','!in','not in']
+
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
+    assert isinstance(search_tag,str), 'Non-string passed as search_tag'
+    assert isinstance(search_value,str), 'Non-string passed as search_key'
+    assert isinstance(operation,str), 'Non-string passed as comparison operator'
+    assert operation.lower().strip() in OPERATORS, 'Invalid comparison operator:' + operation + ' not one of ' + str(OPERATORS)
+    assert search_tag.strip() != '', 'Passed an empty search tag'
+
+    search_tag = search_tag.lower().strip()
+    operation = operation.lower().strip()
+
+    # The selection tag might be a sub-section,
+    # such as a date or birth: passed as birt.date
+    # or place of death passed as deat.plac
+
+    search_subtag = None
+    if '.' in search_tag:
+       parts = search_tag.split('.')
+       if parts[0]:
+          search_tag = parts[0]
+       else:
+          raise ValueError( 'Empty search tag start part.' )
+       if parts[1]:
+          search_subtag = parts[1]
+       else:
+          raise ValueError( 'Empty search sub-tag.' )
+
+    result = []
+
+    if search_tag != 'even':
+       for indi in data[PARSED_INDI]:
+           if search_tag in data[PARSED_INDI][indi]:
+              if match_individual( data[PARSED_INDI][indi], search_tag, search_subtag, search_value, operation ):
+                 result.append( indi )
+
+    return result
