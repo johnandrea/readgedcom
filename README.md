@@ -94,6 +94,33 @@ for indi in found_both:
     print( data[readgedcom.PARSED_INDI][indi]['birt'][0]['date']['in'] )
 ```
 
+A slightly more correct version of the above script
+```
+#!/usr/bin/python3
+
+import sys
+import readgedcom
+
+def show_indi( indi_data ):
+    print( indi_data['name'][0]['value'] )
+    # this person has a known birth, no need to check for key existance
+    best = indi_data['best']['birt']
+    print( indi_data['birt'][best]['date']['in'] )
+
+data = readgedcom.read_file( sys.argv[1] )
+
+found_name = readgedcom.find_individuals( data, 'name', 'Anne ', 'in' )
+found_age = readgedcom.find_individuals( data, 'birt.date', '19600101', '<' )
+
+# intersection of the two lists
+found_both = [item for item in found_name if item in found_age]
+
+for indi in found_both:
+    print( '' )
+    print( indi )
+    show_indi( data[readgedcom.PARSED_INDI][indi] )
+
+```
 
 A script to output the descendants of a selected individual (by EXID)
 into a JSON file.
