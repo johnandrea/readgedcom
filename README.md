@@ -36,7 +36,7 @@ unset_privitize_flag( data )
 
 output_privitized( data, out_file_name )
 
-find_individuals( data, search_tag, search_value, operation )
+list_of_indi = find_individuals( data, search_tag, search_value, operation )
 
 report_individual_double_facts( data )
 
@@ -79,8 +79,6 @@ A script to find anyone with the name "Anne" born before 1960.
 import sys
 import readgedcom
 
-datafile = sys.argv[1]
-
 data = readgedcom.read_file( sys.argv[1] )
 
 found_name = readgedcom.find_individuals( data, 'name', 'Anne ', 'in' )
@@ -91,7 +89,7 @@ found_both = [item for item in found_name if item in found_age]
 
 for indi in found_both:
     print( '' )
-    print( f )
+    print( indi )
     print( data[readgedcom.PARSED_INDI][indi]['name'][0]['value'] )
     print( data[readgedcom.PARSED_INDI][indi]['birt'][0]['date']['in'] )
 ```
@@ -110,7 +108,7 @@ import readgedcom
 datafile = sys.argv[1]
 top_exid = sys.argv[2]
 
-data = readgedcom.read_file( sys.argv[1] )
+data = readgedcom.read_file( datafile )
 
 *TO BE UPDATED*
 ```
