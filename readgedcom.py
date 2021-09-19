@@ -8,11 +8,11 @@ Public functions:
 
     output_original( data, out_file_name )
 
-    set_privitize_flag( data )
+    set_privatize_flag( data )
 
-    unset_privitize_flag( data )
+    unset_privatize_flag( data )
 
-    output_privitized( data, out_file_name )
+    output_privatized( data, out_file_name )
 
     report_individual_double_facts( data )
 
@@ -35,7 +35,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9.4
+v0.9.5
 """
 
 import sys
@@ -334,7 +334,7 @@ def output_section_no_dates( section, outf ):
 
 
 def output_privatized_section( level0, priv_setting, event_list, parsed_data, outf ):
-    """ Print data to the given file handle with the data reduced based on the privitize setting.
+    """ Print data to the given file handle with the data reduced based on the privatize setting.
         'level0' is the un-parsed section correcponding to the
         'parsed_data' section for an individual or family.
         'event_list' contains the names of events which are likely to contain dates."""
@@ -376,27 +376,27 @@ def output_privatized_section( level0, priv_setting, event_list, parsed_data, ou
 
 
 def output_privatized_indi( level0, priv_setting, data_section, outf ):
-    """ Print an individual to the output handle, in privitized format."""
+    """ Print an individual to the output handle, in privatized format."""
     output_privatized_section( level0, priv_setting, INDI_EVENT_TAGS, data_section, outf )
 
 
 def output_privatized_fam( level0, priv_setting, data_section, outf ):
-    """ Print a family to the output handle, in privitized format."""
+    """ Print a family to the output handle, in privatized format."""
     output_privatized_section( level0, priv_setting, FAM_EVENT_TAGS, data_section, outf )
 
 
 def check_section_priv( item, data ):
-    """ Return the value of the privitization flag for the given individual or family."""
+    """ Return the value of the privatization flag for the given individual or family."""
     return data[item][PRIVATIZE_FLAG]
 
 
 def check_fam_priv( fam, data ):
-    """ Return the value of the privitization flag for the given family. """
+    """ Return the value of the privatization flag for the given family. """
     return check_section_priv( extract_fam_id( fam ), data[PARSED_FAM] )
 
 
 def check_indi_priv( indi, data ):
-    """ Return the value of the privitization flag for the given individual. """
+    """ Return the value of the privatization flag for the given individual. """
     return check_section_priv( extract_indi_id( indi ), data[PARSED_INDI] )
 
 
@@ -408,8 +408,8 @@ def output_privatized( data, file ):
         data: the data structure returned from the function read_file.
         file: name of the file to contain the output.
 
-    See the function set_privitize_flag for the settings.
-    set_privitize_flag is optional, but should be called if this output function is used.
+    See the function set_privatize_flag for the settings.
+    set_privatize_flag is optional, but should be called if this output function is used.
     """
 
     assert isinstance( data, dict ), 'Non-dict passed as data parameter'
@@ -549,7 +549,8 @@ def date_to_comparable( original ):
     See the GEDCOM spec.
 
     A malformed portion may be converted to a "1", or might throw an exception
-    if the crash_on_bad_date flag is True.
+    if the crash_on_bad_date flag is True (default False).
+
     ValueError is thrown for a non-gregorian calendar.
     """
 
@@ -689,11 +690,12 @@ def date_to_structure( original ):
 
     value = dict()
     value['is_known'] = False
+    given = None
 
     if original:
-       original = original.lower().replace( '  ', ' ' ).replace( '  ', ' ' ).strip()
+       given = original.lower().replace( '  ', ' ' ).replace( '  ', ' ' ).strip()
 
-    if original:
+    if given:
        value['is_known'] = True
 
        value['is_range'] = False
@@ -707,41 +709,41 @@ def date_to_structure( original ):
        # Ranges cannot contain modifiers such as before, after, etc.,
        # use the "from" / "to", etc. instead
 
-       if 'from ' in original and ' to ' in original:
+       if 'from ' in given and ' to ' in given:
           value['is_range'] = True
-          parts = original.replace( 'from ', '' ).split( ' to ' )
+          parts = given.replace( 'from ', '' ).split( ' to ' )
           date_comparable_results( parts[0], 'min', value )
           date_comparable_results( parts[1], 'max', value )
           value['min']['modifier'] = 'from'
           value['max']['modifier'] = 'to'
 
-       elif 'bet ' in original and ' and ' in original:
+       elif 'bet ' in given and ' and ' in given:
           value['is_range'] = True
-          parts = original.replace( 'bet ', '' ).split( ' and ' )
+          parts = given.replace( 'bet ', '' ).split( ' and ' )
           date_comparable_results( parts[0], 'min', value )
           date_comparable_results( parts[1], 'max', value )
           value['min']['modifier'] = 'bet'
           value['max']['modifier'] = 'and'
 
-       elif original.startswith( 'to ' ):
+       elif given.startswith( 'to ' ):
           # Seems like this specifies everything up to the date
           # why use this instead of 'before'
-          date_comparable_results( original.replace( 'to ', '' ), 'min', value )
+          date_comparable_results( given.replace( 'to ', '' ), 'min', value )
           value['min']['modifier'] = 'to'
           for item in ['value','modifier']:
               value['max'][item] = value['min'][item]
 
        else:
-          parts = original.split()
+          parts = given.split()
 
           if parts[0] in DATE_MODIFIERS:
              value['min']['modifier'] = parts[0]
-             original = original.replace( parts[0] + ' ', '' )
+             given = given.replace( parts[0] + ' ', '' )
           elif parts[0] in ALT_DATE_MODIFIERS:
              value['min']['modifier'] = ALT_DATE_MODIFIERS[parts[0]]
-             original = original.replace( parts[0] + ' ', '' )
+             given = given.replace( parts[0] + ' ', '' )
 
-          date_comparable_results( original, 'min', value )
+          date_comparable_results( given, 'min', value )
 
           for item in ['value','modifier']:
               value['max'][item] = value['min'][item]
@@ -1245,7 +1247,7 @@ def ensure_lowercase_constants():
 
 
 def compute_privatize_flag( death_limit, birth_limit, data ):
-    """ Use the event dates and date limits to compute a privitization flag setting."""
+    """ Use the event dates and date limits to compute a privatization flag setting."""
 
     # Default to complete privatization for everyone.
     result = PRIVATIZE_MAX
@@ -1299,7 +1301,7 @@ def compute_privatize_flag( death_limit, birth_limit, data ):
     return result
 
 
-def single_privitize_flag( flag_value, data ):
+def single_privatize_flag( flag_value, data ):
     """ Set the same privacy flag for everyone. """
     assert isinstance( flag_value, int ), 'Non-int passed as privacy flag'
     assert isinstance( data, dict ), 'Non-dict passed as data'
@@ -1311,17 +1313,17 @@ def single_privitize_flag( flag_value, data ):
         data[PARSED_FAM][fam][PRIVATIZE_FLAG] = flag_value
 
 
-def unset_privitize_flag( data ):
-    """ Turn off the privitize for everyone."""
+def unset_privatize_flag( data ):
+    """ Turn off the privatize for everyone."""
     assert isinstance(data,dict), 'Passed data is not a dict'
     assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
-    single_privitize_flag( PRIVATIZE_OFF, data )
+    single_privatize_flag( PRIVATIZE_OFF, data )
 
 
 def set_privatize_flag( data, years_since_death=20, max_lifetime=104 ):
     """
-    Set the privitization for all individuals which is used to hide data via the
-    output_privitized function.
+    Set the privatization for all individuals which is used to hide data via the
+    output_priaitized function.
 
     The default setting for everyone is off.
 

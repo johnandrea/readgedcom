@@ -30,11 +30,11 @@ data = read_file( gedcom_file_name )
 
 output_original( data, out_file_name )
 
-set_privitize_flag( data )
+set_privatize_flag( data )
 
-unset_privitize_flag( data )
+unset_privatize_flag( data )
 
-output_privitized( data, out_file_name )
+output_privatized( data, out_file_name )
 
 list_of_indi = find_individuals( data, search_tag, search_value, operation )
 
@@ -46,7 +46,7 @@ report_family_double_facts( data )
 
 ### Basic usage
 
-A script which will produce a privitized copy.
+A script which will produce a privatized copy.
 ```
 #!/usr/bin/python3
 
