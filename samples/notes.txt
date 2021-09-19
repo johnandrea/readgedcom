@@ -1,0 +1,10 @@
+Example input with pprint of data structure to show its structure.
+
+Essentially:
+
+import sys
+import pprint
+import readgedcom
+data = readgedcom.read_file( datafile )
+readgedcom.set_privatize_flag( data )
+pprint.pprint( data )
