@@ -132,12 +132,58 @@ import sys
 import json
 import readgedcom
 
+def add_person( indi, individuals, families ):
+    def get_spouse_name( indi, fam, individuals, families ):
+        name = None
+        for partner in ['husb','wife']:
+            if partner in families[fam]:
+               partner_id = families[fam][partner][0]
+               # choose the other partner
+               if partner_id != indi:
+                  name = individuals[partner_id]['name'][0]['display']
+
+        if not name:
+           name = readgedcom.UNKNOWN_NAME
+
+        return name
+
+    def add_family( indi, fam, individuals, families ):
+        result = dict()
+        result['spouse'] = get_spouse_name( indi, fam, individuals, families )
+        result['children'] = []
+        for child in families[fam]['chil']:
+            result['children'].append( add_person( child, individuals, families ) )
+        return result
+
+    result = dict()
+    result['name'] = individuals[indi]['name'][0]['display']
+    result['families'] = []
+    # the families in which this person is a parent
+    if 'fams' in individuals[indi]:
+       for fam in individuals[indi]['fams']:
+           result['families'].append( add_family( indi, fam, individuals, families ) )
+
+    return result
+
 datafile = sys.argv[1]
 top_exid = sys.argv[2]
+out_file = sys.argv[3]
 
 data = readgedcom.read_file( datafile )
 
-*TO BE UPDATED*
+found_id = readgedcom.find_individuals( data, 'exid', top_exid )
+
+n = len( found_id )
+if n < 1:
+   print( 'Didnt find anyone', file=sys.stderr )
+elif n > 1:
+   print( 'Found more than one person', file=sys.stderr )
+else:
+
+   descendants = add_person( found_id[0], data[readgedcom.PARSED_INDI], data[readgedcom.PARSED_FAM] )
+
+   with open( outfile, 'w' ) as outf:
+        json.dump( descendants, outf, indent=1 )
 ```
 
 ## Data structure
