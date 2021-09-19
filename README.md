@@ -182,7 +182,7 @@ else:
 
    descendants = add_person( found_id[0], data[readgedcom.PARSED_INDI], data[readgedcom.PARSED_FAM] )
 
-   with open( outfile, 'w' ) as outf:
+   with open( out_file, 'w' ) as outf:
         json.dump( descendants, outf, indent=1 )
 ```
 
