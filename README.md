@@ -188,7 +188,38 @@ else:
 
 ## Data structure
 
-The data returned from the function read_file is a Python dict.
+Look in the samples directory for examples of the data.
+
+The function read_file returns a dict with the keys of the name of the
+zero level gedcom tags.
+    data['head'] = []
+    data['indi'] = []
+    data['fam'] = []
+    data['trlr'] = []
+    etc.
+
+Each of those values are lists containing the records
+of the tag related to the key. Index 0 = first record,
+index 1 = second record, etc.
+   Each list value is a dict of the following structure:
+'in': the line from the input file,
+'tag': the tag of the input line, lowercase,
+'value': the value on the input line, may be empty,
+'parsed' (optional): a dict containing a reference to the parsed section,
+'sub': a list of each of the sub-records of the current record.
+       These sub-records are of the sane structure
+
+There are two other top level keys:
+   data['individuals'] = dict()
+   data['families'] = dict()
+Those are refered to as the "parsed" sections because they are created
+from the matching input file sections into a more easily scanned format.
+   Each of those dicts has a key of the indi or family xref (without the "@" sign).
+For example:
+   data['individuals']['i7'] = dict{}
+   data['individuals']['i32'] = dict{}
+   data['families']['f17'] = dict()
+   data['families']['f58'] = dict()
 
 ## Bug reports
 
