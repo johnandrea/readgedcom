@@ -35,7 +35,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9.5
+v0.9.6
 """
 
 import sys
@@ -61,7 +61,7 @@ SECTION_NAMES = [SECT_HEAD, 'subm', SECT_INDI, SECT_FAM, 'obje', 'repo', 'snote'
 
 # Sections to be created by the parsing
 PARSED_INDI = 'individuals'
-PARSED_FAM = ' families'
+PARSED_FAM = 'families'
 
 # From GEDCOM 7.0.1 spec pg 40
 FAM_EVENT_TAGS = ['anul','cens','div','divf','enga','marb','marc','marl','mars','marr','even']
