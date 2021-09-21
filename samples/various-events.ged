@@ -1,0 +1,107 @@
+﻿0 HEAD
+1 SOUR RootsMagic
+2 NAME RootsMagic
+2 VERS 7.6.5.0
+1 FILE various-events.ged
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME John A Andrea
+0 @I1@ INDI
+1 NAME George //
+2 GIVN George
+1 SEX M
+1 BIRT
+2 DATE 14 DEC 1895
+2 PLAC Sandringham
+1 EVEN 0%
+2 TYPE DNAcomp
+2 DATE 1950
+1 EVEN 0%
+2 TYPE DNAcomp
+2 DATE 1951
+1 DEAT
+2 DATE BEF 1953
+2 PLAC Sandringham
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Elizabeth /Bowes-Lyon/
+2 GIVN Elizabeth
+2 SURN Bowes-Lyon
+1 NAME Liz //
+2 GIVN Liz
+2 TYPE nickname
+1 NAME The Queen Mother //
+2 GIVN The Queen Mother
+2 TYPE aka
+1 NAME Empress consort of India //
+2 GIVN Empress consort of India
+1 SEX F
+1 BIRT
+2 _PRIM Y
+2 _PROOF proven
+2 DATE 4 AUG 1900
+2 PLAC London
+1 DEAT
+2 DATE AFT 2001
+2 NOTE Unverified
+1 DEAT
+2 _PROOF disproven
+2 DATE BEF 2002
+2 NOTE Not correct
+1 DEAT
+2 DATE ABT 2002
+1 DEAT
+2 _PRIM Y
+2 _PROOF proven
+2 DATE 30 MAR 2002
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Elizabeth //
+2 GIVN Elizabeth
+1 SEX F
+1 EVEN
+2 TYPE Living
+2 DATE 1926
+2 PLAC London
+1 BIRT
+2 DATE 21 APR 1926
+2 PLAC London
+1 EVEN
+2 TYPE Living
+2 DATE 1939
+2 PLAC England
+2 ADDR Balmoral Castle
+1 EVEN
+2 TYPE Living
+2 DATE 1952
+2 PLAC London
+1 EVEN
+2 TYPE coronation
+2 DATE 2 JUN 1953
+1 FAMC @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 MARR
+2 DATE 26 APR 1923
+0 _EVDEF coronation
+1 TYPE P
+1 TITL coronation
+1 ABBR coronation
+1 SENT Coronation Event
+1 PLAC Y
+1 DATE Y
+1 DESC Y
+0 _EVDEF DNAcomp
+1 TYPE P
+1 TITL DNA comparison
+1 ABBR DNAcomp
+1 PLAC N
+1 DATE Y
+1 DESC Y
+0 TRLR
