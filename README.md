@@ -188,9 +188,9 @@ else:
 
 ## Data structure
 
-Look in the samples directory for examples of the data.
+*The samples/ directory shows examples of the data.*
 
-The function read_file returns a dict with the keys of the name of the
+The data file is read into a dict with the keys of the name of the
 zero level gedcom tags:
 ```
     data['head'] = []
@@ -229,6 +229,85 @@ For example:
    data['families']['f58'] = dict()
 ```
 
+The contents of the individual parsed data have the tag as the key into the dict
+with a list as the value since most items can take multiple entries. Even single
+entry items such as sex are presented as lists to be consistent with the other items.
+'''
+data['individuals']['i7']['name'] = []
+data['individuals']['i7']['sex'] = []
+data['individuals']['i7']['birt'] = []
+data['individuals']['i7']['fams'] = []
+data['individuals']['i7']['famc'] = []
+```
+
+The primary name will always be index 0, others are alternate names. The sex item will also be at index 0. The index for the "best" birth, death, etc. is discussed later.
+
+Each name is a dict within the list:
+```
+['name'] = [ {'value':'A Name'}, {'value':'Alt Name'} ]
+```
+
+The name "value" is guaranteed to exist, if necessary set to the "unknown" value. The
+dict also contains other optional items and a few computed ones:
+```
+{
+ 'value': from the input file,
+ 'givn': from the input file,
+ 'surn': from the input file,
+ 'nick', etc. from the input file,
+ 'display': from the "value" without surname slashes,
+ 'html': "display" with "special" characters converted to html entities,
+ 'unicode': "display" with "special" utf-8 chars converted to unicode representation
+}
+```
+
+Each event (birth, death, burial, etc.) is also a dict with keys of the various
+sub-record tags:
+```
+{
+ 'date': from the input - parsed into a dict structure,
+ 'plac': from the input,
+ 'note': from the input,
+ etc.
+}
+```
+
+Every date is represented as a structure:
+```
+{
+  'in': exactly as in the input file,
+  'is_known': has a date been given. If False there is nothing else in the dict,
+  'is_range': is the date is a range type (see GEDCOM spec.),
+  'malformed': if the date as input is invalid - therefor is of low quality,
+  'min': minimum date of the range in a dict structure, 
+  'max': maximum date of the tange, or if not a range same values as "min"
+}
+```
+
+Each one of the "min" and "max" dates themselves is a dict structure:
+```
+{
+  'modifier': empty string, or one of "abt", "bef", "aft", etc.,
+  'value': 'yyyymmdd',
+  'year': they year only portion as an int
+}
+```
+
+A birth event could look like this:
+```
+'birt': [{'date': {'in': '21 APR 1926',
+                   'is_known': True,
+                   'is_range': False,
+                   'malformed': False,
+                   'max': {'modifier': '', 'value': '19260421', 'year': 1926},
+                   'min': {'modifier': '', 'value': '19260421', 'year': 1926}},
+          'plac': 'London'}],
+```
+
 ## Bug reports
 
 This code is provided with neither support nor warranty.
+
+### Mistakes
+
+- Does not collect name type (nickname, aka, etc.) into the individual parsed section.
