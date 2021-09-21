@@ -232,7 +232,7 @@ For example:
 The contents of the individual parsed data have the tag as the key into the dict
 with a list as the value since most items can take multiple entries. Even single
 entry items such as sex are presented as lists to be consistent with the other items.
-'''
+```
 data['individuals']['i7']['name'] = []
 data['individuals']['i7']['sex'] = []
 data['individuals']['i7']['birt'] = []
