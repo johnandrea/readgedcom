@@ -18,6 +18,8 @@ Public functions:
 
     report_family_double_facts( data )
 
+    report_descendant_report( data )
+
 
 The input file should be well formed as this code only checks for
 a few structural errors. A verification program can be found here:
@@ -35,7 +37,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9.6
+v0.9.7
 """
 
 import sys
@@ -789,6 +791,9 @@ def set_best_events( event_list, always_first_list, out_data ):
     # because of the the associated even.type
 
     out_data[BEST_EVENT_KEY] = dict()
+
+    # Best name is always the first one, and it must exist
+    out_data[BEST_EVENT_KEY]['name'] = 0
 
     # No further tests for the "best" of these ones. Always set to index zero.
     # Set for consistency with all events.
@@ -1676,9 +1681,9 @@ def match_individual( indi_data, tag, subtag, search_value, operation ):
     elif isinstance( indi_data[tag], list ):
        # its a list, determine the best one
        best = 0
-       if 'best' in indi_data:
-          if tag in indi_data['best']:
-             best = indi_data['best'][tag]
+       if BEST_EVENT_KEY in indi_data:
+          if tag in indi_data[BEST_EVENT_KEY]:
+             best = indi_data[BEST_EVENT_KEY][tag]
 
        if tag in INDI_EVENT_TAGS:
           # events have dates and places, if not specified then skip it
@@ -1712,7 +1717,7 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
         operation: (default "=") matching condition, one of
                     "=", "!=", ">", ">=", "<", "<=", "in", "not in".
 
-    In the case of date ranges, the minimum data is used.
+    In the case of date ranges, the minimum date is used.
     In the case of multiple events, the "best" event instance is used.
     Custom events never matched (in this version).
     """
@@ -1755,3 +1760,52 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
                  result.append( indi )
 
     return result
+
+
+def get_indi_descendant_count( gen, indi, individuals, families, counts ):
+    count = 0
+    max_gen = gen
+    if 'fams' in individuals[indi]:
+       for fam in individuals[indi]['fams']:
+           for child in families[fam]['chil']:
+               if child not in counts:
+                  counts[child] = get_indi_descendant_count( gen+1, child, individuals, families, counts )
+               max_gen = max( max_gen, counts[child][0] )
+               count = 1 + counts[child][1]
+    return ( max_gen, count )
+
+
+def report_descendant_count( data ):
+    """
+    Print to stdout a tab delimited file of everyone and their descendant count.
+    """
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
+
+    def get_indi_date( indi_data, tag ):
+        """ Return the best input file date for the given tag. """
+        result = ''
+        best = 0
+        if BEST_EVENT_KEY in indi_data:
+           if tag in indi_data[BEST_EVENT_KEY]:
+              best = indi_data[BEST_EVENT_KEY][tag]
+        if tag in indi_data:
+           if indi_data[tag][best]['date']['is_known']:
+              result = indi_data[tag][best]['date']['in']
+        return result
+
+    counted = dict()
+
+    for indi in data[PARSED_INDI]:
+        if indi not in counted:
+           counted[indi] = get_indi_descendant_count( 0, indi, data[PARSED_INDI], data[PARSED_FAM], counted )
+
+    print( 'id\tName\tBirth\tDeath\tGenerations\tDesc. count' )
+    for indi in counted:
+        out = indi
+        out += '\t' + data[PARSED_INDI][indi]['name'][0]['display']
+        out += '\t' + get_indi_date( data[PARSED_INDI][indi], 'birt' )
+        out += '\t' + get_indi_date( data[PARSED_INDI][indi], 'deat' )
+        out += '\t' + str(counted[indi][0])
+        out += '\t' + str(counted[indi][1])
+        print( out )

@@ -42,6 +42,8 @@ report_individual_double_facts( data )
 
 report_family_double_facts( data )
 
+report_descendant_count( data )
+
 ```
 
 ### Basic usage
@@ -104,7 +106,7 @@ import readgedcom
 def show_indi( indi_data ):
     print( indi_data['name'][0]['value'] )
     # this person has a known birth, no need to check for key existance
-    best = indi_data['best']['birt']
+    best = indi_data[readgedcom.BEST_EVENT_KEY]['birt']
     print( indi_data['birt'][best]['date']['in'] )
 
 data = readgedcom.read_file( sys.argv[1] )
@@ -308,6 +310,6 @@ A birth event could look like this:
 
 This code is provided with neither support nor warranty.
 
-### Mistakes
+### Future enhancements
 
-- Does not collect name type (nickname, aka, etc.) into the individual parsed section.
+- Collect name type (nickname, aka, etc.) into the individual parsed section.
