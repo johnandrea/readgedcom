@@ -37,7 +37,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9.8
+v0.9.9
 """
 
 import sys
@@ -1769,6 +1769,7 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
 def get_indi_descendant_count( indi, individuals, families, counts ):
     n_desc = 0
     n_child = 0
+    n_gen = 0
     if 'fams' in individuals[indi]:
        for fam in individuals[indi]['fams']:
            for child in families[fam]['chil']:
@@ -1776,17 +1777,10 @@ def get_indi_descendant_count( indi, individuals, families, counts ):
                if child not in counts:
                   counts[child] = get_indi_descendant_count( child, individuals, families, counts )
                n_desc += 1 + counts[child][1]
-    return ( n_child, n_desc )
-
-
-def get_indi_descendant_generations( indi, individuals, families, counts ):
-    # debug
-    # count number of children
-    n = 0
-    if 'fams' in individuals[indi]:
-       for fam in individuals[indi]['fams']:
-           n = len( families[fam]['chil'] )
-    return n
+               n_gen = max( n_gen, counts[child][2] )
+    if n_child > 0:
+       n_gen += 1
+    return ( n_child, n_desc, n_gen )
 
 
 def report_descendant_count( data ):
@@ -1809,13 +1803,10 @@ def report_descendant_count( data ):
         return result
 
     counted = dict()
-    gens = dict()
 
     for indi in data[PARSED_INDI]:
         if indi not in counted:
            counted[indi] = get_indi_descendant_count( indi, data[PARSED_INDI], data[PARSED_FAM], counted )
-        if indi not in gens:
-           gens[indi] = get_indi_descendant_generations( indi, data[PARSED_INDI], data[PARSED_FAM], gens )
 
     print( 'id\tName\tBirth\tDeath\tChildren\tDescendants\tGenerations' )
     for indi in counted:
@@ -1825,6 +1816,5 @@ def report_descendant_count( data ):
         out += '\t' + get_indi_date( data[PARSED_INDI][indi], 'deat' )
         out += '\t' + str(counted[indi][0])
         out += '\t' + str(counted[indi][1] )
-        #out += '\t' + str(gens[indi])
-        out += '\t' + '?'
+        out += '\t' + str(counted[indi][2] )
         print( out )
