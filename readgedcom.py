@@ -37,7 +37,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9.7
+v0.9.8
 """
 
 import sys
@@ -870,6 +870,7 @@ def handle_event_tag( tag, level1, out_data ):
     value = level1['value']
     if value:
        if value.lower() == 'y':
+          values['date'] = handle_event_dates( '' )
           values['flagged'] = True
        else:
           ancestry_note = value.replace( '  ', ' ' )
@@ -1001,6 +1002,9 @@ def parse_family( level0, out_data ):
 
     # Use this flag on output of modified data
     out_data[PRIVATIZE_FLAG] = PRIVATIZE_OFF
+
+    # Guarantee a child tag exists.The husb and wife might not.
+    out_data['chil'] = []
 
     for level1 in level0['sub']:
         tag = level1['tag']
@@ -1762,17 +1766,27 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
     return result
 
 
-def get_indi_descendant_count( gen, indi, individuals, families, counts ):
-    count = 0
-    max_gen = gen
+def get_indi_descendant_count( indi, individuals, families, counts ):
+    n_desc = 0
+    n_child = 0
     if 'fams' in individuals[indi]:
        for fam in individuals[indi]['fams']:
            for child in families[fam]['chil']:
+               n_child += 1
                if child not in counts:
-                  counts[child] = get_indi_descendant_count( gen+1, child, individuals, families, counts )
-               max_gen = max( max_gen, counts[child][0] )
-               count = 1 + counts[child][1]
-    return ( max_gen, count )
+                  counts[child] = get_indi_descendant_count( child, individuals, families, counts )
+               n_desc += 1 + counts[child][1]
+    return ( n_child, n_desc )
+
+
+def get_indi_descendant_generations( indi, individuals, families, counts ):
+    # debug
+    # count number of children
+    n = 0
+    if 'fams' in individuals[indi]:
+       for fam in individuals[indi]['fams']:
+           n = len( families[fam]['chil'] )
+    return n
 
 
 def report_descendant_count( data ):
@@ -1795,17 +1809,22 @@ def report_descendant_count( data ):
         return result
 
     counted = dict()
+    gens = dict()
 
     for indi in data[PARSED_INDI]:
         if indi not in counted:
-           counted[indi] = get_indi_descendant_count( 0, indi, data[PARSED_INDI], data[PARSED_FAM], counted )
+           counted[indi] = get_indi_descendant_count( indi, data[PARSED_INDI], data[PARSED_FAM], counted )
+        if indi not in gens:
+           gens[indi] = get_indi_descendant_generations( indi, data[PARSED_INDI], data[PARSED_FAM], gens )
 
-    print( 'id\tName\tBirth\tDeath\tGenerations\tDesc. count' )
+    print( 'id\tName\tBirth\tDeath\tChildren\tDescendants\tGenerations' )
     for indi in counted:
         out = indi
         out += '\t' + data[PARSED_INDI][indi]['name'][0]['display']
         out += '\t' + get_indi_date( data[PARSED_INDI][indi], 'birt' )
         out += '\t' + get_indi_date( data[PARSED_INDI][indi], 'deat' )
         out += '\t' + str(counted[indi][0])
-        out += '\t' + str(counted[indi][1])
+        out += '\t' + str(counted[indi][1] )
+        #out += '\t' + str(gens[indi])
+        out += '\t' + '?'
         print( out )
