@@ -192,7 +192,7 @@
                    'value': '@I52@'}],
           'tag': '@f12@',
           'value': 'FAM'}],
- 'individuals': {'i32': {'best-events': {'birt': 0, 'deat': 0, 'sex': 0},
+ 'individuals': {'i32': {'best-events': {'name': 0, 'birt': 0, 'deat': 0, 'sex': 0},
                          'birt': [{'date': {'in': '14 DEC 1895',
                                             'is_known': True,
                                             'is_range': False,
