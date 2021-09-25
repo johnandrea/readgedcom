@@ -20,6 +20,10 @@ Public functions:
 
     report_descendant_report( data )
 
+    id_list = find_individuals( data, search_tag, search_value, operation='=' )
+
+    print_individuals( data, id_list )
+
 
 The input file should be well formed as this code only checks for
 a few structural errors. A verification program can be found here:
@@ -37,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9.9
+v0.9.10
 """
 
 import sys
@@ -194,6 +198,16 @@ def string_like_int( s ):
     if re.search( r'\D', s ):
        return False
     return True
+
+
+def yyyymmdd_to_date( yyyymmdd ):
+                     #01234567
+    """ Return the human form of dd mmm yyyy. """
+    y = yyyymmdd[:4]
+    m = yyyymmdd[4:6]
+    d = yyyymmdd[6:]
+
+    return d + ' ' + MONTH_NAMES[int(m)] + ' ' + y
 
 
 def comparable_before_today( years_ago ):
@@ -1708,6 +1722,56 @@ def match_individual( indi_data, tag, subtag, search_value, operation ):
     return found
 
 
+def get_indi_display( indi_data ):
+    """ Return a dict of basic details for an individual. """
+
+    def get_indi_date( indi_data, tag ):
+        """ Return the best input file date for the given tag, or the empty string. """
+        result = ''
+        best = 0
+        if BEST_EVENT_KEY in indi_data:
+           if tag in indi_data[BEST_EVENT_KEY]:
+              best = indi_data[BEST_EVENT_KEY][tag]
+        if tag in indi_data:
+           if indi_data[tag][best]['date']['is_known']:
+              result = indi_data[tag][best]['date']['min']['modifier']
+              result += ' ' + yyyymmdd_to_date( indi_data[tag][best]['date']['min']['value'] )
+              if indi_data[tag][best]['date']['is_range']:
+                 result += ' ' + indi_data[tag][best]['date']['max']['modifier']
+                 result += ' ' + yyyymmdd_to_date( indi_data[tag][best]['date']['max']['value'] )
+        return result.upper().replace( '  ', ' ' ).strip()
+
+    result = dict()
+
+    result['name'] = indi_data['name'][0]['display']
+    result['unicode'] = indi_data['name'][0]['unicode']
+    result['html'] = indi_data['name'][0]['html']
+    result['birt'] = get_indi_date( indi_data, 'birt' )
+    result['deat'] = get_indi_date( indi_data, 'deat' )
+
+    return result
+
+
+def print_individuals( data, id_list ):
+    """
+    Print to stdout the vital details for the people in the id list,
+    such as returned by the finf function.
+    """
+
+    assert isinstance( id_list, list ), 'Non-list passed as id_list'
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
+
+    # header
+    print( 'id\tName\tBirth\tDeath' )
+
+    for indi in id_list:
+        if isinstance( indi, str ):
+           if indi in data[PARSED_INDI]:
+              info = get_indi_display( data[PARSED_INDI][indi] )
+              print( indi + '\t' + info['name'] + '\t' + info['birt'] + '\t' + info['deat'] )
+
+
 def find_individuals( data, search_tag, search_value, operation='=' ):
     """
     Return a list of ids of the individual which match the search conditions.
@@ -1773,48 +1837,67 @@ def get_indi_descendant_count( indi, individuals, families, counts ):
     if 'fams' in individuals[indi]:
        for fam in individuals[indi]['fams']:
            for child in families[fam]['chil']:
+               # one more child for this person
                n_child += 1
                if child not in counts:
                   counts[child] = get_indi_descendant_count( child, individuals, families, counts )
+               # this child plus the child's descendants
                n_desc += 1 + counts[child][1]
+               # largest generations of all the children
                n_gen = max( n_gen, counts[child][2] )
     if n_child > 0:
+       # count the children's generation
        n_gen += 1
     return ( n_child, n_desc, n_gen )
 
 
-def report_descendant_count( data ):
+def print_descendant_count( indi, indi_data, indi_counts, header=False ):
+    """ Print a single count line. """
+
+    if header:
+       print( 'id\tName\tBirth\tDeath\tChildren\tDescendants\tGenerations' )
+    else:
+       results = get_indi_display( indi_data )
+       out = indi
+       out += '\t' + results['name']
+       out += '\t' + results['birt']
+       out += '\t' + results['deat']
+       out += '\t' + str( indi_counts[0] )
+       out += '\t' + str( indi_counts[1] )
+       out += '\t' + str( indi_counts[2] )
+       print( out )
+
+
+def report_indi_descendant_count( indi, data ):
+    """
+    Print to stdout a tab delimited file of this person's descendant count.
+    """
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
+    assert isinstance( indi, str ), 'Non-string given as the individual id'
+
+    print_descendant_count( None, None, None, header=True )
+
+    if indi in data[PARSED_INDI]:
+       counts = dict()
+       indi_counts = get_indi_descendant_count( indi, data[PARSED_INDI], data[PARSED_FAM], counts )
+       print_descendant_count( indi, data[PARSED_INDI][indi], indi_counts )
+
+
+def report_all_descendant_count( data ):
     """
     Print to stdout a tab delimited file of everyone and their descendant count.
     """
     assert isinstance( data, dict ), 'Non-dict passed as data'
     assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
 
-    def get_indi_date( indi_data, tag ):
-        """ Return the best input file date for the given tag. """
-        result = ''
-        best = 0
-        if BEST_EVENT_KEY in indi_data:
-           if tag in indi_data[BEST_EVENT_KEY]:
-              best = indi_data[BEST_EVENT_KEY][tag]
-        if tag in indi_data:
-           if indi_data[tag][best]['date']['is_known']:
-              result = indi_data[tag][best]['date']['in']
-        return result
-
-    counted = dict()
+    counts = dict()
 
     for indi in data[PARSED_INDI]:
-        if indi not in counted:
-           counted[indi] = get_indi_descendant_count( indi, data[PARSED_INDI], data[PARSED_FAM], counted )
+        if indi not in counts:
+           counts[indi] = get_indi_descendant_count( indi, data[PARSED_INDI], data[PARSED_FAM], counts )
 
-    print( 'id\tName\tBirth\tDeath\tChildren\tDescendants\tGenerations' )
-    for indi in counted:
-        out = indi
-        out += '\t' + data[PARSED_INDI][indi]['name'][0]['display']
-        out += '\t' + get_indi_date( data[PARSED_INDI][indi], 'birt' )
-        out += '\t' + get_indi_date( data[PARSED_INDI][indi], 'deat' )
-        out += '\t' + str(counted[indi][0])
-        out += '\t' + str(counted[indi][1] )
-        out += '\t' + str(counted[indi][2] )
-        print( out )
+    print_descendant_count( None, None, None, header=True )
+
+    for indi in counts:
+        print_descendant_count( indi, data[PARSED_INDI][indi], counts[indi] )

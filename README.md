@@ -36,14 +36,17 @@ unset_privatize_flag( data )
 
 output_privatized( data, out_file_name )
 
-list_of_indi = find_individuals( data, search_tag, search_value, operation )
-
 report_individual_double_facts( data )
 
 report_family_double_facts( data )
 
-report_descendant_count( data )
+report_all_descendant_count( data )
 
+report_indi_descendant_count( indi, data )
+
+list_of_indi = find_individuals( data, search_tag, search_value, operation )
+
+print_individuals( data, list_of_indi )
 ```
 
 ### Basic usage
@@ -89,40 +92,9 @@ found_age = readgedcom.find_individuals( data, 'birt.date', '19600101', '<' )
 # intersection of the two lists
 found_both = [item for item in found_name if item in found_age]
 
-for indi in found_both:
-    print( '' )
-    print( indi )
-    print( data[readgedcom.PARSED_INDI][indi]['name'][0]['value'] )
-    print( data[readgedcom.PARSED_INDI][indi]['birt'][0]['date']['in'] )
+readgedcom.print_individuals( data, found_both )
 ```
 
-A slightly more correct version of the above script
-```
-#!/usr/bin/python3
-
-import sys
-import readgedcom
-
-def show_indi( indi_data ):
-    print( indi_data['name'][0]['value'] )
-    # this person has a known birth, no need to check for key existance
-    best = indi_data[readgedcom.BEST_EVENT_KEY]['birt']
-    print( indi_data['birt'][best]['date']['in'] )
-
-data = readgedcom.read_file( sys.argv[1] )
-
-found_name = readgedcom.find_individuals( data, 'name', 'Anne ', 'in' )
-found_age = readgedcom.find_individuals( data, 'birt.date', '19600101', '<' )
-
-# intersection of the two lists
-found_both = [item for item in found_name if item in found_age]
-
-for indi in found_both:
-    print( '' )
-    print( indi )
-    show_indi( data[readgedcom.PARSED_INDI][indi] )
-
-```
 
 A script to output the descendants of a selected individual (by EXID)
 into a JSON file.
@@ -313,3 +285,4 @@ This code is provided with neither support nor warranty.
 ### Future enhancements
 
 - Collect name type (nickname, aka, etc.) into the individual parsed section.
+- Find people pased on custom events.
