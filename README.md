@@ -263,7 +263,7 @@ Each one of the "min" and "max" dates themselves is a dict structure:
 {
   'modifier': empty string, or one of "abt", "bef", "aft", etc.,
   'value': 'yyyymmdd',
-  'year': they year only portion as an int
+  'year': only the year portion, as an int
 }
 ```
 
@@ -285,4 +285,5 @@ This code is provided with neither support nor warranty.
 ### Future enhancements
 
 - Collect name type (nickname, aka, etc.) into the individual parsed section.
-- Find people pased on custom events.
+- Find people based on custom events.
+- Use proof flags of other programs /9not just RootsMagic).
