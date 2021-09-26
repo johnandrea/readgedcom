@@ -189,29 +189,29 @@ index 1 = second record, etc.
 
 There are two other top level keys:
 ```
-   data['individuals'] = dict()
-   data['families'] = dict()
+   data[readgedcom.PARSED_INDI] = dict()
+   data[readgedcom.PARSED_FAM] = dict()
 ```
 Those are refered to as the "parsed" sections because they are created
 from the matching input file sections into a more easily scanned format.
    Each of those dicts has a key of the indi or family xref (without the "@" sign).
 For example:
 ```
-   data['individuals']['i7'] = dict{}
-   data['individuals']['i32'] = dict{}
-   data['families']['f17'] = dict()
-   data['families']['f58'] = dict()
+   data[readgedcom.PARSED_INDI]['i7'] = dict{}
+   data[readgedcom.PARSED_INDI]['i32'] = dict{}
+   data[readgedcom.PARSED_FAM]['f17'] = dict()
+   data[readgedcom.PARSED_FAM]['f58'] = dict()
 ```
 
 The contents of the individual parsed data have the tag as the key into the dict
 with a list as the value since most items can take multiple entries. Even single
 entry items such as sex are presented as lists to be consistent with the other items.
 ```
-data['individuals']['i7']['name'] = []
-data['individuals']['i7']['sex'] = []
-data['individuals']['i7']['birt'] = []
-data['individuals']['i7']['fams'] = []
-data['individuals']['i7']['famc'] = []
+data[readgedcom.PARSED_INDI]['i7']['name'] = []
+data[readgedcom.PARSED_INDI]['i7']['sex'] = []
+data[readgedcom.PARSED_INDI]['i7']['birt'] = []
+data[readgedcom.PARSED_INDI]['i7']['fams'] = []
+data[readgedcom.PARSED_INDI]['i7']['famc'] = []
 ```
 
 The primary name will always be index 0, others are alternate names. The sex item will also be at index 0. The index for the "best" birth, death, etc. is discussed later.
@@ -287,9 +287,61 @@ this code will create a date structure with a "flagged" key of True such as:
 ```
 'date': { 'flagged': True, 'is_known': False }
 ```
+Otherwise, the "flagged" key does not appear; therefor it should be tested after a test
+for "is_known".
+
 An Ancestry out-of-spec record like the following is parsed as if it is a flagged date:
 ```
 1 DATE Unknown
+```
+
+The parsed families portion has events structured the same as individual events in lists with "best" indexes. Also are 'husb', 'wife' and 'chil' lists; even though 'husb' and 'wife' must occur at most once. 'husb' and 'wife' do not have "best" indexes, and no matter
+what your older siblings might tell you there is no "best" child either. The child list is guaranteed to exist, even if it remains empty.
+
+A family structure could be as simple as:
+```
+{
+ 'wife': ['i32'],
+ 'chil': ['i45']
+}
+```
+
+or a family with children:
+```
+{
+ 'wife': ['i32'],
+ 'husb': ['i73'],
+ 'chil': ['i33','i34'],
+ 'marr': [{'date': {'flagged':True, 'is_known':False}}],
+ 'best-events': {'marr':0}
+}
+```
+
+The "best" event indexes are calculated via weights using the proved and disproved flags.
+For research purposes multiple entries may exist for any event, even birth and death.
+By default the best event is the one first found: index zero. All disproven entries are given the lowest weight, so that they won't be selected unless all that exists are disproven entries. Proven entries get the highest weights so that they will always be selected. But an entry marked as "primary" gets the highest weight. Even a non-proven primary entry out weighs a proven non-primary entry.
+
+The best event indexes are contained in a dict in each parsed individual and parsed family
+section (unless no events exist) as 'tag name:int
+```
+{
+  'best-events': { 'birth':3, 'death':0 }
+}
+```
+
+To display a "best" event, the code is something like this:
+```
+def show_date( indi, tag, indi_data ):
+    print( indi, tag )
+    if tag in indi_data:
+       best = 0
+       if tag in indi_data[readgedcom.BEST_EVENT_KEY]:
+          best = indi_data[readgedcom.BEST_EVENT_KEY][tag]
+       if indi_data[tag][best]['date']['is_known']:
+          print( indi_data[tag][best]['date']['in'] )
+
+for indi in data[readgedcom.PARSED_INDI]:
+    show_date( indi, 'birt', data[readgedcom.PARSED_INDI][indi] ) 
 ```
 
 ## Bug reports
