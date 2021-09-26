@@ -253,7 +253,7 @@ Every date is represented as a structure:
   'is_known': has a date been given. If False there is nothing else in the dict,
   'is_range': is the date is a range type (see GEDCOM spec.),
   'malformed': if the date as input is invalid - therefor is of low quality,
-  'min': minimum date of the range in a dict structure, 
+  'min': minimum date of the range in a dict structure,
   'max': maximum date of the tange, or if not a range same values as "min"
 }
 ```
@@ -276,6 +276,20 @@ A birth event could look like this:
                    'max': {'modifier': '', 'value': '19260421', 'year': 1926},
                    'min': {'modifier': '', 'value': '19260421', 'year': 1926}},
           'plac': 'London'}],
+```
+
+There is a case in the GEDCOM spec which allows an event to be known to have occured
+with an unknown date; refered to as a flagged date.
+```
+1 DATE Y
+```
+this code will create a date structure with a "flagged" key of True such as:
+```
+'date': { 'flagged': True, 'is_known': False }
+```
+An Ancestry out-of-spec record like the following is parsed as if it is a flagged date:
+```
+1 DATE Unknown
 ```
 
 ## Bug reports

@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9.10
+v0.9.11
 """
 
 import sys
@@ -158,12 +158,12 @@ PRIVATIZE_OFF = 0
 PRIVATIZE_MIN = PRIVATIZE_OFF + 1
 PRIVATIZE_MAX = PRIVATIZE_MIN + 1
 
-# Some checking to help prevent typos.
-# I don't imagine it causes much of a performance hit
+# Some checking to help prevent typos. Failure will throw an exception.
+# I don't imagine the checking causes much of a performance hit.
 SELF_CONSISTENCY_CHECKS = True
 SELF_CONSISTENCY_ERR = 'Program code inconsistency:'
 
-# The detected version of the input
+# The detected version of the input file.
 version = ''
 
 
@@ -176,6 +176,7 @@ def convert_to_unicode( text ):
     text = text.replace( '\xe1', '\\u00e1' ) #a acute
     text = text.replace( '\xc1', '\\u00c1' ) #A acute
     text = text.replace( '\xe0', '\\u00e0' ) #a agrave
+    text = text.replace( '\xf6', '\\u00f6' ) #o diaresis
     return text
 
 
@@ -190,6 +191,7 @@ def convert_to_html( text ):
     text = text.replace( '\xe1', '&#225;' ) #a acute
     text = text.replace( '\xc1', '&#193;' ) #A acute
     text = text.replace( '\xe0', '&#224;' ) #a agrave
+    text = text.replace( '\xf6', '&#246;' ) #o diaresis
     return text
 
 
@@ -847,11 +849,7 @@ def set_best_events( event_list, always_first_list, out_data ):
 
 
 def handle_event_dates( value ):
-    """ Parse a event date. Special case for an Ancestry non-standard value."""
-    if value:
-       if value.lower() == 'unknown':
-          # This is an Ancestry mistake, not sure of the semantics
-          value = "bef " + TODAY
+    """ Parse a event date. Special cases could be handled in here."""
     return date_to_structure( value )
 
 
@@ -883,7 +881,9 @@ def handle_event_tag( tag, level1, out_data ):
 
     value = level1['value']
     if value:
-       if value.lower() == 'y':
+       if value.lower() in ['y','unknown']:
+          # The value of "unknown" is an Ancestry out-of-spec record which probably
+          # (I'm guessing) has the same meaning as a flagged date.
           values['date'] = handle_event_dates( '' )
           values['flagged'] = True
        else:
