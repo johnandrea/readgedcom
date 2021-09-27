@@ -322,6 +322,8 @@ The "best" event indexes are calculated via weights using the proved and disprov
 For research purposes multiple entries may exist for any event, even birth and death.
 By default the best event is the one first found: index zero. All disproven entries are given the lowest weight, so that they won't be selected unless all that exists are disproven entries. Proven entries get the highest weights so that they will always be selected. But an entry marked as "primary" gets the highest weight. Even a non-proven primary entry out weighs a proven non-primary entry.
 
+The proof/disproved/primary options are specific to RootsMagic exported files.
+
 The best event indexes are contained in a dict in each parsed individual and parsed family
 section (unless no events exist) as 'tag name:int
 ```

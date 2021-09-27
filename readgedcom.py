@@ -103,7 +103,7 @@ BEST_EVENT_KEY = 'best-events'
 
 # Tags for proof and primary in the case of multiple event records.
 # These are RootsMagic specific. A future version might try to detect the product
-# which exported the GEDCOM file.
+# which exported the GEDCOM file. Though such options might not be elsewhere.
 EVENT_PRIMARY_TAG = '_prim'
 EVENT_PRIMARY_VALUE = 'y'
 EVENT_PROOF_TAG = '_proof'
