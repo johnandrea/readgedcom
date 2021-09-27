@@ -12,10 +12,11 @@ A library for reading and parsing genealogy GEDCOM files.
 - Requires Python 3.6+
 - GEDCOM versions 5.5, 5.5.1, 7.0.x
   https://gedcom.io/specs/
-- Input file should be well formed. Check with a validator such as
+- Does not support GEDCOM ZIP
+- Input file should be well-formed. Check with a validator such as
  https://chronoplexsoftware.com/gedcomvalidator/
 - Maximum of 5 levels of sub-structures
-- No mechanism to output parsed data as a new GEDCOM after manipulation. Instead
+- No mechanism to output parsed data as a new GEDCOM after manipulation. Instead,
  use a genealogy program.
 
 ## Installation
@@ -193,7 +194,7 @@ There are two other top level keys:
    data[readgedcom.PARSED_INDI] = dict()
    data[readgedcom.PARSED_FAM] = dict()
 ```
-Those are refered to as the "parsed" sections because they are created
+Those are referred to as the "parsed" sections because they are created
 from the matching input file sections into a more easily scanned format.
    Each of those dicts has a key of the indi or family xref (without the "@" sign).
 For example:
@@ -255,7 +256,7 @@ Every date is represented as a structure:
   'is_range': is the date is a range type (see GEDCOM spec.),
   'malformed': if the date as input is invalid - therefor is of low quality,
   'min': minimum date of the range in a dict structure,
-  'max': maximum date of the tange, or if not a range same values as "min"
+  'max': maximum date of the range, or if not a range same values as "min"
 }
 ```
 
@@ -279,8 +280,8 @@ A birth event could look like this:
           'plac': 'London'}],
 ```
 
-There is a case in the GEDCOM spec which allows an event to be known to have occured
-with an unknown date; refered to as a flagged date.
+There is a case in the GEDCOM spec which allows an event to be known to have occurred
+with an unknown date; referred to as a flagged date.
 ```
 2 DATE Y
 ```

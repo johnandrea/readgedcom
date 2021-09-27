@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9.13
+v1.0
 """
 
 import sys
@@ -58,12 +58,13 @@ SUPPORTED_VERSIONS = [ '5.5', '5.5.1', '7.0.x' ]
 
 # Section types, listed in order or at least header first and trailer last.
 # Some are not valid in GEDCOM 5.5.x, but that's ok if they are not found.
-# Including a RootsMagic specific: _evdef
+# Including a RootsMagic specific: _evdef, _todo
+# Including Legacy specific: _plac_defn, _event_defn
 SECT_HEAD = 'head'
 SECT_INDI = 'indi'
 SECT_FAM = 'fam'
 SECT_TRLR = 'trlr'
-SECTION_NAMES = [SECT_HEAD, 'subm', SECT_INDI, SECT_FAM, 'obje', 'repo', 'snote', 'sour', '_evdef', SECT_TRLR]
+SECTION_NAMES = [SECT_HEAD, 'subm', SECT_INDI, SECT_FAM, 'obje', 'repo', 'snote', 'sour', '_evdef', '_todo', '_plac_defn', '_event_defn', SECT_TRLR]
 
 # Sections to be created by the parsing
 PARSED_INDI = 'individuals'
@@ -151,8 +152,8 @@ DATA_WARN = 'Warning. Use a validator. '
 
 # What to do with unknown sections
 CRASH_ON_UNK_SECTION = False
-UNK_SECTION_ERR = 'Unknown section. '
-UNK_SECTION_WARN = 'Warning. Ignoring unknown section.'
+UNK_SECTION_ERR = 'Unknown section: '
+UNK_SECTION_WARN = 'Warning. Ignoring unknown section:'
 
 # dd mmm yyyy - same format as gedcom
 TODAY = datetime.datetime.now().strftime("%d %b %Y")
@@ -1480,14 +1481,8 @@ def read_in_data( inf, data ):
               elif '@ snote' in lc_line:
                  sect = 'snote'
 
-              elif lc_line.startswith( '0 _evdef' ):
-                 sect = '_evdef'
-
-              elif lc_line.startswith( '0 _todo' ):
-                 sect = '_todo'
-
               else:
-                 sect = '?'
+                 sect = lc_line.replace( '0 ', '', 1 )
 
               if sect != SECT_HEAD:
                  # Test for version as soon as header is finished
@@ -1498,6 +1493,8 @@ def read_in_data( inf, data ):
                  if CRASH_ON_UNK_SECTION:
                     raise ValueError( UNK_SECTION_ERR + str(line) )
                  print( UNK_SECTION_WARN, line, file=sys.stderr )
+                 if sect not in data:
+                    data[sect] = []
 
               if not ignore_line:
                  data[sect].append( line_values( line ) )
@@ -1551,7 +1548,7 @@ def read_file( datafile ):
     Warnings will be printed to std-err.
     ValueError will be thrown for non-recoverable data errors.
     """
-    assert isinstance( datafile, str ), 'Non-string passed as the filename'
+    assert isinstance( datafile, str ), 'Non-string passed as the filename.'
 
     # See the related document for the format of the dict.
 
@@ -1561,8 +1558,9 @@ def read_file( datafile ):
            for parsed_sect in [PARSED_INDI, PARSED_FAM]:
                if sect.lower().strip() == parsed_sect.lower().strip():
                   raise ValueError( SELF_CONSISTENCY_ERR + 'section name duplication:' + str(sect) )
+       if PARSED_INDI == PARSED_FAM:
+          raise ValueError( SELF_CONSISTENCY_ERR + 'section name duplication:' + str(PARSED_INDI) )
        ensure_lowercase_constants()
-
 
     # The file read into a data structure.
     data = dict()
@@ -1572,7 +1570,7 @@ def read_file( datafile ):
     for sect in SECTION_NAMES:
         data[sect] = []
 
-    # Sections to be created.
+    # Other sections to be created.
     for sect in [PARSED_INDI, PARSED_FAM]:
         data[sect] = dict()
 
@@ -1585,12 +1583,12 @@ def read_file( datafile ):
        raise ValueError( DATA_ERR + 'Trailer must occur once and only once.' )
 
     if len( data[SECT_INDI] ) < 1:
-       raise ValueError( DATA_ERR + 'No individuals' )
+       raise ValueError( DATA_ERR + 'No individuals.' )
     if len( data[SECT_FAM] ) < 1:
        # This is not a fatal problem, only a warning
-       print( DATA_WARN, 'No families', file=sys.stderr )
+       print( DATA_WARN, 'No families.', file=sys.stderr )
 
-    # Since the data passed are serios tests; form the other portion of the data
+    # Since the data has passed the serious tests; form the other portion of the data
     setup_parsed_sections( data )
 
     # and do some checking
