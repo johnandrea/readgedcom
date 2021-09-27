@@ -356,3 +356,4 @@ This code is provided with neither support nor warranty.
 - Collect name type (nickname, aka, etc.) into the individual parsed section.
 - Find people based on custom events.
 - Use proof flags of other programs (not just RootsMagic).
+- Pass error handling options to read_file.

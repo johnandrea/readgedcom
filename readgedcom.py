@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v0.9.11
+v0.9.13
 """
 
 import sys
@@ -148,6 +148,11 @@ DATE_ERR = 'Malformed date:'
 # The message for data file troubles
 DATA_ERR = 'GEDCOM error. Use a validator. '
 DATA_WARN = 'Warning. Use a validator. '
+
+# What to do with unknown sections
+CRASH_ON_UNK_SECTION = False
+UNK_SECTION_ERR = 'Unknown section. '
+UNK_SECTION_WARN = 'Warning. Ignoring unknown section.'
 
 # dd mmm yyyy - same format as gedcom
 TODAY = datetime.datetime.now().strftime("%d %b %Y")
@@ -1478,6 +1483,9 @@ def read_in_data( inf, data ):
               elif lc_line.startswith( '0 _evdef' ):
                  sect = '_evdef'
 
+              elif lc_line.startswith( '0 _todo' ):
+                 sect = '_todo'
+
               else:
                  sect = '?'
 
@@ -1487,7 +1495,9 @@ def read_in_data( inf, data ):
                     version = confirm_gedcom_version( data )
 
               if sect not in SECTION_NAMES:
-                 raise ValueError( 'Unknown section:' + str(line) )
+                 if CRASH_ON_UNK_SECTION:
+                    raise ValueError( UNK_SECTION_ERR + str(line) )
+                 print( UNK_SECTION_WARN, line, file=sys.stderr )
 
               if not ignore_line:
                  data[sect].append( line_values( line ) )
