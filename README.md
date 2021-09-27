@@ -282,7 +282,7 @@ A birth event could look like this:
 There is a case in the GEDCOM spec which allows an event to be known to have occured
 with an unknown date; refered to as a flagged date.
 ```
-1 DATE Y
+2 DATE Y
 ```
 this code will create a date structure with a "flagged" key of True such as:
 ```
@@ -293,7 +293,7 @@ for "is_known".
 
 An Ancestry out-of-spec record like the following is parsed as if it is a flagged date:
 ```
-1 DATE Unknown
+2 DATE Unknown
 ```
 
 The parsed families portion has events structured the same as individual events in lists with "best" indexes. Also are 'husb', 'wife' and 'chil' lists; even though 'husb' and 'wife' must occur at most once. 'husb' and 'wife' do not have "best" indexes, and no matter
