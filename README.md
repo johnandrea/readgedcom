@@ -49,6 +49,10 @@ report_indi_descendant_count( indi, data )
 list_of_indi = find_individuals( data, search_tag, search_value, operation )
 
 print_individuals( data, list_of_indi )
+
+output_all_dot( data [, out_file] )
+
+output_indi_ancestor_dot( data, indi [, out_file] )
 ```
 
 ### Basic usage
@@ -160,6 +164,26 @@ else:
 
    with open( out_file, 'w' ) as outf:
         json.dump( descendants, outf, indent=1 )
+```
+
+A script to output in Graphviz Dot format of ancestors of selected individuals.
+
+```
+#!/usr/bin/python3
+
+import sys
+import readgedcom
+
+datafile = sys.argv[1]
+
+data = readgedcom.read_file( datafile )
+
+# everyone born after 1975
+found_ids = readgedcom.find_individuals( data, 'birt.date', '19750101', '>=' )
+
+for indi in found_ids:
+    out_file = str(indi) + '.dot'
+    readgedcom.output_indi_ancestor_dot( data, indi, out_file )
 ```
 
 ## Data structure

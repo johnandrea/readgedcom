@@ -24,6 +24,10 @@ Public functions:
 
     print_individuals( data, id_list )
 
+    output_indi_ancestor_dot( data, indi [,output_file] )
+
+    output_all_dot( data [,output_file] )
+
 
 The input file should be well formed as this code only checks for
 a few structural errors. A verification program can be found here:
@@ -41,7 +45,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v1.0
+v1.1
 """
 
 import sys
@@ -1734,28 +1738,42 @@ def get_indi_display( indi_data ):
     """ Return a dict of basic details for an individual. """
 
     def get_indi_date( indi_data, tag ):
-        """ Return the best input file date for the given tag, or the empty string. """
-        result = ''
+        """ Return the best input file date for the given tag, or the empty string.
+            Two date items are returned:  [modifier] dd mmm yyyy  and  [modifier] year """
+        def cleanup( s ):
+            return s.upper().replace( '  ', ' ' ).strip()
+
+        full_result = ''
+        year_result = ''
         best = 0
         if BEST_EVENT_KEY in indi_data:
            if tag in indi_data[BEST_EVENT_KEY]:
               best = indi_data[BEST_EVENT_KEY][tag]
         if tag in indi_data:
            if indi_data[tag][best]['date']['is_known']:
-              result = indi_data[tag][best]['date']['min']['modifier']
-              result += ' ' + yyyymmdd_to_date( indi_data[tag][best]['date']['min']['value'] )
+              modifier = indi_data[tag][best]['date']['min']['modifier']
+              value = indi_data[tag][best]['date']['min']['value']
+              full_result = modifier + ' ' + yyyymmdd_to_date( value )
+              year_result = modifier + ' ' + value[0:4]
               if indi_data[tag][best]['date']['is_range']:
-                 result += ' ' + indi_data[tag][best]['date']['max']['modifier']
-                 result += ' ' + yyyymmdd_to_date( indi_data[tag][best]['date']['max']['value'] )
-        return result.upper().replace( '  ', ' ' ).strip()
+                 modifier = indi_data[tag][best]['date']['max']['modifier']
+                 value = indi_data[tag][best]['date']['max']['value']
+                 full_result += ' ' + modifier + ' ' + yyyymmdd_to_date( value )
+        return [ cleanup(full_result), cleanup(year_result) ]
 
     result = dict()
 
     result['name'] = indi_data['name'][0]['display']
     result['unicode'] = indi_data['name'][0]['unicode']
     result['html'] = indi_data['name'][0]['html']
-    result['birt'] = get_indi_date( indi_data, 'birt' )
-    result['deat'] = get_indi_date( indi_data, 'deat' )
+
+    date_result = get_indi_date( indi_data, 'birt' )
+    result['birt'] = date_result[0]
+    result['birt.year'] = date_result[1]
+
+    date_result = get_indi_date( indi_data, 'deat' )
+    result['deat'] = date_result[0]
+    result['deat.year'] = date_result[1]
 
     return result
 
@@ -1909,3 +1927,182 @@ def report_all_descendant_count( data ):
 
     for indi in counts:
         print_descendant_count( indi, data[PARSED_INDI][indi], counts[indi] )
+
+
+def out_file_all_dot( data, fh ):
+    def get_info( indi_data ):
+        info = get_indi_display( indi_data )
+        return info['html']
+    def draw_link( indi_link, parents_tag, fh ):
+        # the middle of the parent record
+        parents_link = parents_tag + ':p'
+        print( indi_link + ' -> ' + parents_link + ';', file=fh )
+    def make_fam_tag( fam ):
+        # to identify the record in the dot output
+        return 'f_' + str( fam )
+    def make_indi_tag( indi ):
+        # to identify the record in the dot output
+        return 'i_' + str( indi )
+    def output_parent_pairs( individuals, families, fh ):
+        for fam in families:
+            names = dict()
+            for partner in ['husb','wife']:
+                names[partner] = UNKNOWN_NAME
+                if partner in families[fam]:
+                   indi = families[fam][partner][0]
+                   names[partner] = get_info( individuals[indi] )
+
+            # label ids are h=husb, w=wife => first character of the word
+            out = make_fam_tag( fam ) + ' [label="'
+            out += '<h>' + names['husb']
+            out += '|<p>|'  # middle area, potentially marriage date could go in here
+            out += '<w>' + names['wife']
+            out += '"];'
+            print( out, file=fh )
+
+    def link_parents_to_grand( individuals, families, fh ):
+        for fam in families:
+            for partner in ['husb','wife']:
+                if partner in families[fam]:
+                   indi = families[fam][partner][0]
+                   if 'famc' in individuals[indi] and individuals[indi]['famc'][0]:
+                      parents_fam = individuals[indi]['famc'][0]
+                      parents_tag = make_fam_tag( parents_fam )
+                      # get the h or w part of this marriage record
+                      partner_link = make_fam_tag( fam ) + ':' + partner[0]
+                      draw_link( partner_link, parents_tag, fh )
+
+    def link_single_to_parents( individuals, fh ):
+        for indi in individuals:
+            if 'fams' not in individuals[indi]:
+               if 'famc' in individuals[indi] and individuals[indi]['famc'][0]:
+                  indi_tag = make_indi_tag( indi )
+                  info = get_info( individuals[indi] )
+                  parents_tag = make_fam_tag( individuals[indi]['famc'][0] )
+                  print( indi_tag + ' [label="<i> ' + info + '"];', file=fh )
+                  draw_link( indi_tag + ':i', parents_tag, fh )
+
+    print( 'digraph family {', file=fh )
+    print( 'node [shape=record];', file=fh )
+    print( 'rankdir=LR;', file=fh )
+
+    # output all the marriage/partnership records
+    output_parent_pairs( data[PARSED_INDI], data[PARSED_FAM], fh )
+
+    # connect each member of a marriage to their parents
+    link_parents_to_grand( data[PARSED_INDI], data[PARSED_FAM], fh )
+
+    # everyone else
+    link_single_to_parents( data[PARSED_INDI], fh )
+
+    # done
+    print( '}', file=fh )
+
+
+def out_file_indi_ancestor_dot( data, indi, fh ):
+    def get_info( indi_data ):
+        # potentially check for privitization
+        info = get_indi_display( indi_data )
+        result = info['html']
+        dates = info['birt.year'] + ' - ' + info['deat.year']
+        dates = dates.strip()
+        if dates and dates != '-':
+           # not a newline, but the string that will become a newline
+           result += '\\n' + dates
+        return result
+    def make_fam_tag( fam ):
+        # to identify the record in the dot output
+        return 'f_' + str(fam)
+    def make_indi_tag( indi ):
+        # to identify the record in the dot output
+        return 'i_' + str(indi)
+    def link_parents( individuals, families, fam, indi_link, fh ):
+        names = dict()
+        for partner in ['husb','wife']:
+            names[partner] = UNKNOWN_NAME
+            if partner in families[fam]:
+               indi = families[fam][partner][0]
+               names[partner] = get_info( individuals[indi] )
+
+        fam_tag = make_fam_tag( fam )
+
+        # draw the box for the parents
+        out = fam_tag + ' [label="'
+        out += '<h>' + names['husb']
+        out += '|<p>|'  # potentially marriage date could go in here
+        out += '<w>' + names['wife']
+        out += '"];'
+        print( out, file=fh )
+
+        # connect the child
+        parents_link = fam_tag + ':p'
+        print( indi_link + ' -> ' + parents_link + ';', file=fh )
+
+        # follow the parents
+        for partner in ['husb','wife']:
+            if partner in families[fam]:
+               partner_id = families[fam][partner][0]
+               if 'famc' in individuals[partner_id] and individuals[partner_id]['famc'][0]:
+                  grandparent_fam = individuals[partner_id]['famc'][0]
+                  partner_link = fam_tag + ':' + partner[0]
+                  link_parents( individuals, families, grandparent_fam, partner_link, fh )
+
+    print( 'digraph family {', file=fh )
+    print( 'node [shape=record];', file=fh )
+    print( 'rankdir=LR;', file=fh )
+
+    # the individual
+    info = get_info( data[PARSED_INDI][indi] )
+    indi_tag = make_indi_tag( indi )
+    print( indi_tag + '[label="<i> ' + info + '"];', file=fh )
+
+    if 'famc' in data[PARSED_INDI][indi] and data[PARSED_INDI][indi]['famc'][0]:
+       indi_link = indi_tag + ':i'
+       parents_fam = data[PARSED_INDI][indi]['famc'][0]
+       link_parents( data[PARSED_INDI], data[PARSED_FAM], parents_fam, indi_link, fh )
+
+    # done
+    print( '}', file=fh )
+
+
+def output_indi_ancestor_dot( data, indi, out_name=None ):
+    """
+    Print a Graphviz dot file representation of the ancetors or the given individual.
+    If the third parameter exists: output to that filename, else output to stdout.
+    """
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
+
+    plain_file = False
+
+    fh = sys.stdout
+    if out_name and out_name != '-':
+       plain_file = True
+       fh = open( out_name, 'w' )
+
+    if indi in data[PARSED_INDI]:
+       out_file_indi_ancestor_dot( data, indi, fh )
+
+    if plain_file:
+       fh.close()
+
+
+def output_all_dot( data, out_name=None ):
+    """
+    Print a Graphviz dot file representation of all the families in the data.
+    If the second parameter exists: output to that filename, else output to stdout.
+    """
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
+
+    plain_file = False
+
+    fh = sys.stdout
+    if out_name and out_name != '-':
+       plain_file = True
+       fh = open( out_name, 'w' )
+
+    out_file_all_dot( data, fh )
+
+    if plain_file:
+       fh.close()
