@@ -81,7 +81,16 @@ data = readgedcom.read_file( sys.argv[1] )
 pprint.pprint( data )
 ```
 
-A script to display everyone in Graphviz DOT format to stdout.
+A script (named dotall.py) to display everyone in Graphviz DOT format to stdout.
+Run like this:
+```
+dotall.py  filename.ged  >filename.dot
+graphviz -Tpng filename.dot -o filename.png
+```
+
+This may not be an appropriate method for display of a large family. Perhaps
+useful for input to other analysis programs.
+
 ```
 #!/usr/bin/python3
 
