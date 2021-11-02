@@ -166,7 +166,8 @@ else:
         json.dump( descendants, outf, indent=1 )
 ```
 
-A script to output in Graphviz Dot format of ancestors of selected individuals.
+A script to output, in Graphviz Dot format, the ancestors of selected individuals.
+Afterwards for each dot file:  graphviz -Tpng filename.dot -o filename.png
 
 ```
 #!/usr/bin/python3
@@ -179,7 +180,7 @@ datafile = sys.argv[1]
 data = readgedcom.read_file( datafile )
 
 # everyone born after 1975
-found_ids = readgedcom.find_individuals( data, 'birt.date', '19750101', '>=' )
+found_ids = readgedcom.find_individuals( data, 'birt.date', '19761231', '>' )
 
 for indi in found_ids:
     out_file = str(indi) + '.dot'
