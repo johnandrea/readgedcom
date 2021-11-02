@@ -81,6 +81,17 @@ data = readgedcom.read_file( sys.argv[1] )
 pprint.pprint( data )
 ```
 
+A script to display everyone in Graphviz DOT format to stdout.
+```
+#!/usr/bin/python3
+
+import sys
+import readgedcom
+
+data = readgedcom.read_file( sys.argv[1] )
+readgedcom.output_all_dot( data )
+```
+
 ### Advanced Usage
 
 A script to find anyone with the name "Anne" born before 1960.
@@ -180,7 +191,7 @@ datafile = sys.argv[1]
 data = readgedcom.read_file( datafile )
 
 # everyone born after 1975
-found_ids = readgedcom.find_individuals( data, 'birt.date', '19761231', '>' )
+found_ids = readgedcom.find_individuals( data, 'birt.date', '19751231', '>' )
 
 for indi in found_ids:
     out_file = str(indi) + '.dot'
