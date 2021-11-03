@@ -28,6 +28,8 @@ Public functions:
 
     output_all_dot( data [,output_file] )
 
+    output_all_json( data [,output_file] )
+
 
 The input file should be well formed as this code only checks for
 a few structural errors. A verification program can be found here:
@@ -45,10 +47,11 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v1.1
+v1.2
 """
 
 import sys
+import json
 import copy
 import re
 import datetime
@@ -2103,6 +2106,90 @@ def output_all_dot( data, out_name=None ):
        fh = open( out_name, 'w' )
 
     out_file_all_dot( data, fh )
+
+    if plain_file:
+       fh.close()
+
+
+def output_all_json( data, out_name=None ):
+    """
+    Print a JSON file representation of the descendants of everyone.
+    If the second parameter exists: output to that filename, else output to stdout.
+    """
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
+
+    def drop_lead( identifier ):
+        return str(identifier).replace( 'i', '' ).replace( 'f', '' )
+
+    def add_individuals( individuals ):
+        def add_individual( indi_data, name_parts ):
+            result = dict()
+            for item in ['fams','famc']:
+                if item in indi_data:
+                   result[item] = []
+                   for fam in indi_data[item]:
+                       result[item].append( drop_lead( fam ) )
+            item = 'sex'
+            if item in indi_data:
+               result[item] = indi_data[item][0]
+
+            info = get_indi_display( indi_data )
+            result['name'] = info['unicode']
+            if info['birt']:
+               result['birth'] = info['birt']
+            if info['deat']:
+               result['death'] = info['deat']
+
+            for item in name_parts:
+                if item in indi_data and indi_data[item]:
+                   result[name_parts[item]] = convert_to_unicode( indi_data[item] )
+
+            return result
+
+        # match additional parts
+        name_parts = dict()
+        name_parts['givn'] = 'given'
+        name_parts['surn'] = 'surname'
+        name_parts['nick'] = 'nickname'
+
+        result = dict()
+        for indi in individuals:
+            result[drop_lead(indi)] = add_individual( individuals[indi], name_parts )
+        return result
+
+    def add_families( families ):
+        def add_family( fam_data ):
+            result = dict()
+            result['husband'] = None
+            result['wife'] = None
+            result['children'] = []
+            if 'husb' in fam_data:
+               result['husband'] = drop_lead( fam_data['husb'][0] )
+            if 'wife' in fam_data:
+               result['wife'] = drop_lead( fam_data['wife'][0] )
+            if 'chil' in fam_data:
+               for child in fam_data['chil']:
+                   result['children'].append( drop_lead( child ) )
+            return result
+
+        result = dict()
+        for fam in families:
+            result[drop_lead(fam)] = add_family( families[fam] )
+        return result
+
+    plain_file = False
+
+    fh = sys.stdout
+    if out_name and out_name != '-':
+       plain_file = True
+       fh = open( out_name, 'w' )
+
+    result = dict()
+    result['individuals'] = add_individuals( data[PARSED_INDI] )
+    result['families'] = add_families( data[PARSED_FAM] )
+
+    json.dump( result, fh, indent=2 )
 
     if plain_file:
        fh.close()

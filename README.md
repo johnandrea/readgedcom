@@ -50,6 +50,8 @@ list_of_indi = find_individuals( data, search_tag, search_value, operation )
 
 print_individuals( data, list_of_indi )
 
+output_all_json( data [, out_file] )
+
 output_all_dot( data [, out_file] )
 
 output_indi_ancestor_dot( data, indi [, out_file] )
