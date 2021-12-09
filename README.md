@@ -65,7 +65,7 @@ messages in data['messages'].
 
 | Name  | Default   | Description |
 | :---- | :-------- | :---------- |
-| show-settings | False | Print these settings to stdout. |
+| show-settings | False | Print these settings to stderr. |
 | display-gedcom-warnings | False | Print GEDCOM input warnings to stderr. |
 | exit-on-bad-date | False | Raise exception if malformed date in input, or try to repair. |
 | exit-on-unknown-section | False | Raise exception on an unknown GEDCOM section header. |
