@@ -28,7 +28,7 @@ No installation process. Copy the file next to your application which uses the l
 ### Functions:
 
 ```
-data = read_file( gedcom_file_name )
+data = read_file( gedcom_file_name [, settings] )
 
 output_original( data, out_file_name )
 
@@ -55,6 +55,35 @@ output_all_json( data [, out_file] )
 output_all_dot( data [, out_file] )
 
 output_indi_ancestor_dot( data, indi [, out_file] )
+```
+
+## Settings
+
+The optional dict() of settings can change the display of messages, etc.
+Either way, the returned data structure will contain a list of generated
+messages in data['messages'].
+
+| Name  | Default   | Description |
+| :---- | :-------- | :---------- |
+| show-settings | False | Print these settings to stdout. |
+| display-gedcom-warnings | False | Print GEDCOM input warnings to stderr. |
+| exit-on-bad-date | False | Raise exception if malformed date in input, or try to repair. |
+| exit-on-unknown-section | False | Raise exception on an unknown GEDCOM section header. |
+| exit-on-no-individuals | True | Raise exception  if no individuals found in the input. |
+| exit-on-no-families | False | Raise exception if no families found in the input. |
+| exit-on-missing-individuals | False | Raise exception if an expected individual not found. |
+| exit-on-missing-families | False | Raise exception if an expected family not found. |
+
+
+### Example Settings
+
+```
+opts = dict()
+opts['display-gedcom-warnings'] = False
+opts['show-settings'] = True
+data = readgedcom( filename, opts )
+for mess in data['messages']:
+    print( '   ', mess, file=sys.stderr )
 ```
 
 ### Basic usage
@@ -404,4 +433,4 @@ This code is provided with neither support nor warranty.
 - Collect name type (nickname, aka, etc.) into the individual parsed section.
 - Find people based on custom events.
 - Use proof flags of other programs (not just RootsMagic).
-- Pass error handling options to read_file.
+- Try harder to fix a malformed date. Language parsing in and out.

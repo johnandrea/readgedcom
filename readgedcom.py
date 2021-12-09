@@ -4,7 +4,7 @@ individuals and families for simplified handling; converting to
 HTML pages, JSON data, etc.
 
 Public functions:
-    data = read_file( gedcom_file_name )
+    data = read_file( gedcom_file_name [, settings ] )
 
     output_original( data, out_file_name )
 
@@ -47,7 +47,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v1.2
+v1.3
 """
 
 import sys
@@ -150,7 +150,6 @@ MONTH_NUMBERS = {'jan':1, 'feb':2, 'mar':3, 'apr':4, 'may':5, 'jun':6,
 				'july':7, 'august':8, 'september':9, 'october':10, 'november':11, 'december':12}
 
 # Bad dates can be tried to be fixed or cause exit
-CRASH_ON_BAD_DATE = False
 DATE_ERR = 'Malformed date:'
 
 # The message for data file troubles
@@ -158,7 +157,6 @@ DATA_ERR = 'GEDCOM error. Use a validator. '
 DATA_WARN = 'Warning. Use a validator. '
 
 # What to do with unknown sections
-CRASH_ON_UNK_SECTION = False
 UNK_SECTION_ERR = 'Unknown section: '
 UNK_SECTION_WARN = 'Warning. Ignoring unknown section:'
 
@@ -173,11 +171,18 @@ PRIVATIZE_MAX = PRIVATIZE_MIN + 1
 
 # Some checking to help prevent typos. Failure will throw an exception.
 # I don't imagine the checking causes much of a performance hit.
+# This is not a passed in as a setting.
 SELF_CONSISTENCY_CHECKS = True
 SELF_CONSISTENCY_ERR = 'Program code inconsistency:'
 
-# The detected version of the input file.
+# The detected version of the input file. Treat as a global.
 version = ''
+
+# This is the operational settings. Treat as a global
+run_settings = dict()
+
+# A place to save all messages which will be copied into the output data. Treat as a global.
+all_messages = []
 
 
 def convert_to_unicode( text ):
@@ -206,6 +211,59 @@ def convert_to_html( text ):
     text = text.replace( '\xe0', '&#224;' ) #a agrave
     text = text.replace( '\xf6', '&#246;' ) #o diaresis
     return text
+
+
+def print_warn( message ):
+    global all_messages
+    all_messages.append( message )
+    if run_settings['display-gedcom-warnings']:
+       print( message, file=sys.stderr )
+
+
+def concat_things( *args ):
+    """ Behave kinda like a print statement: convert all the things to strings.
+        Return the large concatinated string. """
+    result = ''
+    space = ''
+    for arg in args:
+        result += space + str(arg).strip()
+        space = ' '
+    return result
+
+
+def setup_settings( settings=None ):
+    """ Set the settings which control how the program operates.
+        Return a dict with the defaults or the user supplied values. """
+
+    new_settings = dict()
+
+    if settings is None:
+       settings = dict()
+    if not isinstance( settings, dict ):
+       settings = dict()
+
+    defaults = dict()
+    defaults['show-settings'] = False
+    defaults['display-gedcom-warnings'] = False
+    defaults['exit-on-bad-date'] = False
+    defaults['exit-on-unknown-section'] = False
+    defaults['exit-on-no-individuals'] = True
+    defaults['exit-on-no-families'] = False
+    defaults['exit-on-missing-individuals'] = False
+    defaults['exit-on-missing-families'] = False
+
+    for item in defaults:
+        setting = defaults[item]
+        if item in settings:
+           if isinstance( settings[item], type(setting) ):
+              setting = settings[item]
+        new_settings[item] = setting
+
+    if new_settings['show-settings']:
+       for item in new_settings:
+           print( 'Setting', item, '=', new_settings[item], file=sys.stderr )
+
+    return new_settings
 
 
 def string_like_int( s ):
@@ -252,19 +310,14 @@ def add_file_back_ref( file_tag, file_index, parsed_section ):
 
 
 def copy_section( from_sect, to_sect, data ):
-    """ Copy a portion of the data frmo one section to another."""
+    """ Copy a portion of the data from one section to another."""
     if from_sect in SECTION_NAMES:
        if from_sect in data:
           data[to_sect] = copy.deepcopy( data[from_sect] )
        else:
           data[to_sect] = []
     else:
-       print( 'Cant copy unknown section:', from_sect, file=sys.stderr )
-
-
-#def copy_header( data ):
-#    # Example
-#    copy_section( SECT_HEAD, 'header', data )
+       print_warn( concat_things( 'Cant copy unknown section:', from_sect ) )
 
 
 def extract_indi_id( tag ):
@@ -598,6 +651,8 @@ def date_to_comparable( original ):
     default_month = 1
     default_year = 1
 
+    exit_bad_date = run_settings['exit-on-bad-date']
+
     result = None
     malformed = False
 
@@ -629,10 +684,10 @@ def date_to_comparable( original ):
           year = parts[2]
 
        else:
-          if CRASH_ON_BAD_DATE:
+          if exit_bad_date:
              raise ValueError( DATE_ERR + ':' + str(original) )
           malformed = True
-          print( DATE_ERR, original, ': setting to', year, month, day, file=sys.stderr )
+          print_warn( concat_things( DATE_ERR, original, ':setting to', year, month, day ) )
 
        if isinstance(day,str):
           #i.e. has been extracted from the given date string
@@ -640,16 +695,17 @@ def date_to_comparable( original ):
              day = int( day )
              if day < 1 or day > 31:
                 day = default_day
-                if CRASH_ON_BAD_DATE:
+                if exit_bad_date:
                    raise ValueError( DATE_ERR + ':' + str(original) )
                 malformed = True
-                print( DATE_ERR, original, ': setting day to', day, file=sys.stderr )
+                print_warn( concat_things(DATE_ERR, original, ':setting day to', day ) )
+
           else:
-             if CRASH_ON_BAD_DATE:
+             if exit_bad_date:
                 raise ValueError( DATE_ERR + ':' + str(original) )
              day = default_day
              malformed = True
-             print( DATE_ERR, original, ': setting day to', day, file=sys.stderr )
+             print_warn( concat_things( DATE_ERR, original, ':setting day to', day ) )
 
        if isinstance(month,str):
           #i.e. has been extracted from the given date string
@@ -662,10 +718,10 @@ def date_to_comparable( original ):
              if month in MONTH_NUMBERS:
                 month = month_name_to_number( month )
              else:
-                if CRASH_ON_BAD_DATE:
+                if exit_bad_date:
                    raise ValueError( DATE_ERR + ':' + str(original) )
                 month = default_month
-                print( DATE_ERR, original, ': setting month to number', month, file=sys.stderr )
+                print_warn( concat_things( DATE_ERR, original, ':setting month to number', month ) )
 
        if isinstance(year,str):
           #i.e. has been extracted from the given date string
@@ -673,16 +729,17 @@ def date_to_comparable( original ):
              year = int( year )
           else:
              malformed = True
-             print( DATE_ERR, original, ': attempting to correct', file=sys.stderr )
+             # don't throw an exception yet
+             print_warn( concat_things( DATE_ERR, original, ':attempting to correct' ) )
              # Ancestry mistakes
              year = year.replace( '-', '' ).replace( '.', '' )
              if string_like_int( year ):
                 year = int( year )
              else:
-                if CRASH_ON_BAD_DATE:
+                if exit_bad_date:
                    raise ValueError( DATE_ERR + ':' + str(original) )
                 year = default_year
-                print( DATE_ERR, original, ': setting year to:', year, file=sys.stderr )
+                print_warn( concat_things( DATE_ERR, original, ':setting year to:', year ) )
 
        result = '%04d%02d%02d' % ( year, month, day )
 
@@ -840,7 +897,7 @@ def set_best_events( event_list, always_first_list, out_data ):
            if tag in out_data:
               found_best = 0
               if len( out_data[tag] ) > 1:
-                 # If there is a disproven marked as primary - choose any other.
+                 # If there is a disproven value marked as primary - choose any other.
 
                  # Find the best: disproven having lowest value, proven is highest
                  value_best = smallest
@@ -975,7 +1032,7 @@ def handle_name_tag( tag, level1, out_data ):
     if level1['value']:
        full_name = level1['value']
     else:
-       print( DATA_WARN, 'Blank name replaced with:', full_name, file=sys.stderr )
+       print_warn( concat_things( DATA_WARN, 'Blank name replaced with:', full_name ) )
 
     names['value'] = full_name
 
@@ -993,7 +1050,7 @@ def handle_name_tag( tag, level1, out_data ):
               if value == '':
                  # special case, surname cannot be empty
                  value = UNKNOWN_NAME
-                 print( DATA_WARN, 'Blank surname replaced with:', value, file=sys.stderr )
+                 print_warn( concat_things( DATA_WARN, 'Blank surname replaced with:', value ) )
 
            names[tag2] = value
 
@@ -1021,7 +1078,7 @@ def ensure_not_twice( tag_list, sect_type, ref_id, data ):
     for tag in tag_list:
         if tag in data:
            if len(data[tag]) > 1:
-              raise ValueError( DATA_ERR + sect_type + ' ' + ref_id + ' tag occured more than once:' + str(tag) )
+              raise ValueError( concat_things( DATA_ERR, sect_type, ref_id, 'tag occured more than once:', tag ) )
 
 
 def parse_family( level0, out_data ):
@@ -1126,7 +1183,7 @@ def parse_individual( level0, out_data ):
     # The name is required
     tag = 'name'
     if tag not in out_data:
-       print( DATA_WARN, 'Missing name replaced with', UNKNOWN_NAME, file=sys.stderr )
+       print_warn( concat_things( DATA_WARN, 'Missing name replaced with', UNKNOWN_NAME ) )
        out_data[tag] = []
        names = dict()
        names['value'] = UNKNOWN_NAME
@@ -1163,23 +1220,33 @@ def check_parsed_sections( data ):
         for fam_type in ['fams','famc']:
             if fam_type in data[isect][indi]:
                for fam in data[isect][indi][fam_type]:
-                   if not fam in data[fsect]:
-                      print( SECT_INDI, indi, 'lists', fam, 'in', fam_type, 'but not found. Removing xref.', file=sys.stderr )
+                   if fam not in data[fsect]:
                       data[isect][indi][fam_type].remove( fam )
+                      message = concat_things( DATA_WARN, SECT_INDI, indi, 'lists', fam, 'in', fam_type, 'but not found.' )
+                      if run_settings['exit-on-missing-families']:
+                         raise ValueError( message )
+                      print_warn( message + ' Removing xref.' )
 
     for fam in data[fsect]:
         for fam_type in ['husb','wife']:
             if fam_type in data[fsect][fam]:
                for indi in data[fsect][fam][fam_type]:
                    if indi and indi not in data[isect]:
-                      print( SECT_FAM, fam, 'lists', fam_type, 'of', indi, 'but not found. Removing xref.', file=sys.stderr )
                       data[fsect][fam][fam_type].remove( indi )
+                      message = concat_things( DATA_WARN, SECT_FAM, fam, 'lists', fam_type, 'of', indi, 'but not found.' )
+                      if run_settings['exit-on-missing-individuals']:
+                         raise ValueError( message )
+                      print_warn( message + ' Removing xref.' )
+
         fam_type = 'chil'
         if fam_type in data[fsect][fam]:
            for indi in data[fsect][fam][fam_type]:
                if indi not in data[isect]:
-                  print( SECT_FAM, fam, 'lists', fam_type, 'of', indi, 'but not found. Removing xref.', file=sys.stderr )
                   data[fsect][fam][fam_type].remove( indi )
+                  message = concat_things( DATA_WARN, SECT_FAM, fam, 'lists', fam_type, 'of', indi, 'but not found.' )
+                  if run_settings['exit-on-missing-families']:
+                     raise ValueError( message )
+                  print_warn( message + ' Removing xref.' )
 
 
 def ensure_int_values( the_list ):
@@ -1460,14 +1527,14 @@ def read_in_data( inf, data ):
                  sect = SECT_INDI
                  if lc_line in lines_found:
                     ignore_line = True
-                    print( DATA_WARN, 'Duplicate section ignored:', line, file=sys.stderr )
+                    print_warn( concat_things( DATA_WARN, 'Duplicate section ignored:', line ) )
                  lines_found.append( lc_line )
 
               elif lc_line.startswith( '0 @f' ) and lc_line.endswith( ' fam' ):
                  sect = SECT_FAM
                  if lc_line in lines_found:
                     ignore_line = True
-                    print( DATA_WARN, 'Duplicate section ignored:', line, file=sys.stderr )
+                    print_warn( concat_things( DATA_WARN, 'Duplicate section ignored:', line ) )
                  lines_found.append( lc_line )
 
               elif lc_line.startswith( '0 trlr' ):
@@ -1497,9 +1564,10 @@ def read_in_data( inf, data ):
                     version = confirm_gedcom_version( data )
 
               if sect not in SECTION_NAMES:
-                 if CRASH_ON_UNK_SECTION:
-                    raise ValueError( UNK_SECTION_ERR + str(line) )
-                 print( UNK_SECTION_WARN, line, file=sys.stderr )
+                 message = concat_things( UNK_SECTION_WARN, line )
+                 if run_settings['exit-on-unknown-section']:
+                    raise ValueError( message )
+                 print_warn( message )
                  if sect not in data:
                     data[sect] = []
 
@@ -1539,13 +1607,13 @@ def read_in_data( inf, data ):
                  # unlikely to be a level 6
 
            else:
-              print( DATA_WARN + 'Level not handled:', line, file=sys.stderr )
+              print_warn( concat_things( DATA_WARN, 'Level not handled:', line ) )
 
     if final_section.lower() != SECT_TRLR:
-       raise ValueError( DATA_ERR + 'Final section was not the trailer.' )
+       raise ValueError( concat_things(DATA_ERR,'Final section was not the trailer.' ) )
 
 
-def read_file( datafile ):
+def read_file( datafile, given_settings=None ):
     """
     Return a dict containing the GEDCOM data in the file.
     Parameter:
@@ -1554,10 +1622,24 @@ def read_file( datafile ):
     The calling program should ensure the existance of the file.
     Warnings will be printed to std-err.
     ValueError will be thrown for non-recoverable data errors.
+
+    Settings are optional, see the documentation.
     """
+    global run_settings
+
     assert isinstance( datafile, str ), 'Non-string passed as the filename.'
 
+    run_settings = setup_settings( given_settings )
+
+    # The file read into a data structure.
     # See the related document for the format of the dict.
+    data = dict()
+
+    # Warn/err messages also goe into the data.
+    # Except the self-consistency checks: they are important enough to throw exceptions.
+    # Also except the gedcom header and trailer errors.
+    # Also file i/o errors which will throw system exceptions.
+    data['messages'] = []
 
     if SELF_CONSISTENCY_CHECKS:
        # Ensure no conflict between the section names.
@@ -1568,9 +1650,6 @@ def read_file( datafile ):
        if PARSED_INDI == PARSED_FAM:
           raise ValueError( SELF_CONSISTENCY_ERR + 'section name duplication:' + str(PARSED_INDI) )
        ensure_lowercase_constants()
-
-    # The file read into a data structure.
-    data = dict()
 
     # These are the zero level tags expected in the file.
     # Some may not occur.
@@ -1590,10 +1669,16 @@ def read_file( datafile ):
        raise ValueError( DATA_ERR + 'Trailer must occur once and only once.' )
 
     if len( data[SECT_INDI] ) < 1:
-       raise ValueError( DATA_ERR + 'No individuals.' )
+       message = concat_things( DATA_WARN, 'No individuals' )
+       if run_settings['exit-on-no-individuals']:
+          raise ValueError( message )
+       print_warn( message )
+
     if len( data[SECT_FAM] ) < 1:
-       # This is not a fatal problem, only a warning
-       print( DATA_WARN, 'No families.', file=sys.stderr )
+        message = concat_things( DATA_WARN, 'No families' )
+        if run_settings['exit-on-no-families']:
+           raise ValueError( message )
+        print_warn( message )
 
     # Since the data has passed the serious tests; form the other portion of the data
     setup_parsed_sections( data )
@@ -1601,11 +1686,14 @@ def read_file( datafile ):
     # and do some checking
     check_parsed_sections( data )
 
+    # Capture the messages before returning
+    data['messages'] = all_messages
+
     return data
 
 
 def report_double_facts( data, is_indi, check_list ):
-    """ Print events or other records occur more than once."""
+    """ Print events or other records which occur more than once."""
     assert isinstance( check_list, list ), 'Non-list passed as check_list parameter'
 
     for owner in data.keys():
