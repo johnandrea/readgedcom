@@ -1,0 +1,4 @@
+Test date parsing.
+
+The MS-Win native library can't handle dates pre-unixepoch which makes it useless for genealogy.
+The Python library Arrow works much better.
