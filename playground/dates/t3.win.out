@@ -1,0 +1,14 @@
+date            | dateparser | arrow     
+10 mar 1982     | 1982-03-10 | err       
+1982 mar 10     | 1982-03-10 | err       
+1970 jan 1      | 1970-01-01 | err       
+1969 dec 31     | 1969-12-31 | err       
+3 oct 1860      | 1860-10-03 | err       
+3-oct-1860      | 1860-10-03 | err       
+1860-oct-3      | 1860-10-03 | err       
+1860-10-3       | 1860-10-03 | 1860-10-03
+3-10-1860       | 1860-03-10 | err       
+wrong-1907      | err        | err       
+1907-wrong      | err        | err       
+1907 wrong      | err        | err       
+wrong 1907      | err        | err       
