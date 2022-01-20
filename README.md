@@ -50,11 +50,6 @@ list_of_indi = find_individuals( data, search_tag, search_value, operation )
 
 print_individuals( data, list_of_indi )
 
-output_all_json( data [, out_file] )
-
-output_all_dot( data [, out_file] )
-
-output_indi_ancestor_dot( data, indi [, out_file] )
 ```
 
 ## Settings
@@ -112,25 +107,6 @@ data = readgedcom.read_file( sys.argv[1] )
 pprint.pprint( data )
 ```
 
-A script (named dotall.py) to display everyone in Graphviz DOT format to stdout.
-Run like this:
-```
-dotall.py  filename.ged  >filename.dot
-graphviz -Tpng filename.dot -o filename.png
-```
-
-This may not be an appropriate method for display of a large family. Perhaps
-useful for input to other analysis programs.
-
-```
-#!/usr/bin/python3
-
-import sys
-import readgedcom
-
-data = readgedcom.read_file( sys.argv[1] )
-readgedcom.output_all_dot( data )
-```
 
 ### Advanced Usage
 
@@ -217,26 +193,6 @@ else:
         json.dump( descendants, outf, indent=1 )
 ```
 
-A script to output, in Graphviz Dot format, the ancestors of selected individuals.
-Afterwards for each dot file:  graphviz -Tpng filename.dot -o filename.png
-
-```
-#!/usr/bin/python3
-
-import sys
-import readgedcom
-
-datafile = sys.argv[1]
-
-data = readgedcom.read_file( datafile )
-
-# everyone born after 1975
-found_ids = readgedcom.find_individuals( data, 'birt.date', '19751231', '>' )
-
-for indi in found_ids:
-    out_file = str(indi) + '.dot'
-    readgedcom.output_indi_ancestor_dot( data, indi, out_file )
-```
 
 ## Data structure
 
