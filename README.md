@@ -353,7 +353,7 @@ or a family with children:
 
 The "best" event indexes are calculated via weights using the proved and disproved flags.
 For research purposes multiple entries may exist for any event, even birth and death.
-By default the best event is the one first found: index zero. All disproven entries are given the lowest weight, so that they won't be selected unless all that exists are disproven entries. Proven entries get the highest weights so that they will always be selected. But an entry marked as "primary" gets the highest weight. Even a non-proven primary entry out weighs a proven non-primary entry.
+By default the best event is the one first found: index zero. All disproven entries are given the lowest weight, so that they won't be selected unless only disproven entries exist. Proven entries get the highest weights so that they will always be selected. An entry marked as "primary" gets the highest weight. Even a non-proven primary entry out-weighs a proven non-primary entry.
 
 The proof/disproved/primary options are specific to RootsMagic exported files.
 
