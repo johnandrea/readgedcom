@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v1.5
+v1.6
 """
 
 import sys
@@ -74,7 +74,7 @@ PARSED_FAM = 'families'
 FAM_EVENT_TAGS = ['anul','cens','div','divf','enga','marb','marc','marl','mars','marr','even']
 
 # From GEDCOM 7.0.1 spec pg 44
-INDI_EVENT_TAGS = ['bapm','barm','basm','bles','buri','cens','chra','conf','crem','deat','emig','fcom','grad','immi','natu','ordn','prob','reti','will','adop','birt','chr','even']
+INDI_EVENT_TAGS = ['bapm','barm','basm','bles','buri','cens','chra','conf','crem','deat','emig','fact','fcom','grad','immi','natu','ordn','prob','reti','will','adop','birt','chr','even']
 
 # Other individual tags of interest placed into the parsed section,
 # in addition to the event tags and of course the name(s)
@@ -973,13 +973,22 @@ def handle_event_tag( tag, level1, out_data ):
 
 
 def handle_custom_event( tag, level1, out_data ):
-    """ Parse an individual or family custom event."""
+    """
+    Parse an individual or family custom event.
+    A value on the tag line becomes added as an item with the key of 'value'.
+    """
 
     # A custom event might look like this
     #
-    #1 EVEN 118 cM 2%
-    #2 TYPE dna
-    #2 DATE 1 Aug 2021
+    # 1 FACT newspaper
+    # 2 TYPE obit
+    #
+    # or, even though not to spec
+    # the event value is in use
+    #
+    # 1 EVEN 118 cM 2%
+    # 2 TYPE dna
+    # 2 DATE 1 Aug 2021
 
     values = dict()
     values['value'] = level1['value']
@@ -1103,7 +1112,7 @@ def parse_family( level0, out_data ):
         elif tag in OTHER_FAM_TAGS:
            out_data[tag].append( value )
 
-        elif tag == 'even':
+        elif tag in ['even','fact']:
            # Broken out specially because its custom style must
            # be handled before the below test for general event list.
            handle_custom_event( tag, level1, out_data )
@@ -1157,13 +1166,13 @@ def parse_individual( level0, out_data ):
            # must be handled before the test for other-indi-tags.
            out_data[tag].append( extract_fam_id( value ) )
 
-        elif tag in OTHER_INDI_TAGS:
-           out_data[tag].append( value )
-
-        elif tag == 'even':
+        elif tag in ['even','fact']:
            # This one broken out specially because its a custom event
            # must be handled before the below test for regular events.
            handle_custom_event( tag, level1, out_data )
+
+        elif tag in OTHER_INDI_TAGS:
+           out_data[tag].append( value )
 
         elif tag in INDI_EVENT_TAGS:
            handle_event_tag( tag, level1, out_data )
@@ -1802,7 +1811,7 @@ def match_individual( indi_data, tag, subtag, search_value, operation ):
               break
 
     # check the generic event before the standard events
-    elif tag == 'even':
+    elif tag in ['even','fact']:
          # an other type of event, maybe a custom fact event
          if subtag:
             # look through all the events for the subtag
