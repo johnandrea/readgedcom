@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v1.4
+v1.5
 """
 
 import sys
@@ -1754,7 +1754,7 @@ def report_family_double_facts( data, check_list=None ):
 
 
 def match_individual( indi_data, tag, subtag, search_value, operation ):
-    """ Return True if individual's data matches the search condition."""
+    """ Return True if individual's data matches the search condition. """
 
     def compare( have, want, op ):
         result = False
@@ -1776,7 +1776,16 @@ def match_individual( indi_data, tag, subtag, search_value, operation ):
            result = want not in have
         return result
 
+    def find_best( tag ):
+       best = 0
+       if BEST_EVENT_KEY in indi_data:
+          if tag in indi_data[BEST_EVENT_KEY]:
+             best = indi_data[BEST_EVENT_KEY][tag]
+       return best
+
+
     found = False
+    value = None
 
     if tag == 'name':
        # look in name and alt-names
@@ -1792,28 +1801,51 @@ def match_individual( indi_data, tag, subtag, search_value, operation ):
               found = True
               break
 
-    elif isinstance( indi_data[tag], list ):
-       # its a list, determine the best one
-       best = 0
-       if BEST_EVENT_KEY in indi_data:
-          if tag in indi_data[BEST_EVENT_KEY]:
-             best = indi_data[BEST_EVENT_KEY][tag]
+    # check the generic event before the standard events
+    elif tag == 'even':
+         # an other type of event, maybe a custom fact event
+         if subtag:
+            # look through all the events for the subtag
+            # and check all of that subtype
 
-       if tag in INDI_EVENT_TAGS:
-          # events have dates and places, if not specified then skip it
-          if subtag:
-             if subtag in indi_data[tag][best]:
-                if subtag == 'date':
-                   if indi_data[tag][best]['date']['is_known']:
-                      value = indi_data[tag][best]['date']['min']['value']
-                   else:
-                      value = indi_data[tag][best][subtag]
-       else:
-         # plain list such as sex,exid, etc. not an event
-         value = indi_data[tag][best]
+            if tag in indi_data:
+               for event in indi_data[tag]:
+                   if event['type'] == subtag:
+                      value = event['value']
+                      if isinstance( value, str ):
+                         found = compare( value, search_value, operation )
+                      if found:
+                         break
 
-       if isinstance(value,str):
-          found = compare( value, search_value, operation )
+    elif tag in INDI_EVENT_TAGS:
+         # its a regular event tag (birth, death, etc.)
+
+         # need to find the best one
+         best = find_best( tag )
+
+         # theseevents have dates and places, if not specified then skip it
+         if subtag and subtag in indi_data[tag][best]:
+            if subtag == 'date':
+               if indi_data[tag][best]['date']['is_known']:
+                  value = indi_data[tag][best]['date']['min']['value']
+               else:
+                  value = indi_data[tag][best][subtag]
+
+         if isinstance( value, str ):
+            # be sure to compare a string result against a string as wanted
+            found = compare( value, search_value, operation )
+
+    else:
+         if tag in indi_data:
+            if isinstance( indi_data[tag], list ):
+               best = find_best( tag )
+               # plain list such as sex, etc.
+               value = indi_data[tag][best]
+            else:
+               # not sure what other item this might be
+               value = indi_data[tag]
+            if isinstance( value, str ):
+               found = compare( value, search_value, operation )
 
     return found
 
@@ -1890,6 +1922,8 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
         search_tag: tag such as "name", "fams", "exid", etc.
                     For events the sub-tags may be specified such as
                     "birt.date", "deat.plac", etc.
+                    Also, items which are custom facts which are events
+                    must be specified like this  "event.exid" or "even.exid"
         search_value: for matching against the data. Must be a string.
                     For dates specify as "yyyymmdd".
         operation: (default "=") matching condition, one of
@@ -1901,6 +1935,12 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
     """
 
     OPERATORS = ['=','==','!','!=','not =', 'not=', '<','<=','=<','>','>=','=>','in','!in','not in']
+
+    # common mistypings
+    FIX_TAG_NAME = {'birth':'birt', 'death':'deat', 'event':'even' }
+    # possibly handle marriage lookups in a future version
+    #FIX_TAG_NAME['marriage'] = 'marr'
+    #FIX_TAG_NAME['divorce'] = 'div'
 
     assert isinstance( data, dict ), 'Non-dict passed as data'
     assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
@@ -1922,6 +1962,8 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
        parts = search_tag.split('.')
        if parts[0]:
           search_tag = parts[0]
+          if search_tag in FIX_TAG_NAME:
+             search_tag = FIX_TAG_NAME[search_tag]
        else:
           raise ValueError( 'Empty search tag start part.' )
        if parts[1]:
@@ -1931,11 +1973,10 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
 
     result = []
 
-    if search_tag != 'even':
-       for indi in data[PARSED_INDI]:
-           if search_tag in data[PARSED_INDI][indi]:
-              if match_individual( data[PARSED_INDI][indi], search_tag, search_subtag, search_value, operation ):
-                 result.append( indi )
+    for indi in data[PARSED_INDI]:
+        if search_tag in data[PARSED_INDI][indi]:
+           if match_individual( data[PARSED_INDI][indi], search_tag, search_subtag, search_value, operation ):
+              result.append( indi )
 
     return result
 
