@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v1.6
+v1.6.1
 """
 
 import sys
@@ -976,6 +976,7 @@ def handle_custom_event( tag, level1, out_data ):
     """
     Parse an individual or family custom event.
     A value on the tag line becomes added as an item with the key of 'value'.
+    GEDCOM spec 7.0.1 pg 65-67
     """
 
     # A custom event might look like this
@@ -1968,7 +1969,7 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
 
     search_subtag = None
     if '.' in search_tag:
-       parts = search_tag.split('.')
+       parts = search_tag.split( '.', 1 )
        if parts[0]:
           search_tag = parts[0]
           if search_tag in FIX_TAG_NAME:
