@@ -22,6 +22,8 @@ A library for reading and parsing genealogy GEDCOM files.
 ## Installation
 
 No installation process. Copy the file next to your application which uses the library.
+Or place the readgedcom.py file in a parallel directory and use the load module mechanism to import it:
+see the included example code.
 
 ## Usage
 
