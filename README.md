@@ -390,5 +390,6 @@ This code is provided with neither support nor warranty.
 
 - Collect name type (nickname, aka, etc.) into the individual parsed section.
 - Find people based on custom events.
+- Find people base on family events.
 - Use proof flags of other programs (not just RootsMagic).
 - Try harder to fix a malformed date. Language parsing in and out.
