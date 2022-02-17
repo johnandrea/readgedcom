@@ -355,7 +355,7 @@ or a family with children:
 
 The "best" event indexes are calculated via weights using the proved and disproved flags.
 For research purposes multiple entries may exist for any event, even birth and death.
-By default the best event is the one first found: index zero. All disproven entries are given the lowest weight, so that they won't be selected unless only disproven entries exist. Proven entries get the highest weights so that they will always be selected. An entry marked as "primary" gets the highest weight. Even a non-proven primary entry out-weighs a proven non-primary entry.
+By default the best event is the one first found: index zero. All disproven entries are ignored, they won't be selected even if only disproven entries exist. Proven entries are better than both disputed and un-marked entries. An entry marked as "primary" gets the highest weight - even a non-proven primary entry out-weighs a proven non-primary entry.
 
 The proof/disproved/primary options are specific to RootsMagic exported files.
 
@@ -392,4 +392,4 @@ This code is provided with neither support nor warranty.
 - Find people based on custom events.
 - Find people based on family events.
 - Use proof flags of other programs (not just RootsMagic).
-- Try harder to fix a malformed date. Language parsing in and out.
+- Try harder to fix a malformed date. Perhaps fuzzy date parsing.
