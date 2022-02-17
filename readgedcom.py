@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v1.6.1
+v1.7
 """
 
 import sys
@@ -864,14 +864,15 @@ def get_note( level2 ):
 
 def set_best_events( event_list, always_first_list, out_data ):
     """ For each event with multiple instances within a single individual or family
-        Set the index of the "best" instance based on the proof and primary settings."""
+        Set the index of the "best" instance based on the proof and primary settings.
+        Disproven events will not become a best selected. """
 
     # Note that custom event records with the tag "even" are not included
     # because of the the associated even.type
 
     out_data[BEST_EVENT_KEY] = dict()
 
-    # Best name is always the first one, and it must exist
+    # Best name is always the first one, and it must exist even if set to "unknown"
     out_data[BEST_EVENT_KEY]['name'] = 0
 
     # No further tests for the "best" of these ones. Always set to index zero.
@@ -886,28 +887,33 @@ def set_best_events( event_list, always_first_list, out_data ):
     smallest = min( EVENT_PROOF_VALUES.values() ) - 1
 
     for tag in event_list:
-        if tag != 'even':
-           if tag in out_data:
-              found_best = 0
-              if len( out_data[tag] ) > 1:
-                 # If there is a disproven value marked as primary - choose any other.
 
-                 # Find the best: disproven having lowest value, proven is highest
-                 value_best = smallest
-                 for i, section in enumerate( out_data[tag] ):
-                     value = EVENT_PROOF_VALUES[EVENT_PROOF_DEFAULT]
-                     if EVENT_PROOF_TAG in section:
-                        proof_setting = section[EVENT_PROOF_TAG].lower()
-                        if proof_setting in EVENT_PROOF_VALUES:
-                           value = EVENT_PROOF_VALUES[proof_setting]
-                     # just the existance of this tag is good enough
-                     if EVENT_PRIMARY_TAG in section:
-                        # even better
-                        value *= 10
-                     if value > value_best:
-                        value_best = value
-                        found_best = i
+        # custom events ignored
+        if tag != 'even' and tag in out_data:
+           print( tag, file=sys.stderr ) #debug
 
+           # Find the best: disproven having lowest value, proven is highest
+           value_best = smallest
+           found_best = 0
+
+           for i, section in enumerate( out_data[tag] ):
+               value = EVENT_PROOF_VALUES[EVENT_PROOF_DEFAULT]
+               if EVENT_PROOF_TAG in section:
+                  proof_setting = section[EVENT_PROOF_TAG].lower()
+                  if proof_setting in EVENT_PROOF_VALUES:
+                     value = EVENT_PROOF_VALUES[proof_setting]
+                  # just the existance of this tag is good enough
+                  if EVENT_PRIMARY_TAG in section:
+                     # even better is primary, but disproven gets no better
+                     value *= 10
+               if value > value_best:
+                  value_best = value
+                  found_best = i
+
+           print( value_best, 'value best', file=sys.stderr ) #debug
+           # must be better than disproven to get included in the list of best events
+           if value_best > EVENT_PROOF_VALUES['disproven']:
+              print( 'adding to list', file=sys.stderr ) #debug
               out_data[BEST_EVENT_KEY][tag] = found_best
 
 
