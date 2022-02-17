@@ -1,0 +1,25 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SOUR Manually-Creation
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME John A Andrea
+0 @I1@ INDI
+1 NAME Tester A /Person/
+2 GIVN Tester A
+2 SURN Person
+1 SEX M
+1 BIRT
+2 _PROOF disproven
+2 DATE 1827
+2 NOTE disproven birth
+1 BIRT
+2 _PROOF disproven
+2 DATE 1825
+2 NOTE another disproven birth
+1 DEAT
+2 DATE 1880
+0 TRLR
