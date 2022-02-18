@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2021 John A. Andrea
-v1.7
+v1.7.1
 """
 
 import sys
@@ -865,7 +865,9 @@ def get_note( level2 ):
 def set_best_events( event_list, always_first_list, out_data ):
     """ For each event with multiple instances within a single individual or family
         Set the index of the "best" instance based on the proof and primary settings.
-        Disproven events will not become a best selected. """
+        Disproven events will not become a best selected.
+        The computation here depends on the disproved/default/proved values
+        set to 0,1,2 though -1,1,2 would also work. """
 
     # Note that custom event records with the tag "even" are not included
     # because of the the associated even.type
@@ -890,7 +892,6 @@ def set_best_events( event_list, always_first_list, out_data ):
 
         # custom events ignored
         if tag != 'even' and tag in out_data:
-           print( tag, file=sys.stderr ) #debug
 
            # Find the best: disproven having lowest value, proven is highest
            value_best = smallest
@@ -910,10 +911,8 @@ def set_best_events( event_list, always_first_list, out_data ):
                   value_best = value
                   found_best = i
 
-           print( value_best, 'value best', file=sys.stderr ) #debug
            # must be better than disproven to get included in the list of best events
            if value_best > EVENT_PROOF_VALUES['disproven']:
-              print( 'adding to list', file=sys.stderr ) #debug
               out_data[BEST_EVENT_KEY][tag] = found_best
 
 
