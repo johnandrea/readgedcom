@@ -40,8 +40,8 @@ This code handles only the Gregorian calendar with optional epoch setting of BCE
 Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
-Copyright (c) 2021 John A. Andrea
-v1.7.1
+Copyright (c) 2022 John A. Andrea
+v1.8
 """
 
 import sys
@@ -1838,7 +1838,7 @@ def match_individual( indi_data, tag, subtag, search_value, operation ):
          # need to find the best one
          best = find_best( tag )
 
-         # theseevents have dates and places, if not specified then skip it
+         # these events have dates and places, if not specified then skip it
          if subtag and subtag in indi_data[tag][best]:
             if subtag == 'date':
                if indi_data[tag][best]['date']['is_known']:
@@ -1881,15 +1881,16 @@ def get_indi_display( indi_data ):
            if tag in indi_data[BEST_EVENT_KEY]:
               best = indi_data[BEST_EVENT_KEY][tag]
         if tag in indi_data:
-           if indi_data[tag][best]['date']['is_known']:
-              modifier = indi_data[tag][best]['date']['min']['modifier']
-              value = indi_data[tag][best]['date']['min']['value']
-              full_result = modifier + ' ' + yyyymmdd_to_date( value )
-              year_result = modifier + ' ' + value[0:4]
-              if indi_data[tag][best]['date']['is_range']:
-                 modifier = indi_data[tag][best]['date']['max']['modifier']
-                 value = indi_data[tag][best]['date']['max']['value']
-                 full_result += ' ' + modifier + ' ' + yyyymmdd_to_date( value )
+           if 'date' in indi_data[tag][best]:
+              if indi_data[tag][best]['date']['is_known']:
+                 modifier = indi_data[tag][best]['date']['min']['modifier']
+                 value = indi_data[tag][best]['date']['min']['value']
+                 full_result = modifier + ' ' + yyyymmdd_to_date( value )
+                 year_result = modifier + ' ' + value[0:4]
+                 if indi_data[tag][best]['date']['is_range']:
+                    modifier = indi_data[tag][best]['date']['max']['modifier']
+                    value = indi_data[tag][best]['date']['max']['value']
+                    full_result += ' ' + modifier + ' ' + yyyymmdd_to_date( value )
         return [ cleanup(full_result), cleanup(year_result) ]
 
     result = dict()
@@ -1942,27 +1943,60 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
         search_value: for matching against the data. Must be a string.
                     For dates specify as "yyyymmdd".
         operation: (default "=") matching condition, one of
-                    "=", "!=", ">", ">=", "<", "<=", "in", "not in".
+                    "=", "!=", ">", ">=", "<", "<=", "in", "not in", "exist", "not exist".
 
     In the case of date ranges, the minimum date is used.
     In the case of multiple events, the "best" event instance is used.
-    Custom events never matched (in this version).
+    Custom events (EVEN) are not matched in this version.
     """
 
-    OPERATORS = ['=','==','!','!=','not =', 'not=', '<','<=','=<','>','>=','=>','in','!in','not in']
+    def existance_match( individual, tag, subtag ):
+        result = False
 
-    # common mistypings
-    FIX_TAG_NAME = {'birth':'birt', 'death':'deat', 'event':'even' }
+        if tag in individual:
+
+           if tag == 'even':
+              # scan through all the custom events
+              for event in individual[tag]:
+                  if 'type' in event and event['type'] == subtag:
+                     result = True
+                     break
+
+           else:
+              best = 0
+              if BEST_EVENT_KEY in individual:
+                 if tag in individual[BEST_EVENT_KEY]:
+                    best = individual[BEST_EVENT_KEY][tag]
+
+              if subtag:
+                 result = subtag in individual[tag][best]
+              else:
+                 # no test for subtag, the tag exists
+                 result = True
+
+        return result
+
+
+    OPERATORS = ['=', '!=', '<', '<=', '>', '=>', 'in', 'not in', 'exist', 'not exist']
+    ALT_OPERATORS = {'==':'=', 'not=':'!=', 'not =':'!=', '=<':'<=', '>=':'=>', '!in':'not in', 'exists':'exist', 'not exists':'not exist', '!exist':'not exist', '!exists':'not exist' }
+
+    # full words
+    ALT_TAG = {'birth':'birt', 'born':'birt', 'death':'deat', 'died':'deat', 'event':'even' }
+    ALT_SUBTAG = { 'place':'plac' }
+
     # possibly handle marriage lookups in a future version
-    #FIX_TAG_NAME['marriage'] = 'marr'
-    #FIX_TAG_NAME['divorce'] = 'div'
+    #ALT_SUBTAG = {'marriage':'marr', 'divorce':'div' }
+
+    # Use this to skip an event defaulting the the date subtag
+    # for example when checking existance of any birth tag rather than just birth.date
+    IGNORE_SUBTAG_VALUE = '_'
 
     assert isinstance( data, dict ), 'Non-dict passed as data'
     assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
     assert isinstance(search_tag,str), 'Non-string passed as search_tag'
-    assert isinstance(search_value,str), 'Non-string passed as search_key'
+    assert isinstance(search_value,str), 'Non-string passed as search_value'
     assert isinstance(operation,str), 'Non-string passed as comparison operator'
-    assert operation.lower().strip() in OPERATORS, 'Invalid comparison operator:' + operation + ' not one of ' + str(OPERATORS)
+    assert operation.lower().strip() in OPERATORS or operation.lower().strip() in ALT_OPERATORS, 'Invalid comparison operator:' + operation + ' not one of ' + str(OPERATORS)
     assert search_tag.strip() != '', 'Passed an empty search tag'
 
     search_tag = search_tag.lower().strip()
@@ -1977,21 +2011,49 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
        parts = search_tag.split( '.', 1 )
        if parts[0]:
           search_tag = parts[0]
-          if search_tag in FIX_TAG_NAME:
-             search_tag = FIX_TAG_NAME[search_tag]
        else:
           raise ValueError( 'Empty search tag start part.' )
        if parts[1]:
           search_subtag = parts[1]
+          if search_subtag in ALT_SUBTAG:
+             search_subtag = ALT_SUBTAG[search_subtag]
        else:
           raise ValueError( 'Empty search sub-tag.' )
 
+    if search_tag in ALT_TAG:
+       search_tag = ALT_TAG[search_tag]
+
+    # Default to date
+    if not search_subtag:
+       if search_tag in INDI_EVENT_TAGS:
+          search_subtag = 'date'
+       # but, check for the ignore value after the default is set
+       if search_subtag == IGNORE_SUBTAG_VALUE:
+          search_subtag = None
+
+    if search_subtag in ALT_SUBTAG:
+       search_tag = ALT_SUBTAG[search_subtag]
+
+    if operation in ALT_OPERATORS:
+       operation = ALT_OPERATORS[operation]
+
     result = []
 
-    for indi in data[PARSED_INDI]:
-        if search_tag in data[PARSED_INDI][indi]:
-           if match_individual( data[PARSED_INDI][indi], search_tag, search_subtag, search_value, operation ):
+    if operation == 'exist':
+       for indi in data[PARSED_INDI]:
+           if existance_match( data[PARSED_INDI][indi], search_tag, search_subtag ):
               result.append( indi )
+
+    elif operation == 'not exist':
+       for indi in data[PARSED_INDI]:
+           if not existance_match( data[PARSED_INDI][indi], search_tag, search_subtag ):
+              result.append( indi )
+
+    else:
+       for indi in data[PARSED_INDI]:
+           if search_tag in data[PARSED_INDI][indi]:
+              if match_individual( data[PARSED_INDI][indi], search_tag, search_subtag, search_value, operation ):
+                 result.append( indi )
 
     return result
 
