@@ -1,0 +1,33 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SOUR typed
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME John
+0 @I1@ INDI
+1 NAME A /Date no place/
+1 BIRT
+2 DATE 1827
+0 @I2@ INDI
+1 NAME B /Date no place/
+1 BIRT
+2 DATE 1827
+0 @I3@ INDI
+1 NAME C /Place no date/
+1 BIRT
+2 PLAC England
+0 @I4@ INDI
+1 NAME D /Place no date/
+1 BIRT
+2 PLAC Scotland
+0 @I5@ INDI
+1 NAME E /Date and place/
+1 BIRT
+2 DATE 1830
+2 PLAC England
+0 @I6@ INDI
+1 NAME F /No date no place/
+0 TRLR
