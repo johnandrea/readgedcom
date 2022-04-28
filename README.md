@@ -282,6 +282,8 @@ sub-record tags:
 }
 ```
 
+Note the use of tags as truncated words like in GEDCOM usage, but in lower case. "birt" for birth, "deat" for death, "marr" for marriage, "plac" for place, "chil" for child/children, etc.
+
 Every date is represented as a structure:
 ```
 {
@@ -314,8 +316,14 @@ A birth event could look like this:
           'plac': 'London'}],
 ```
 
+With only a place recorded, the structure would look like:
+'''
+'birt': [{'date': {'is_known': False},
+          'plac': 'London'}]
+'''
+
 There is a case in the GEDCOM spec which allows an event to be known to have occurred
-with an unknown date; referred to as a flagged date.
+with an unknown date; referred to as a flagged date. Custom events where a date may not be used or expected may not have that date/is_known flag so the existance of the "date" key should be tested.
 ```
 2 DATE Y
 ```
