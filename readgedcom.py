@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.8
+v1.9.0
 """
 
 import sys
@@ -924,7 +924,7 @@ def handle_event_dates( value ):
 def handle_event_tag( tag, level1, out_data ):
     """ Parse an individual or family event record."""
 
-    # An event record look like this
+    # An event record looks like this
     #
     #1 BIRT
     #2 DATE 14 DEC 1895
@@ -973,6 +973,15 @@ def handle_event_tag( tag, level1, out_data ):
        else:
           values['note'] = ''
        values['note'] += ancestry_note
+
+    # If a date didn't show up, for instance knowning only a birth place
+    # then even  x['date'] won't exist, so it needs to be checked before
+    # the check for x['date']['is_known']
+    # For the cases where a date is expected - add the date/not known
+    if tag in INDI_EVENT_TAGS + FAM_EVENT_TAGS:
+       if 'date' not in values:
+          values['date'] = dict()
+          values['date']['is_known'] = False
 
     out_data[tag].append( values )
 
@@ -1947,7 +1956,6 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
 
     In the case of date ranges, the minimum date is used.
     In the case of multiple events, the "best" event instance is used.
-    Custom events (EVEN) are not matched in this version.
     """
 
     def existance_match( individual, tag, subtag ):
