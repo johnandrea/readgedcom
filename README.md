@@ -317,10 +317,10 @@ A birth event could look like this:
 ```
 
 With only a place recorded, the structure would look like:
-'''
+```
 'birt': [{'date': {'is_known': False},
-          'plac': 'London'}]
-'''
+          'plac': 'London'}],
+```
 
 There is a case in the GEDCOM spec which allows an event to be known to have occurred
 with an unknown date; referred to as a flagged date. Custom events where a date may not be used or expected may not have that date/is_known flag so the existance of the "date" key should be tested.
