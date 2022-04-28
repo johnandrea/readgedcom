@@ -392,3 +392,13 @@ This code is provided with neither support nor warranty.
 - Find people based on family events.
 - Use proof flags of other programs (not just RootsMagic).
 - Try harder to fix a malformed date. Perhaps fuzzy date parsing.
+- Consider HTML conversion via
+'''
+  # 'encode' function returns byte array, use 'decode' to get back to an ascii string
+  return text.encode( 'ascii', 'xmlcharrefreplace' ).decode( 'ascii' )
+'''
+- Consider reading stdin via
+'''
+  import io
+  for line in io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8'):
+'''
