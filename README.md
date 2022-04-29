@@ -390,6 +390,9 @@ def show_date( indi, tag, indi_data ):
 for indi in data[readgedcom.PARSED_INDI]:
     show_date( indi, 'birt', data[readgedcom.PARSED_INDI][indi] ) 
 ```
+## Bugs
+
+The best-event list for marriages contains an item for "name". There is no such item for marriages.
 
 ## Bug reports
 
