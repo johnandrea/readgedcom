@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.10.0
+v1.10.1
 """
 
 import sys
@@ -196,8 +196,11 @@ def convert_to_unicode( text ):
 
 def convert_to_html( text ):
     """ Convert common utf-8 encoded characters to html for the various display of names etc."""
-    text = text.replace( '<', '&lt;' )
-    text = text.replace( '>', '&gt;' )
+    #https://dev.w3.org/html5/html-author/charref
+    text = text.replace('&','&smp;').replace('<','&lt;').replace('>','&gt;' )
+    text = text.replace('"','&quot;').replace("'",'&apos;')
+    text = text.replace('`','&#96;').replace('\\','&bsol;')
+
     text = text.replace( '\xe7', '&#231;' ) #c cedilia
     text = text.replace( '\xe9', '&#233;' ) #e acute
     text = text.replace( '\xc9', '&#201;' ) #E acute
