@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.9.1
+v1.10.0
 """
 
 import sys
@@ -111,8 +111,11 @@ EVENT_PROOF_TAG = '_proof'
 EVENT_PROOF_DEFAULT = 'other'
 EVENT_PROOF_VALUES = {'disproven':0, EVENT_PROOF_DEFAULT:1, 'proven':2}
 
+# Sub parts to not generally display
+LEVEL2_SUB_NAMES = ['npfx', 'nsfx']
+
 # Name sub-parts in order of display appearance
-LEVEL2_NAMES = ['npfx', 'givn', 'surn', 'nsfx']
+LEVEL2_NAMES = ['givn', 'surn'] + LEVEL2_SUB_NAMES
 
 # This code doesn't deal with calendars, but need to know what to look for
 # in case of words before a date.
@@ -1076,7 +1079,7 @@ def handle_name_tag( tag, level1, out_data ):
     if have_surn_parts:
        space = ''
        for tag2 in LEVEL2_NAMES:
-           if tag2 in names:
+           if tag2 in names and tag2 not in LEVEL2_SUB_NAMES:
               value += space + names[tag2]
               space = ' '
 
