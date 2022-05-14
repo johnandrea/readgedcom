@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.10.2
+v1.10.3
 """
 
 import sys
@@ -180,61 +180,70 @@ run_settings = dict()
 # A place to save all messages which will be copied into the output data. Treat as a global.
 all_messages = []
 
+# This becomes a global into the convert routine
+unicode_table = dict()
 
-def convert_to_unicode( text ):
-    """ Convert common utf-8 encoded characters to unicode for the various display of names etc.
+
+def setup_unicode_table():
+    """ Define utf-8 characters to convert to unicode characters.
     Favouring (Latin) English and French names.
+    Including backslash and quotes to prevent trouble in output as quoted strings, etc.
     """
     # https://www.cl.cam.ac.uk/~mgk25/ucs/quotes.html
     # https://www.compart.com/en/unicode/
-    text = text.replace( '\\', '\\u005c' ) # backslash
-    text = text.replace( '"', '\\u0022' ) # doublequote
-    text = text.replace( "'", '\\u0027' ) # singlequote
-    text = text.replace( '\xe2\x80\x93', '\\u2013' ) # en dash
-    text = text.replace( '\xe2\x80\x94', '\\u2014' ) # em dash
 
-    text = text.replace( '\xc0', '\\u00c0' ) # A grave
-    text = text.replace( '\xe0', '\\u00e0' ) # a grave
-    text = text.replace( '\xc1', '\\u00c1' ) # A acute
-    text = text.replace( '\xe1', '\\u00e1' ) # a acute
-    text = text.replace( '\xc2', '\\u00c2' ) # A circumflex
-    text = text.replace( '\xe2', '\\u00e2' ) # a circumflex
+    lookup_table = dict()
 
-    text = text.replace( '\xc7', '\\u00c7' ) # C cedilia
-    text = text.replace( '\xe7', '\\u00e7' ) # c cedilia
+    lookup_table['back slash'] = [ '\\', '\\u005c' ]
+    lookup_table['double quote'] = [ '"', '\\u0022' ]
+    lookup_table['single quote'] = [ "'", '\\u0027' ]
+    lookup_table['en dash'] = [ '\xe2\x80\x93', '\\u2013' ]
+    lookup_table['em dash'] = [ '\xe2\x80\x94', '\\u2014' ]
+    lookup_table['A grave'] = [ '\xc0', '\\u00c0' ]
+    lookup_table['a grave'] = [ '\xe0', '\\u00e0' ]
+    lookup_table['A acute'] = [ '\xc1', '\\u00c1' ]
+    lookup_table['a acute'] = [ '\xe1', '\\u00e1' ]
+    lookup_table['A circumflex'] = [ '\xc2', '\\u00c2' ]
+    lookup_table['a circumflex'] = [ '\xe2', '\\u00e2' ]
+    lookup_table['C cedilia'] = [ '\xc7', '\\u00c7' ]
+    lookup_table['c cedilia'] = [ '\xe7', '\\u00e7' ]
+    lookup_table['E acute'] = [ '\xc9', '\\u00c9' ]
+    lookup_table['e acute'] = [ '\xe9', '\\u00e9' ]
+    lookup_table['E grave'] = [ '\xc8', '\\u00c8' ]
+    lookup_table['e grave'] = [ '\xe8', '\\u00e8' ]
+    lookup_table['I grave'] = [ '\xcc', '\\u00cc' ]
+    lookup_table['i grave'] = [ '\xec', '\\u00ec' ]
+    lookup_table['I acute'] = [ '\xcd', '\\u00cd' ]
+    lookup_table['i acute'] = [ '\xed', '\\u00ed' ]
+    lookup_table['I circumflex'] = [ '\xce', '\\u00ce' ]
+    lookup_table['i circumflex'] = [ '\xee', '\\u00ee' ]
+    lookup_table['O grave'] = [ '\xd2', '\\u00d2' ]
+    lookup_table['o grave'] = [ '\xf2', '\\u00f2' ]
+    lookup_table['O acute'] = [ '\xd3', '\\u00d3' ]
+    lookup_table['o acute'] = [ '\xf3', '\\u00f3' ]
+    lookup_table['O circumflex'] = [ '\xd4', '\\u00d4' ]
+    lookup_table['o circumflex'] = [ '\xf4', '\\u00f4' ]
+    lookup_table['O diaresis'] = [ '\xd6', '\\u00d6' ]
+    lookup_table['o diaresis'] = [ '\xf6', '\\u00f6' ]
+    lookup_table['U grave'] = [ '\xd9', '\\u00d9' ]
+    lookup_table['u grave'] = [ '\xf9', '\\u00f9' ]
+    lookup_table['U acute'] = [ '\xda', '\\u00da' ]
+    lookup_table['u acute'] = [ '\xfa', '\\u00da' ]
+    lookup_table['U circumflex'] = [ '\xdb', '\\u00db' ]
+    lookup_table['u circumflex'] = [ '\xfb', '\\u00fb' ]
+    lookup_table['U diaresis'] = [ '\xdc', '\\u00dc' ]
+    lookup_table['u diaresis'] = [ '\xfc', '\\u00fc' ]
+    lookup_table['Sharp'] = [ '\xdf', '\\u00df' ]
 
-    text = text.replace( '\xc9', '\\u00c9' ) # E acute
-    text = text.replace( '\xe9', '\\u00e9' ) # e acute
-    text = text.replace( '\xc8', '\\u00c8' ) # E grave
-    text = text.replace( '\xe8', '\\u00e8' ) # e grave
+    return lookup_table
 
-    text = text.replace( '\xcc', '\\u00cc' ) # I grave
-    text = text.replace( '\xec', '\\u00ec' ) # i grave
-    text = text.replace( '\xcd', '\\u00cd' ) # I acute
-    text = text.replace( '\xed', '\\u00ed' ) # i acute
-    text = text.replace( '\xce', '\\u00ce' ) # I circumflex
-    text = text.replace( '\xee', '\\u00ee' ) # i circumflex
 
-    text = text.replace( '\xd2', '\\u00d2' ) # O grave
-    text = text.replace( '\xf2', '\\u00f2' ) # o grave
-    text = text.replace( '\xd3', '\\u00d3' ) # O acute
-    text = text.replace( '\xf3', '\\u00f3' ) # o acute
-    text = text.replace( '\xd4', '\\u00d4' ) # O circumflex
-    text = text.replace( '\xf4', '\\u00f4' ) # o circumflex
-    text = text.replace( '\xd6', '\\u00d6' ) # O diaresis
-    text = text.replace( '\xf6', '\\u00f6' ) # o diaresis
+def convert_to_unicode( text ):
+    """ Convert common utf-8 encoded characters to unicode for the various display of names etc.
+    """
 
-    text = text.replace( '\xd9', '\\u00d9' ) # U grave
-    text = text.replace( '\xf9', '\\u00f9' ) # u grave
-    text = text.replace( '\xda', '\\u00da' ) # U acute
-    text = text.replace( '\xfa', '\\u00da' ) # u acute
-    text = text.replace( '\xdb', '\\u00db' ) # U circumflex
-    text = text.replace( '\xfb', '\\u00fb' ) # u circumflex
-    text = text.replace( '\xdc', '\\u00dc' ) # U diaresis
-    text = text.replace( '\xfc', '\\u00fc' ) # u diaresis
-
-    text = text.replace( '\xdf', '\\u00df' ) # B sharp
-
+    for item in unicode_table:
+        text = text.replace( unicode_table[item][0], unicode_table[item][1] )
     return text
 
 
@@ -1686,6 +1695,7 @@ def read_file( datafile, given_settings=None ):
     Settings are optional, see the documentation.
     """
     global run_settings
+    global unicode_table
 
     assert isinstance( datafile, str ), 'Non-string passed as the filename.'
 
@@ -1710,6 +1720,8 @@ def read_file( datafile, given_settings=None ):
        if PARSED_INDI == PARSED_FAM:
           raise ValueError( SELF_CONSISTENCY_ERR + 'section name duplication:' + str(PARSED_INDI) )
        ensure_lowercase_constants()
+
+    unicode_table = setup_unicode_table()
 
     # These are the zero level tags expected in the file.
     # Some may not occur.
