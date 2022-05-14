@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.10.1
+v1.10.2
 """
 
 import sys
@@ -182,33 +182,70 @@ all_messages = []
 
 
 def convert_to_unicode( text ):
-    """ Convert common utf-8 encoded characters to unicode for the various display of names etc."""
-    text = text.replace( '\xe7', '\\u00e7' ) #c cedilia
-    text = text.replace( '\xe9', '\\u00e9' ) #e acute
-    text = text.replace( '\xc9', '\\u00c9' ) #E acute
-    text = text.replace( '\xe8', '\\u00e8' ) #e agrave
-    text = text.replace( '\xe1', '\\u00e1' ) #a acute
-    text = text.replace( '\xc1', '\\u00c1' ) #A acute
-    text = text.replace( '\xe0', '\\u00e0' ) #a agrave
-    text = text.replace( '\xf6', '\\u00f6' ) #o diaresis
+    """ Convert common utf-8 encoded characters to unicode for the various display of names etc.
+    Favouring (Latin) English and French names.
+    """
+    # https://www.cl.cam.ac.uk/~mgk25/ucs/quotes.html
+    # https://www.compart.com/en/unicode/
+    text = text.replace( '\\', '\\u005c' ) # backslash
+    text = text.replace( '"', '\\u0022' ) # doublequote
+    text = text.replace( "'", '\\u0027' ) # singlequote
+    text = text.replace( '\xe2\x80\x93', '\\u2013' ) # en dash
+    text = text.replace( '\xe2\x80\x94', '\\u2014' ) # em dash
+
+    text = text.replace( '\xc0', '\\u00c0' ) # A grave
+    text = text.replace( '\xe0', '\\u00e0' ) # a grave
+    text = text.replace( '\xc1', '\\u00c1' ) # A acute
+    text = text.replace( '\xe1', '\\u00e1' ) # a acute
+    text = text.replace( '\xc2', '\\u00c2' ) # A circumflex
+    text = text.replace( '\xe2', '\\u00e2' ) # a circumflex
+
+    text = text.replace( '\xc7', '\\u00c7' ) # C cedilia
+    text = text.replace( '\xe7', '\\u00e7' ) # c cedilia
+
+    text = text.replace( '\xc9', '\\u00c9' ) # E acute
+    text = text.replace( '\xe9', '\\u00e9' ) # e acute
+    text = text.replace( '\xc8', '\\u00c8' ) # E grave
+    text = text.replace( '\xe8', '\\u00e8' ) # e grave
+
+    text = text.replace( '\xcc', '\\u00cc' ) # I grave
+    text = text.replace( '\xec', '\\u00ec' ) # i grave
+    text = text.replace( '\xcd', '\\u00cd' ) # I acute
+    text = text.replace( '\xed', '\\u00ed' ) # i acute
+    text = text.replace( '\xce', '\\u00ce' ) # I circumflex
+    text = text.replace( '\xee', '\\u00ee' ) # i circumflex
+
+    text = text.replace( '\xd2', '\\u00d2' ) # O grave
+    text = text.replace( '\xf2', '\\u00f2' ) # o grave
+    text = text.replace( '\xd3', '\\u00d3' ) # O acute
+    text = text.replace( '\xf3', '\\u00f3' ) # o acute
+    text = text.replace( '\xd4', '\\u00d4' ) # O circumflex
+    text = text.replace( '\xf4', '\\u00f4' ) # o circumflex
+    text = text.replace( '\xd6', '\\u00d6' ) # O diaresis
+    text = text.replace( '\xf6', '\\u00f6' ) # o diaresis
+
+    text = text.replace( '\xd9', '\\u00d9' ) # U grave
+    text = text.replace( '\xf9', '\\u00f9' ) # u grave
+    text = text.replace( '\xda', '\\u00da' ) # U acute
+    text = text.replace( '\xfa', '\\u00da' ) # u acute
+    text = text.replace( '\xdb', '\\u00db' ) # U circumflex
+    text = text.replace( '\xfb', '\\u00fb' ) # u circumflex
+    text = text.replace( '\xdc', '\\u00dc' ) # U diaresis
+    text = text.replace( '\xfc', '\\u00fc' ) # u diaresis
+
+    text = text.replace( '\xdf', '\\u00df' ) # B sharp
+
     return text
 
 
 def convert_to_html( text ):
     """ Convert common utf-8 encoded characters to html for the various display of names etc."""
-    #https://dev.w3.org/html5/html-author/charref
+    # https://dev.w3.org/html5/html-author/charref
     text = text.replace('&','&smp;').replace('<','&lt;').replace('>','&gt;' )
     text = text.replace('"','&quot;').replace("'",'&apos;')
     text = text.replace('`','&#96;').replace('\\','&bsol;')
-
-    text = text.replace( '\xe7', '&#231;' ) #c cedilia
-    text = text.replace( '\xe9', '&#233;' ) #e acute
-    text = text.replace( '\xc9', '&#201;' ) #E acute
-    text = text.replace( '\xe8', '&#232;' ) #e agrave
-    text = text.replace( '\xe1', '&#225;' ) #a acute
-    text = text.replace( '\xc1', '&#193;' ) #A acute
-    text = text.replace( '\xe0', '&#224;' ) #a agrave
-    text = text.replace( '\xf6', '&#246;' ) #o diaresis
+    # encode generates a byte array, decode goes back to a string
+    text = text.encode( 'ascii', 'xmlcharrefreplace' ).decode( 'ascii' )
     return text
 
 
