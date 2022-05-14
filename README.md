@@ -404,5 +404,5 @@ This code is provided with neither support nor warranty.
 - Find people based on family events.
 - Use proof flags of other programs (not just RootsMagic).
 - Try harder to fix a malformed date. Perhaps fuzzy date parsing.
-- Consider HTML conversion via: return text.encode( 'ascii', 'xmlcharrefreplace' ).decode( 'ascii' ) along with the regular ampersand, greater-than, quotes, etc.
+- Consider using encode/decode for better unicode conversion.
 - Consider reading stdin via: for line in io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8'):
