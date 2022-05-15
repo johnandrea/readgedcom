@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.10.3
+v1.10.4
 """
 
 import sys
@@ -190,11 +190,12 @@ def setup_unicode_table():
     Including backslash and quotes to prevent trouble in output as quoted strings, etc.
     """
     # https://www.cl.cam.ac.uk/~mgk25/ucs/quotes.html
-    # https://www.compart.com/en/unicode/
+    # https://www.compart.com/en/unicode/block
 
     lookup_table = dict()
 
     lookup_table['back slash'] = [ '\\', '\\u005c' ]
+    lookup_table['back quote'] = [ '`', '\\u0060' ]
     lookup_table['double quote'] = [ '"', '\\u0022' ]
     lookup_table['single quote'] = [ "'", '\\u0027' ]
     lookup_table['en dash'] = [ '\xe2\x80\x93', '\\u2013' ]
@@ -238,18 +239,19 @@ def setup_unicode_table():
     return lookup_table
 
 
-def convert_to_unicode( text ):
+def convert_to_unicode( s ):
     """ Convert common utf-8 encoded characters to unicode for the various display of names etc.
     """
-
+    text = s.strip()
     for item in unicode_table:
         text = text.replace( unicode_table[item][0], unicode_table[item][1] )
     return text
 
 
-def convert_to_html( text ):
+def convert_to_html( s ):
     """ Convert common utf-8 encoded characters to html for the various display of names etc."""
     # https://dev.w3.org/html5/html-author/charref
+    text = s.strip()
     text = text.replace('&','&smp;').replace('<','&lt;').replace('>','&gt;' )
     text = text.replace('"','&quot;').replace("'",'&apos;')
     text = text.replace('`','&#96;').replace('\\','&bsol;')
