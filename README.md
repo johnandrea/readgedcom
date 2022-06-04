@@ -394,6 +394,8 @@ for indi in data[readgedcom.PARSED_INDI]:
 
 The best-event list for marriages contains an item for "name". There is no such item for marriages.
 
+Some multiple events (census and immigration for example) which can have multiple entries are not handled properly.
+
 ## Bug reports
 
 This code is provided with neither support nor warranty.
