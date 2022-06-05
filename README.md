@@ -271,7 +271,7 @@ dict also contains other optional items and a few computed ones:
 }
 ```
 
-Each event (birth, death, burial, etc.) is also a dict with keys of the various
+Each event (birth, death, census, immigration, etc.) is also a dict with keys of the various
 sub-record tags:
 ```
 {
@@ -376,25 +376,54 @@ section (unless no events exist) as 'tag name:int
 }
 ```
 
+Not every event has a 'best', its for a few events which can't possibly happen more than
+once: birth, death, etc. "name" and "sex" are included bacause its possible that research could
+have proven/disputed records for those non-event items.
+Check the list INDI_SINGLE_EVENTS and for families FAM_SINGLE_EVENTS.
+
 To display a "best" event, the code is something like this:
 ```
 def show_date( indi, tag, indi_data ):
-    print( indi, tag )
-    if tag in indi_data:
-       best = 0
-       if tag in indi_data[readgedcom.BEST_EVENT_KEY]:
-          best = indi_data[readgedcom.BEST_EVENT_KEY][tag]
-       if indi_data[tag][best]['date']['is_known']:
-          print( indi_data[tag][best]['date']['in'] )
+    def show_date_in_event( event_data ):
+        if 'date' in event_data and event_data['date']['is_known']:
+           print( indi, tag, event_data['date']['in'] )
 
+    if tag in indi_data:
+       best = indi_data[readgedcom.BEST_EVENT_KEY].get( tag, 0 )
+       show_date_in_event( indi_data[tag][best] )
+
+# every person
 for indi in data[readgedcom.PARSED_INDI]:
     show_date( indi, 'birt', data[readgedcom.PARSED_INDI][indi] ) 
 ```
+
+However for events in general, for example census records which occur multiple times
+over multiple years:
+```
+def show_date( indi, tag, indi_data ):
+    def show_date_in_event( event_data ):
+        if 'date' in event_data and event_data['date']['is_known']:
+           print( indi, tag, event_data['date']['in'] )
+
+    if tag in indi_data:
+       if tag in indi_data[readgedcom.BEST_EVENT_KEY]:
+          best = indi_data[readgedcom.BEST_EVENT_KEY].get( tag, 0 )
+          show_date_in_event( indi_data[tag][best] )
+       else:
+          # not a single time event, show all
+          for event_record in indi_data[readgedcom.BEST_EVENT_KEY][tag]
+              show_date_in_event( event_record )
+
+# every person
+for indi in data[readgedcom.PARSED_INDI]:
+    show_date( indi, 'cens', data[readgedcom.PARSED_INDI][indi] ) 
+```
+
+The handling of non-single events with proven/disproved markers will have to be checked in your
+own code.
 ## Bugs
 
-The best-event list for marriages contains an item for "name". There is no such item for marriages.
-
-Some multiple events (census and immigration for example) which can have multiple entries are not handled properly.
+Not every possible unicode character conversion is handled.
 
 ## Bug reports
 
