@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.11.0
+v1.12.0
 """
 
 import sys
@@ -85,12 +85,24 @@ OTHER_INDI_TAGS = ['sex', 'exid', 'fams', 'famc']
 FAM_MEMBER_TAGS = ['husb', 'wife', 'chil']
 OTHER_FAM_TAGS = []
 
+# Events in the life of a person (or family) which can only occur once
+# but might have more than one entry because research is inconclusive.
+# These are the ones which will occur in the 'best' lists. See below
+# for proved/disproves,etc. and example code.
+# A person could be buried multiple times, immigrate multiple times, etc.
+# and such entries would be a list and if proven/disproved they would need
+# to be checked on their own.
+INDI_SINGLE_EVENTS = ['name','sex','birt','deat']
+# Assuming that a couple married the second time constiutes a second
+# family entry. A couple could for instance get engaged more than once.
+FAM_SINGLE_EVENTS = ['marr','div','anul']
+
 # Individual records which are only allowed to occur once.
 # However they will still be placed into an array to be consistent
 # with the other facts/events.
 # An exception will be thrown if a duplicate is found.
 # Use of a validator is recommended.
-ONCE_INDI_TAGS = ['sex', 'exid']
+ONCE_INDI_TAGS = ['exid']
 
 # Family items allowed only once.
 # See the description of individuals only once.
@@ -241,6 +253,7 @@ def setup_unicode_table():
 
 def convert_to_unicode( s ):
     """ Convert common utf-8 encoded characters to unicode for the various display of names etc.
+        The pythonic conversion routines don't seem to do the job.
     """
     text = s.strip()
     for item in unicode_table:
@@ -934,7 +947,7 @@ def get_note( level2 ):
     return value.replace( '  ', ' ' )
 
 
-def set_best_events( event_list, always_first_list, out_data ):
+def set_best_events( single_time_list, out_data ):
     """ For each event with multiple instances within a single individual or family
         Set the index of the "best" instance based on the proof and primary settings.
         Disproven events will not become a best selected.
@@ -946,24 +959,12 @@ def set_best_events( event_list, always_first_list, out_data ):
 
     out_data[BEST_EVENT_KEY] = dict()
 
-    # Best name is always the first one, and it must exist even if set to "unknown"
-    out_data[BEST_EVENT_KEY]['name'] = 0
-
-    # No further tests for the "best" of these ones. Always set to index zero.
-    # Set for consistency with all events.
-    for tag in always_first_list:
-        if tag in out_data:
-           out_data[BEST_EVENT_KEY][tag] = 0
-
-
     # Initial value is smaller than the smallest of all in order for the first test
     # to pick up the first item tested.
     smallest = min( EVENT_PROOF_VALUES.values() ) - 1
 
-    for tag in event_list:
-
-        # custom events ignored
-        if tag != 'even' and tag in out_data:
+    for tag in single_time_list:
+        if tag in out_data:
 
            # Find the best: disproven having lowest value, proven is highest
            value_best = smallest
@@ -1212,7 +1213,7 @@ def parse_family( level0, out_data ):
            level1['parsed'] = { 'key':tag, 'index': len(out_data[tag])-1 }
 
     ensure_not_twice( ONCE_FAM_TAGS, 'Family', level0['tag'], out_data )
-    set_best_events( FAM_EVENT_TAGS, ONCE_FAM_TAGS, out_data )
+    set_best_events( FAM_SINGLE_EVENTS, out_data )
 
 
 def setup_parsed_families( sect, psect, data ):
@@ -1280,7 +1281,7 @@ def parse_individual( level0, out_data ):
        out_data[tag].append( names )
 
     ensure_not_twice( ONCE_INDI_TAGS, 'Individual', level0['tag'], out_data )
-    set_best_events( INDI_EVENT_TAGS, ONCE_INDI_TAGS, out_data )
+    set_best_events( INDI_SINGLE_EVENTS, out_data )
 
 
 def setup_parsed_individuals( sect, psect, data ):
@@ -1464,7 +1465,7 @@ def compute_privatize_flag( death_limit, birth_limit, data ):
         if key in data:
            # relax the setting, keep checking the date
            result = PRIVATIZE_MIN
-           best_event = data[BEST_EVENT_KEY][key]
+           best_event = data[BEST_EVENT_KEY].get( key, 0 )
            if 'date' in data[key][best_event]:
               if data[key][best_event]['date']['is_known']:
                  tested_date = True
@@ -1483,7 +1484,7 @@ def compute_privatize_flag( death_limit, birth_limit, data ):
 
        for key in birth_keys:
            if key in data:
-              best_event = data[BEST_EVENT_KEY][key]
+              best_event = data[BEST_EVENT_KEY].get( key, 0 )
               if 'date' in data[key][best_event]:
                  if data[key][best_event]['date']['is_known']:
                     if data[key][best_event]['date']['max']['value'] <= birth_limit:
@@ -1876,11 +1877,7 @@ def match_individual( indi_data, tag, subtag, search_value, operation ):
         return result
 
     def find_best( tag ):
-       best = 0
-       if BEST_EVENT_KEY in indi_data:
-          if tag in indi_data[BEST_EVENT_KEY]:
-             best = indi_data[BEST_EVENT_KEY][tag]
-       return best
+        return indi_data[BEST_EVENT_KEY].get( tag, 0 )
 
 
     found = False
@@ -1920,6 +1917,8 @@ def match_individual( indi_data, tag, subtag, search_value, operation ):
          # its a regular event tag (birth, death, etc.)
 
          # need to find the best one
+         # probably ok to return zero even if its not a single event tag
+         # because what does  census.date mean for multi year census entries
          best = find_best( tag )
 
          # these events have dates and places, if not specified then skip it
@@ -1960,10 +1959,7 @@ def get_indi_display( indi_data ):
 
         full_result = ''
         year_result = ''
-        best = 0
-        if BEST_EVENT_KEY in indi_data:
-           if tag in indi_data[BEST_EVENT_KEY]:
-              best = indi_data[BEST_EVENT_KEY][tag]
+        best = indi_data[BEST_EVENT_KEY].get( tag, 0 )
         if tag in indi_data:
            if 'date' in indi_data[tag][best]:
               if indi_data[tag][best]['date']['is_known']:
