@@ -1,7 +1,7 @@
 import sys
 import readgedcom
 
-# display the date and locations for everyone events
+# display the date and locations for everyone's events
 
 def show_1_record( indi, name, event_name, event_data ):
     if 'date' in event_data and 'plac' in event_data:
