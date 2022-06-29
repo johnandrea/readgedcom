@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.12.0
+v1.12.1
 """
 
 import sys
@@ -124,7 +124,7 @@ EVENT_PROOF_DEFAULT = 'other'
 EVENT_PROOF_VALUES = {'disproven':0, EVENT_PROOF_DEFAULT:1, 'proven':2}
 
 # Sub parts to not generally display
-LEVEL2_SUB_NAMES = ['npfx', 'nsfx']
+LEVEL2_SUB_NAMES = ['npfx', 'nick', 'nsfx']
 
 # Name sub-parts in order of display appearance
 LEVEL2_NAMES = ['givn', 'surn'] + LEVEL2_SUB_NAMES
