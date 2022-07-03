@@ -431,7 +431,8 @@ This code is provided with neither support nor warranty.
 
 ### Future enhancements
 
-- Collect name type (nickname, aka, etc.) into the individual parsed section.
+- Collect name type (aka, etc.) into the individual parsed section.
+- Find people using childof, parentof, partnerof with function for multiple list intersection. 
 - Find people based on family events.
 - Use proof flags of other programs (not just RootsMagic).
 - Try harder to fix a malformed date. Perhaps fuzzy date parsing.
