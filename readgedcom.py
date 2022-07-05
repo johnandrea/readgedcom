@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.12.1
+v1.12.2
 """
 
 import sys
@@ -194,6 +194,20 @@ all_messages = []
 
 # This becomes a global into the convert routine
 unicode_table = dict()
+
+
+def list_intersection( *lists ):
+    """ For use with find_individuals results.
+        Return the intersection of all the given lists. """
+    result = []
+    for l in lists:
+        if isinstance( l, list ):
+           if result:
+              r = result
+              result = [item for item in l if item in r]
+           else:
+              result = l
+    return result
 
 
 def setup_unicode_table():
