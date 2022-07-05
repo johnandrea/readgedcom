@@ -52,6 +52,8 @@ list_of_indi = find_individuals( data, search_tag, search_value, operation )
 
 print_individuals( data, list_of_indi )
 
+list_intersection( list1, list2, ... )
+
 ```
 
 ## Settings
@@ -124,8 +126,8 @@ data = readgedcom.read_file( sys.argv[1] )
 found_name = readgedcom.find_individuals( data, 'name', 'Anne ', 'in' )
 found_age = readgedcom.find_individuals( data, 'birt.date', '19600101', '<' )
 
-# intersection of the two lists
-found_both = [item for item in found_name if item in found_age]
+# people who exist in both lists
+found_both = readgedcom.list_intersection( found_name, found_age )
 
 readgedcom.print_individuals( data, found_both )
 ```
@@ -433,6 +435,7 @@ This code is provided with neither support nor warranty.
 
 - Collect name type (nickname, aka, etc.) into the individual parsed section.
 - Find people based on family events.
+- Find people based on childof, parentof, partnerof.
 - Use proof flags of other programs (not just RootsMagic).
 - Try harder to fix a malformed date. Perhaps fuzzy date parsing.
 - Consider using encode/decode for better unicode conversion.
