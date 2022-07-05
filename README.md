@@ -52,7 +52,7 @@ list_of_indi = find_individuals( data, search_tag, search_value, operation )
 
 print_individuals( data, list_of_indi )
 
-list_intersection( list1, list2, ... )
+new_list = list_intersection( list1, list2, ... )
 
 ```
 
