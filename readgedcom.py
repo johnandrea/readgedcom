@@ -41,13 +41,14 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.12.2
+v1.12.3
 """
 
 import sys
 import copy
 import re
 import datetime
+from collections.abc import Iterable
 
 # GEDCOM v7.0 requires this character sequence at the start of the file.
 # It may also be present in older versions (RootsMagic does include it).
@@ -201,7 +202,7 @@ def list_intersection( *lists ):
         Return the intersection of all the given lists. """
     result = []
     for l in lists:
-        if isinstance( l, list ):
+        if isinstance( l, Iterable ):
            if result:
               r = result
               result = [item for item in l if item in r]
