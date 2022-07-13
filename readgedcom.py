@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.12.3
+v1.12.4
 """
 
 import sys
@@ -2035,7 +2035,8 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
                     "birt.date", "deat.plac", etc.
                     Also, items which are custom facts which are events
                     must be specified like this  "event.exid" or "even.exid"
-        search_value: for matching against the data. Must be a string.
+        search_value: for matching against the data.
+                    Must be a string. but this assumes data keys (as used for family matches: childrenof, etc.) makes use of strings.
                     For dates specify as "yyyymmdd".
         operation: (default "=") matching condition, one of
                     "=", "!=", ">", ">=", "<", "<=", "in", "not in", "exist", "not exist".
@@ -2070,31 +2071,117 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
 
         return result
 
+    def value_search():
+        result = []
 
-    OPERATORS = ['=', '!=', '<', '<=', '>', '=>', 'in', 'not in', 'exist', 'not exist']
-    ALT_OPERATORS = {'==':'=', 'not=':'!=', 'not =':'!=', '=<':'<=', '>=':'=>', '!in':'not in', 'exists':'exist', 'not exists':'not exist', '!exist':'not exist', '!exists':'not exist' }
+        if operation == 'exist':
+           for indi in data[PARSED_INDI]:
+               if existance_match( data[PARSED_INDI][indi], search_tag, search_subtag ):
+                  result.append( indi )
 
-    # full words
-    ALT_TAG = {'birth':'birt', 'born':'birt', 'death':'deat', 'died':'deat', 'event':'even' }
-    ALT_SUBTAG = { 'place':'plac' }
+        elif operation == 'not exist':
+           for indi in data[PARSED_INDI]:
+               if not existance_match( data[PARSED_INDI][indi], search_tag, search_subtag ):
+                  result.append( indi )
 
-    # possibly handle marriage lookups in a future version
-    #ALT_SUBTAG = {'marriage':'marr', 'divorce':'div' }
+        else:
+           for indi in data[PARSED_INDI]:
+               if search_tag in data[PARSED_INDI][indi]:
+                  if match_individual( data[PARSED_INDI][indi], search_tag, search_subtag, search_value, operation ):
+                     result.append( indi )
 
-    # Use this to skip an event defaulting the the date subtag
-    # for example when checking existance of any birth tag rather than just birth.date
-    IGNORE_SUBTAG_VALUE = '_'
+        return result
+
+    def relation_search():
+        def get_families( fam_key ):
+            # return the families in which the searh value is
+            # a parent or a child using "fams" or "famc"
+            result = []
+            if fam_key in data[PARSED_INDI][search_value]:
+               for fam in data[PARSED_INDI][search_value][fam_key]:
+                   result.append( fam )
+            return result
+
+        result = []
+
+        if search_value in data[PARSED_INDI]:
+           if search_tag == 'parentsof':
+              # find the families in which the search_value is a child
+              for fam in get_families( 'famc' ):
+                  for partner in ['husb','wife']:
+                      if partner in data[PARSED_FAM][fam]:
+                         result.append( data[PARSED_FAM][fam][partner][0] )
+
+           elif search_tag == 'childrenof':
+              # find the families in which the search value is a parent
+              for fam in get_families( 'fams' ):
+                  # if no children, there should be am empty list
+                  for child in data[PARSED_FAM][fam]['chil']:
+                      result.append( child )
+
+           elif search_tag == 'partnersof':
+              for fam in get_families( 'fams' ):
+                  for partner in ['husb','wife']:
+                      if partner in data[PARSED_FAM][fam]:
+                         partner_id = data[PARSED_FAM][fam][partner][0]
+                         # the other partner in the family
+                         if partner_id != search_value:
+                            result.append( partner_id )
+
+        return result
+
 
     assert isinstance( data, dict ), 'Non-dict passed as data'
     assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
     assert isinstance(search_tag,str), 'Non-string passed as search_tag'
     assert isinstance(search_value,str), 'Non-string passed as search_value'
     assert isinstance(operation,str), 'Non-string passed as comparison operator'
-    assert operation.lower().strip() in OPERATORS or operation.lower().strip() in ALT_OPERATORS, 'Invalid comparison operator:' + operation + ' not one of ' + str(OPERATORS)
-    assert search_tag.strip() != '', 'Passed an empty search tag'
+
+
+    OPERATORS = ['=', '!=', '<', '<=', '>', '=>', 'in', 'not in', 'exist', 'not exist']
+    ALT_OPERATORS = {'==':'=', 'not=':'!=', 'not =':'!=', '=<':'<=', '>=':'=>', '!in':'not in', 'exists':'exist', 'not exists':'not exist', '!exist':'not exist', '!exists':'not exist' }
 
     search_tag = search_tag.lower().strip()
     operation = operation.lower().strip()
+
+    assert operation not in OPERATORS or operation not in ALT_OPERATORS, 'Invalid comparison operator "' + operation + '" not one of ' + str(OPERATORS)
+
+    # its more difficult to check that the search_tag is ok, there are many variations
+    # should it fail or just return an empty list
+
+    assert search_tag != '', 'Passed an empty search tag'
+
+    ## could be used where only equality is possible
+    #SAME_AS_EQUAL = ['=','in','exist']
+
+    search_type = 'value'
+
+    # full words
+    ALT_TAG = {'birth':'birt', 'born':'birt', 'death':'deat', 'died':'deat', 'event':'even' }
+
+    # or for the relationships
+    for prefix in ['partners','parents','children']:
+        for suffix in [' of','-of','_of']:
+            alt_name = prefix + suffix
+            name = prefix + 'of'
+            ALT_TAG[alt_name] = name
+            if search_tag in (name,alt_name):
+               search_type = 'relation'
+    # The other variants change the meaning
+    # parents-of is not parent-of
+    # partners-of is partner-of, but don't allow it because of the above
+    # and childs-of is not proper english.
+
+
+    ALT_SUBTAG = { 'place':'plac' }
+
+    # possibly handle marriage lookups in a future version
+    # but so many partnerships can exist without a date
+    #ALT_SUBTAG = {'marriage':'marr', 'divorce':'div' }
+
+    # Use this to skip an event defaulting the the date subtag
+    # for example when checking existance of any birth tag rather than just birth.date
+    IGNORE_SUBTAG_VALUE = '_'
 
     # The selection tag might be a sub-section,
     # such as a date or birth: passed as birt.date
@@ -2131,25 +2218,9 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
     if operation in ALT_OPERATORS:
        operation = ALT_OPERATORS[operation]
 
-    result = []
-
-    if operation == 'exist':
-       for indi in data[PARSED_INDI]:
-           if existance_match( data[PARSED_INDI][indi], search_tag, search_subtag ):
-              result.append( indi )
-
-    elif operation == 'not exist':
-       for indi in data[PARSED_INDI]:
-           if not existance_match( data[PARSED_INDI][indi], search_tag, search_subtag ):
-              result.append( indi )
-
-    else:
-       for indi in data[PARSED_INDI]:
-           if search_tag in data[PARSED_INDI][indi]:
-              if match_individual( data[PARSED_INDI][indi], search_tag, search_subtag, search_value, operation ):
-                 result.append( indi )
-
-    return result
+    if search_type == 'relation':
+       return relation_search()
+    return value_search()
 
 
 def get_indi_descendant_count( indi, individuals, families, counts ):
