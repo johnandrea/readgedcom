@@ -423,6 +423,34 @@ for indi in data[readgedcom.PARSED_INDI]:
 
 The handling of non-single events with proven/disproved markers will have to be checked in your
 own code.
+
+## Using find_individuals
+
+Operations: "=", "not =", "<", "<=", ">", ">=", "in", "not in", "exist", "not exist". Default is "=" and in some cases the operator is ignored.
+
+When selecting dates use a full date as a string in the format "yyyymmdd". Though a day of "00" or month of "00" can be used for less or greater comparisons.
+
+Search tag: Use the name of an individuals fact/event such as "birt", "deat", "name", etc. Sub-tags can be selected like "birt.date", "deat.plac", etc. By default the "date" is the sub-tag, but using "_" as a sub-tag is useful for testing the existance of a tag like "birt._" If a custom event is required, use the prefix "even." as in "even.dnamatch".
+
+Finding relatives: the search tag can be one of "partnersof", "parentsof", "childrenof". The opeator is ignored and the search value should be a single identifier for an individual in the data.
+
+### Examples
+
+# getting all the "Ellen Smith"s born between 1850 and 1875
+list_a = find_individuals( data, 'surn', 'Smith', '=' )
+list_b = find_individuals( data, 'givn', 'Ellen", 'in' )
+list_c = find_individuals( data, 'birt.date', '18500000', '>' )
+list_d = find_individuals( data, 'birt', '18760101', '<' )
+# Note: use "in" for "givn" rather than "=" because givn might contain a middle name
+smiths = list_intersection( list_a, list_b, list_c, list_d )
+for indi in smiths:
+   print( 'found person' )
+   print_individuals( data, [indi] )
+   print( 'her partners' )
+   print_individuals( find_individuals( data, 'partnersof', indi ) )
+   print( 'her children' )
+   print_individuals( find_individuals( data, 'childrenof', indi ) )
+
 ## Bugs
 
 Not every possible unicode character conversion is handled.
@@ -435,8 +463,7 @@ This code is provided with neither support nor warranty.
 
 - Collect name type (nickname, aka, etc.) into the individual parsed section.
 - Find people based on family events.
-- Find people based on childof, parentof, partnerof.
-- Use proof flags of other programs (not just RootsMagic).
+- Use proof flags of other programs (not just RootsMagic, if they exist).
 - Try harder to fix a malformed date. Perhaps fuzzy date parsing.
 - Consider using encode/decode for better unicode conversion.
 - Consider reading stdin via: for line in io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8'):
