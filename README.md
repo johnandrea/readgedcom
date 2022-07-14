@@ -430,12 +430,13 @@ Operations: "=", "not =", "<", "<=", ">", ">=", "in", "not in", "exist", "not ex
 
 When selecting dates use a full date as a string in the format "yyyymmdd". Though a day of "00" or month of "00" can be used for less or greater comparisons.
 
-Search tag: Use the name of an individuals fact/event such as "birt", "deat", "name", etc. Sub-tags can be selected like "birt.date", "deat.plac", etc. By default the "date" is the sub-tag, but using "_" as a sub-tag is useful for testing the existance of a tag like "birt._" If a custom event is required, use the prefix "even." as in "even.dnamatch".
+Search tag: Use the name of an individuals fact/event such as "birt", "deat", "name", etc. Sub-tags can be selected like "birt.date", "deat.plac", etc. By default the "date" is the sub-tag, but using underscore as a sub-tag is useful for testing the existance of a tag like "birt.\_" If a custom event is required, use the prefix "even." as in "even.dnamatch".
 
 Finding relatives: the search tag can be one of "partnersof", "parentsof", "childrenof". The opeator is ignored and the search value should be a single identifier for an individual in the data.
 
 ### Examples
 
+```
 # getting all the "Ellen Smith"s born between 1850 and 1875
 list_a = find_individuals( data, 'surn', 'Smith', '=' )
 list_b = find_individuals( data, 'givn', 'Ellen", 'in' )
@@ -449,7 +450,9 @@ for indi in smiths:
    print( 'her partners' )
    print_individuals( find_individuals( data, 'partnersof', indi ) )
    print( 'her children' )
-   print_individuals( find_individuals( data, 'childrenof', indi ) )
+   print_individuals( find_individuals( data, 'childrenof', indi )
+```
+   
 
 ## Bugs
 
