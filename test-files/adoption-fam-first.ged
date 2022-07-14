@@ -1,0 +1,48 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SOUR Manually-Creation
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME John A Andrea
+0 @I1@ INDI
+1 NAME Test /Person/
+2 GIVN Tester
+2 SURN Person
+1 ADOP
+2 DATE 1931
+1 FAMC @F1@
+1 FAMC @F2@
+0 @I2@ INDI
+1 NAME Mother /Adoptive/
+2 GIVN Mother
+2 SURN Adoptive
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Father /Adoptive/
+2 GIVN Father
+2 SURN Adoptive
+1 FAMS @F1@
+0 @I4@ INDI
+1 NAME Mother /Biological/
+2 GIVN Mother
+2 SURN Biological
+1 FAMS @F2@
+0 @I5@ INDI
+1 NAME Father /Biological/
+2 GIVN Father
+2 SURN Biological
+1 FAMS @F2@
+0 @F1@ FAM
+1 HUSB @I3@
+1 WIFE @I2@
+1 CHIL @I1@
+2 _FREL adopted
+2 _MREL adopted
+0 @F2@ FAM
+1 HUSB @I5@
+1 WIFE @I4@
+1 CHIL @I1@
+0 TRLR
