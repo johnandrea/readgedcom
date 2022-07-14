@@ -466,6 +466,7 @@ This code is provided with neither support nor warranty.
 
 - Collect name type (nickname, aka, etc.) into the individual parsed section.
 - Find people based on family events.
+- How to handle non-biological relationships.
 - Use proof flags of other programs (not just RootsMagic, if they exist).
 - Try harder to fix a malformed date. Perhaps fuzzy date parsing.
 - Consider using encode/decode for better unicode conversion.
