@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.12.4
+v1.13.0
 """
 
 import sys
@@ -841,8 +841,6 @@ def date_comparable_results( original, key, date_data ):
     if not date_data['malformed']:
        date_data['malformed'] = results['malformed']
 
-    #print( 'date data:', date_data, ':', file=sys.stderr ) #debug
-
     if results['add_abt_modifier']:
        if not date_data['min']['modifier']:
           date_data['min']['modifier'] = 'ABT'
@@ -1189,6 +1187,18 @@ def ensure_not_twice( tag_list, sect_type, ref_id, data ):
 def parse_family( level0, out_data ):
     """ Parse a family record from the input section to the parsed families section."""
 
+    def handle_child_item( tag, level1 ):
+        # special items such as RootsMagic non-biological tags
+        # 1 CHIL @I1@
+        # 2 _FREL adopted
+        # 2 _MREL adopted
+        # but remove the underscore (and change to lowercase)
+        for level2 in level1['sub']:
+            tag2 = level2['tag']
+            if tag2 in ['_mrel','_frel']:
+               tag2 = tag2.replace( '_','' )
+               out_data[tag2] = level2['value'].lower()
+
     # Use this flag on output of modified data
     out_data[PRIVATIZE_FLAG] = PRIVATIZE_OFF
 
@@ -1211,6 +1221,9 @@ def parse_family( level0, out_data ):
 
         if tag in FAM_MEMBER_TAGS:
            out_data[tag].append( extract_indi_id( value ) )
+
+           if tag == 'chil':
+              handle_child_item( tag, level1 )
 
         elif tag in OTHER_FAM_TAGS:
            out_data[tag].append( value )
