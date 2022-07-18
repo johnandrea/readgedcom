@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.13.0
+v1.13.1
 """
 
 import sys
@@ -1187,17 +1187,31 @@ def ensure_not_twice( tag_list, sect_type, ref_id, data ):
 def parse_family( level0, out_data ):
     """ Parse a family record from the input section to the parsed families section."""
 
-    def handle_child_item( tag, level1 ):
+    def handle_child_item( child, level1 ):
         # special items such as RootsMagic non-biological tags
         # 1 CHIL @I1@
         # 2 _FREL adopted
         # 2 _MREL adopted
-        # but remove the underscore (and change to lowercase)
+
+        # put it into this dict
+        rel_key = 'rel'
+
+        # convert tag name to match the parent
+        rel_parent = {'_mrel': 'wife', '_frel': 'husb'}
+
+        # producing a result like
+        # 'rel': {'child-id': {'wife':'adopted', 'husb':'adopted'}}
+
         for level2 in level1['sub']:
             tag2 = level2['tag']
-            if tag2 in ['_mrel','_frel']:
-               tag2 = tag2.replace( '_','' )
-               out_data[tag2] = level2['value'].lower()
+            if tag2 in rel_parent:
+               parent = rel_parent[tag2]
+               if rel_key not in out_data:
+                  out_data[rel_key] = dict()
+               if child not in out_data[rel_key]:
+                  out_data[rel_key][child] = dict()
+               out_data[rel_key][child][parent] = level2['value'].lower()
+
 
     # Use this flag on output of modified data
     out_data[PRIVATIZE_FLAG] = PRIVATIZE_OFF
@@ -1220,10 +1234,11 @@ def parse_family( level0, out_data ):
         # Now deal with that record.
 
         if tag in FAM_MEMBER_TAGS:
-           out_data[tag].append( extract_indi_id( value ) )
+           indi_id = extract_indi_id( value )
+           out_data[tag].append( indi_id )
 
            if tag == 'chil':
-              handle_child_item( tag, level1 )
+              handle_child_item( indi_id, level1 )
 
         elif tag in OTHER_FAM_TAGS:
            out_data[tag].append( value )
