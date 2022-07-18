@@ -370,7 +370,7 @@ If the family record contains relationship tags between a child and a parent the
   'wife': ['i32'],
   'husb': ['i73'],
   'chil': ['i45','i46'],
-  'rel': [{'i45': {'wife':'adopted', 'husb':'adopted'}, {'i46': {'wife':'adopted','husb':'adopted'}],
+  'rel': { 'i45':{'wife':'adopted', 'husb':'adopted'}, 'i46':{'wife':'adopted', 'husb':'adopted'} },
   'marr': [{'date': {'flagged':True, 'is_known':False}}],
   'best-events': {'marr':0}
 }
