@@ -464,10 +464,10 @@ This code is provided with neither support nor warranty.
 
 ### Future enhancements
 
-- Collect name type (nickname, aka, etc.) into the individual parsed section.
+- Collect alternate name parts (aka, etc.) into the individual parsed section.
 - Find people based on family events.
-- How to handle non-biological relationships.
-- Use proof flags of other programs (not just RootsMagic, if they exist).
+- Handle non-biological relationship tags from programs other than RootsMagic (if they exist).
+- Use proof flags from programs other than RootsMagi (if they exist).
 - Try harder to fix a malformed date. Perhaps fuzzy date parsing.
 - Consider using encode/decode for better unicode conversion.
 - Consider reading stdin via: for line in io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8'):
