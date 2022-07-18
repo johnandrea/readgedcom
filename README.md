@@ -358,11 +358,27 @@ or a family with children:
 {
  'wife': ['i32'],
  'husb': ['i73'],
- 'chil': ['i33','i34'],
+ 'chil': ['i45','i46'],
  'marr': [{'date': {'flagged':True, 'is_known':False}}],
  'best-events': {'marr':0}
 }
 ```
+
+If the family record contains relationship tags between a child and a parent they will be collected into the parsed family section. For example if the children in the above family were marked as adopted by both wife and husband:
+```
+{
+  'wife': ['i32'],
+  'husb': ['i73'],
+  'chil': ['i45','i46'],
+  'rel': [{'i45': {'wife':'adopted', 'husb':'adopted'}, {'i46': {'wife':'adopted','husb':'adopted'}],
+  'marr': [{'date': {'flagged':True, 'is_known':False}}],
+  'best-events': {'marr':0}
+}
+```
+Those relationships are currently extracted from RootsMagic specific tags which can take values of "birth", "adopted", "step", "foster", "related", "guardian", "sealed", and "unknown".
+
+
+## "Best" events
 
 The "best" event indexes are calculated via weights using the proved and disproved flags.
 For research purposes multiple entries may exist for any event, even birth and death.
