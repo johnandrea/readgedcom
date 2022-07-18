@@ -453,10 +453,10 @@ Finding relatives: the search tag can be one of "partnersof", "parentsof", "chil
 ### Examples
 
 ```
-# getting all the "Ellen Smith"s born between 1850 and 1875
+# getting all the Ellen Smiths born between 1850 and 1875
 list_a = find_individuals( data, 'surn', 'Smith', '=' )
 list_b = find_individuals( data, 'givn', 'Ellen", 'in' )
-list_c = find_individuals( data, 'birt.date', '18500000', '>' )
+list_c = find_individuals( data, 'birt.date', '18491231', '>' )
 list_d = find_individuals( data, 'birt', '18760101', '<' )
 # Note: use "in" for "givn" rather than "=" because givn might contain a middle name
 smiths = list_intersection( list_a, list_b, list_c, list_d )
