@@ -253,9 +253,9 @@ data[readgedcom.PARSED_INDI]['i7']['famc'] = []
 ```
 
 The individual and family parsed sections have a key of "xref" which contains the
-original number portion of the input GEDCOM xref (a single item, not a list).
+original number portion of the input GEDCOM xref (a single integer, not a list).
 ```
-print( data[readgedcom.PARSED_INDI]['i7']['xref'] ) -> '7'
+print( data[readgedcom.PARSED_INDI]['i7']['xref'] ) -> 7
 ```
 
 The primary name will always be index 0, others are alternate names. The sex item will also be at index 0. The index for the "best" birth, death, etc. is discussed later.
