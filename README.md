@@ -489,7 +489,8 @@ This code is provided with neither support nor warranty.
 - Collect alternate name parts (aka, etc.) into the individual parsed section.
 - Find people based on family events.
 - Handle non-biological relationship tags from programs other than RootsMagic (if they exist).
-- Use proof flags from programs other than RootsMagi (if they exist).
+- Use proof flags from programs other than RootsMagic (if they exist).
 - Try harder to fix a malformed date. Perhaps fuzzy date parsing.
 - Consider using encode/decode for better unicode conversion.
 - Consider reading stdin via: for line in io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8'):
+- Add option to skip non-biological relationships (adoption, ceremonial, etc.)
