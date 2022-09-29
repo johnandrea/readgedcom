@@ -484,7 +484,7 @@ Not every possible unicode character conversion is handled.
 
 This code is provided with neither support nor warranty.
 
-### Future enhancements
+## Future enhancements
 
 - Collect alternate name parts (aka, etc.) into the individual parsed section.
 - Find people based on family events.
