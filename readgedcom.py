@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.14.0
+v1.14.1
 """
 
 import sys
@@ -1264,7 +1264,7 @@ def setup_parsed_families( sect, psect, data ):
     for i, level0 in enumerate( data[sect] ):
         fam = extract_fam_id( level0['tag'] )
         data[psect][fam] = dict()
-        data[psect][fam]['xref'] = fam.replace('F','').replace('f','')
+        data[psect][fam]['xref'] = int( fam.replace('F','').replace('f','') )
         add_file_back_ref( sect, i, data[psect][fam] )
 
         parse_family( level0, data[psect][fam] )
@@ -1333,7 +1333,7 @@ def setup_parsed_individuals( sect, psect, data ):
     for i, level0 in enumerate( data[sect] ):
         indi = extract_indi_id( level0['tag'] )
         data[psect][indi] = dict()
-        data[psect][indi]['xref'] = indi.replace('I','').replace('i','')
+        data[psect][indi]['xref'] = int( indi.replace('I','').replace('i','') )
         add_file_back_ref( sect, i, data[psect][indi] )
 
         parse_individual( level0, data[psect][indi] )
