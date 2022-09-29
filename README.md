@@ -25,6 +25,36 @@ No installation process. Copy the file next to your application which uses the l
 Or place the readgedcom.py file in a parallel directory and use the load module mechanism to import it:
 see the included example code.
 
+## Settings
+
+The optional dict() of settings can change the display of messages, etc.
+Either way, the returned data structure will contain a list of generated
+messages in data['messages'].
+
+| Name  | Default   | Description |
+| :---- | :-------- | :---------- |
+| show-settings | False | Print these settings to stderr. |
+| display-gedcom-warnings | False | Print GEDCOM input warnings to stderr. |
+| exit-on-bad-date | False | Raise exception if malformed date in input, or try to repair. |
+| exit-on-unknown-section | False | Raise exception on an unknown GEDCOM section header. |
+| exit-on-no-individuals | True | Raise exception  if no individuals found in the input. |
+| exit-on-no-families | False | Raise exception if no families found in the input. |
+| exit-on-missing-individuals | False | Raise exception if an expected individual not found. |
+| exit-on-missing-families | False | Raise exception if an expected family not found. |
+
+
+### Example Settings
+
+```
+opts = dict()
+opts['display-gedcom-warnings'] = False
+opts['show-settings'] = True
+data = readgedcom( filename, opts )
+for mess in data['messages']:
+    print( '   ', mess, file=sys.stderr )
+```
+
+
 ## Usage
 
 ### Functions:
@@ -54,35 +84,6 @@ print_individuals( data, list_of_indi )
 
 new_list = list_intersection( list1, list2, ... )
 
-```
-
-## Settings
-
-The optional dict() of settings can change the display of messages, etc.
-Either way, the returned data structure will contain a list of generated
-messages in data['messages'].
-
-| Name  | Default   | Description |
-| :---- | :-------- | :---------- |
-| show-settings | False | Print these settings to stderr. |
-| display-gedcom-warnings | False | Print GEDCOM input warnings to stderr. |
-| exit-on-bad-date | False | Raise exception if malformed date in input, or try to repair. |
-| exit-on-unknown-section | False | Raise exception on an unknown GEDCOM section header. |
-| exit-on-no-individuals | True | Raise exception  if no individuals found in the input. |
-| exit-on-no-families | False | Raise exception if no families found in the input. |
-| exit-on-missing-individuals | False | Raise exception if an expected individual not found. |
-| exit-on-missing-families | False | Raise exception if an expected family not found. |
-
-
-### Example Settings
-
-```
-opts = dict()
-opts['display-gedcom-warnings'] = False
-opts['show-settings'] = True
-data = readgedcom( filename, opts )
-for mess in data['messages']:
-    print( '   ', mess, file=sys.stderr )
 ```
 
 ### Basic usage
