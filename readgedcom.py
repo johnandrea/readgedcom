@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.14.1
+v1.15.0
 """
 
 import sys
@@ -201,13 +201,16 @@ def list_intersection( *lists ):
     """ For use with find_individuals results.
         Return the intersection of all the given lists. """
     result = []
+    first_time = True
     for l in lists:
         if isinstance( l, Iterable ):
-           if result:
+           if first_time:
+              result = [item for item in l]
+              first_time = False
+           else:
               r = result
               result = [item for item in l if item in r]
-           else:
-              result = l
+
     return result
 
 
