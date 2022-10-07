@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.1
+v1.15.2
 """
 
 import sys
@@ -104,7 +104,8 @@ FAM_SINGLE_EVENTS = ['marr','div','anul']
 # with the other facts/events.
 # An exception will be thrown if a duplicate is found.
 # Use of a validator is recommended.
-ONCE_INDI_TAGS = ['exid']
+# Not 100% sure EXID should be on this list.
+ONCE_INDI_TAGS = ['exid', '_uid', 'uuid', '_uuid']
 
 # Family items allowed only once.
 # See the description of individuals only once.
