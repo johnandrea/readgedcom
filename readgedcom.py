@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.0
+v1.15.1
 """
 
 import sys
@@ -79,7 +79,8 @@ INDI_EVENT_TAGS = ['bapm','barm','basm','bles','buri','cens','chra','conf','crem
 
 # Other individual tags of interest placed into the parsed section,
 # in addition to the event tags and of course the name(s)
-OTHER_INDI_TAGS = ['sex', 'exid', 'fams', 'famc']
+# including some less common items which are identification items.
+OTHER_INDI_TAGS = ['sex', 'exid', 'fams', 'famc', 'refn', '_uid', 'uuid', '_uuid']
 
 # Other family tag of interest placed into the parsed section,
 # in addition to the event tags
