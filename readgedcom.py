@@ -20,7 +20,7 @@ Public functions:
 
     report_descendant_report( data )
 
-    id_list = find_individuals( data, search_tag, search_value, operation='=' )
+    id_list = find_individuals( data, search_tag, search_value, operation='=', only_best=True )
 
     print_individuals( data, id_list )
 
@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.2
+v1.15.3
 """
 
 import sys
@@ -1903,10 +1903,11 @@ def report_family_double_facts( data, check_list=None ):
     report_double_facts( data[PARSED_FAM], False, check_list )
 
 
-def match_individual( indi_data, tag, subtag, search_value, operation ):
+def match_individual( indi_data, tag, subtag, search_value, operation, only_best ):
     """ Return True if individual's data matches the search condition. """
 
     def compare( have, want, op ):
+        # these are for string objects
         result = False
         if op in ['=','==']:
            result = have == want
@@ -1929,16 +1930,27 @@ def match_individual( indi_data, tag, subtag, search_value, operation ):
     def find_best( tag ):
         return indi_data[BEST_EVENT_KEY].get( tag, 0 )
 
+    def compare_string( have, want, op ):
+        if isinstance( have, str ):
+           return compare( have, want, op )
+        return False
+
 
     found = False
     value = None
 
     if tag == 'name':
-       # look in name and alt-names
-       for contents in indi_data[tag]:
-           if compare( contents['value'], search_value, operation ):
-              found = True
-              break
+       # ignore any subtag
+       # name will always have a "best" setting
+       # or should names be a special case and always search all of them
+       if only_best:
+          best = find_best( tag )
+          found = compare( indi_data[tag][best]['value'], search_value, operation )
+       else:
+          for contents in indi_data[tag]:
+              if compare( contents['value'], search_value, operation ):
+                 found = True
+                 break
 
     elif tag in ['fams','famc']:
        # look at all the elements
@@ -1957,43 +1969,51 @@ def match_individual( indi_data, tag, subtag, search_value, operation ):
             if tag in indi_data:
                for event in indi_data[tag]:
                    if event['type'] == subtag:
-                      value = event['value']
-                      if isinstance( value, str ):
-                         found = compare( value, search_value, operation )
-                      if found:
+                      if compare_string( event['value'], search_value, operation ):
+                         found = True
                          break
 
     elif tag in INDI_EVENT_TAGS:
          # its a regular event tag (birth, death, etc.)
+         # these need to have a subtag selected (date, place, etc.)
+         # otherwise, should it throw an error (?)
 
-         # need to find the best one
-         # probably ok to return zero even if its not a single event tag
-         # because what does  census.date mean for multi year census entries
-         best = find_best( tag )
+         if subtag:
 
-         # these events have dates and places, if not specified then skip it
-         if subtag and subtag in indi_data[tag][best]:
-            if subtag == 'date':
-               if indi_data[tag][best]['date']['is_known']:
-                  value = indi_data[tag][best]['date']['min']['value']
-               else:
-                  value = indi_data[tag][best][subtag]
+            search_indexes = list( range(len(indi_data[tag])) )
+            if only_best and tag in indi_data[BEST_EVENT_KEY]:
+               search_indexes = [ find_best( tag ) ]
 
-         if isinstance( value, str ):
-            # be sure to compare a string result against a string as wanted
-            found = compare( value, search_value, operation )
+            for element in search_indexes:
+                value = None
+
+                if subtag in indi_data[tag][element]:
+                   if subtag == 'date':
+                      # this is a special case due to the parsed date structure
+                      if indi_data[tag][element]['date']['is_known']:
+                         value = indi_data[tag][element]['date']['min']['value']
+                   else:
+                      value = indi_data[tag][element][subtag]
+
+                if compare_string( value, search_value, operation ):
+                   found = True
+                   break
 
     else:
          if tag in indi_data:
             if isinstance( indi_data[tag], list ):
-               best = find_best( tag )
                # plain list such as sex, etc.
-               value = indi_data[tag][best]
+               search_indexes = list( range(len(indi_data[tag])) )
+               if only_best and tag in indi_data[BEST_EVENT_KEY]:
+                  search_indexes = [ find_best( tag ) ]
+               for element in search_indexes:
+                   if compare_string( indi_data[tag][element], search_value, operation ):
+                      found = True
+                      break
+
             else:
                # not sure what other item this might be
-               value = indi_data[tag]
-            if isinstance( value, str ):
-               found = compare( value, search_value, operation )
+               found = compare_string( indi_data[tag], search_value, operation )
 
     return found
 
@@ -2060,7 +2080,7 @@ def print_individuals( data, id_list ):
               print( indi + '\t' + info['name'] + '\t' + info['birt'] + '\t' + info['deat'] )
 
 
-def find_individuals( data, search_tag, search_value, operation='=' ):
+def find_individuals( data, search_tag, search_value, operation='=', only_best=True ):
     """
     Return a list of ids of the individual which match the search conditions.
     Parameters:
@@ -2075,10 +2095,27 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
                     For dates specify as "yyyymmdd".
         operation: (default "=") matching condition, one of
                     "=", "!=", ">", ">=", "<", "<=", "in", "not in", "exist", "not exist".
+        only_best: (default True) tags which have a "best" setting try to match only
+                   those marked best. I.e. name, birth, death, etc.
 
     In the case of date ranges, the minimum date is used.
-    In the case of multiple events, the "best" event instance is used.
     """
+
+    def compare_int( have, want, op ):
+        result = False
+        if op in ['=','==','in']:
+           result = have == want
+        elif op in ['!','!=','not =','not=','!in','not in']:
+           result = have != want
+        elif op == '<':
+           result = have < want
+        elif op in ['<=','=<']:
+           result = have <= want
+        elif op == '>':
+           result = have > want
+        elif op in ['>=','=>']:
+           result = have >= want
+        return result
 
     def existance_match( individual, tag, subtag ):
         result = False
@@ -2093,15 +2130,22 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
                      break
 
            else:
-              best = 0
-              if BEST_EVENT_KEY in individual:
-                 if tag in individual[BEST_EVENT_KEY]:
-                    best = individual[BEST_EVENT_KEY][tag]
-
               if subtag:
-                 result = subtag in individual[tag][best]
+                 search_through_list = list( range( len( individual[tag] ) ) )
+                 if only_best and tag in individual[BEST_EVENT_KEY]:
+                    search_through_list = [ individual[BEST_EVENT_KEY][tag] ]
+
+                 for i in search_through_list:
+                     if subtag in individual[tag][i]:
+                        result = True
+                        if subtag == 'date':
+                           # date structure entails a special case
+                           result = individual[tag][i][subtag]['is_known']
+                        if result:
+                           break
+
               else:
-                 # no test for subtag, the tag exists
+                 # no subtag to check, the tag exists
                  result = True
 
         return result
@@ -2120,10 +2164,26 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
                   result.append( indi )
 
         else:
-           for indi in data[PARSED_INDI]:
-               if search_tag in data[PARSED_INDI][indi]:
-                  if match_individual( data[PARSED_INDI][indi], search_tag, search_subtag, search_value, operation ):
+           if search_tag == 'xref':
+              # being able to search for an xref is future-proofing against changes to the
+              # individual object key
+              search_for = search_value
+              if isinstance( search_value, str ):
+                 search_for = search_value.replace('@','').replace('i','').replace('I','').strip()
+                 if not string_like_int( search_for ):
+                    print( 'Test value for xref must result in a whole number:', search_for, file=sys.stderr )
+                 search_for = int( search_for )
+              for indi in data[PARSED_INDI]:
+                  if compare_int( data[PARSED_INDI][indi]['xref'], search_for, operation ):
                      result.append( indi )
+
+           else:
+              # already asserted that its a str or int
+              search_for = str( search_value )
+              for indi in data[PARSED_INDI]:
+                  if search_tag in data[PARSED_INDI][indi]:
+                     if match_individual( data[PARSED_INDI][indi], search_tag, search_subtag, search_for, operation, only_best ):
+                        result.append( indi )
 
         return result
 
@@ -2169,9 +2229,8 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
     assert isinstance( data, dict ), 'Non-dict passed as data'
     assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
     assert isinstance(search_tag,str), 'Non-string passed as search_tag'
-    assert isinstance(search_value,str), 'Non-string passed as search_value'
+    assert isinstance(search_value,(str,int)), 'Object passed as search_value'
     assert isinstance(operation,str), 'Non-string passed as comparison operator'
-
 
     OPERATORS = ['=', '!=', '<', '<=', '>', '=>', 'in', 'not in', 'exist', 'not exist']
     ALT_OPERATORS = {'==':'=', 'not=':'!=', 'not =':'!=', '=<':'<=', '>=':'=>', '!in':'not in', 'exists':'exist', 'not exists':'not exist', '!exist':'not exist', '!exists':'not exist' }
@@ -2206,7 +2265,6 @@ def find_individuals( data, search_tag, search_value, operation='=' ):
     # parents-of is not parent-of
     # partners-of is partner-of, but don't allow it because of the above
     # and childs-of is not proper english.
-
 
     ALT_SUBTAG = { 'place':'plac' }
 
