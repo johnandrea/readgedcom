@@ -1,0 +1,90 @@
+﻿0 HEAD
+1 SOUR RootsMagic
+2 NAME RootsMagic
+2 VERS 7.6.5.0
+1 FILE various-events.ged
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME John A Andrea
+0 @I1@ INDI
+1 NAME Plain Name and _a_l_t_
+2 GIVN Plain
+1 NAME Alt Name
+2 GIVN Alt
+0 @I2@ INDI
+1 NAME Male and Female
+1 SEX M
+1 SEX F
+0 @I3@ INDI
+1 NAME Male
+1 SEX M
+0 @I4@ INDI
+1 NAME Female
+1 SEX F
+0 @I5@ INDI
+1 NAME Born 1930 with dna 60
+1 EVEN 60
+2 TYPE dna
+1 BIRT
+2 DATE 16 OCT 1930
+0 @I6@ INDI
+1 NAME Born 1940
+1 BIRT
+2 DATE 16 OCT 1940
+0 @I7@ INDI
+1 NAME Born 1950
+1 BIRT
+2 DATE 16 OCT 1950
+0 @I8@ INDI
+1 NAME Born Toronto
+1 BIRT
+2 PLAC Toronto
+0 @I9@ INDI
+1 NAME Born Montreal
+1 BIRT
+2 PLAC Montreal
+0 @I10@ INDI
+1 NAME Born Toronto and Montreal(disproven)
+1 BIRT
+2 PLAC Toronto
+2 _PROOF proven
+1 BIRT
+2 PLAC Montreal
+2 _PROOF disproven
+0 @I11@ INDI
+1 NAME Born 1930 and 1950(disproven)
+1 BIRT
+2 DATE 02 NOV 1930
+2 _PROOF proven
+1 BIRT
+2 DATE 02 NOV 1950
+2 _PROOF disproven
+0 @I12@ INDI
+1 NAME Refn 123
+1 REFN 123
+0 @I13@ INDI
+1 NAME Refn 456 and 789
+1 REFN 456
+1 REFN 789
+0 @I14@ INDI
+1 NAME Female and male(disproven)
+1 SEX F
+2 _PROOF proven
+1 SEX M
+2 _PROOF disproven
+0 @I15@ INDI
+1 NAME Plain and _A_l_t_(disproven)
+2 _PROOF proven
+1 NAME Alt
+2 _PROOF disproven
+0 @I16@ INDI
+1 NAME dna 42 and 60
+1 EVEN 42
+2 TYPE dna
+1 EVEN 60
+2 TYPE dna
+0 TRLR
