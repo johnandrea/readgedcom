@@ -1,6 +1,7 @@
 import sys
-import readgedcom
+import collections
 import pprint
+import readgedcom
 
 options = { 'display-gedcom-warnings': False, 'show-settings': False }
 
@@ -16,18 +17,22 @@ def expected( title, got, wanted ):
     print( '' )
     print( title )
     readgedcom.print_individuals( data, got )
-    print( 'should have shown id', wanted )
+    print( 'expected', wanted )
+    test_wanted = ['i' + str(i) for i in wanted]
+    if collections.Counter( got ) != collections.Counter( test_wanted ):
+       print( 'WRONG answer', got, test_wanted )
+
 
 # assuming that the gedcom is defined properly with givn and surn name records
 
-expected( 'find Smiths', readgedcom.find_individuals( data, 'name.surn', 'Smith', '=' ), '1 and 2' )
+expected( 'find Smiths', readgedcom.find_individuals( data, 'name.surn', 'Smith', '=' ), [1,2] )
 
-expected( 'not Smiths', readgedcom.find_individuals( data, 'name.surn', 'Smith', 'not' ), '3, 4 and 5' )
+expected( 'not Smiths', readgedcom.find_individuals( data, 'name.surn', 'Smith', 'not' ), [3,4,5] )
 
-expected( 'smith anywhere', readgedcom.find_individuals( data, 'name', 'Smith', 'in' ), '1, 2 and 5' )
+expected( 'smith anywhere', readgedcom.find_individuals( data, 'name', 'Smith', 'in' ), [1,2,5] )
 
 # use "in" for givn because of possible existance of middle name
 
-expected( 'find Eileen', readgedcom.find_individuals( data, 'name.givn', 'Eileen', 'in' ), '1 and 4' )
+expected( 'find Eileen', readgedcom.find_individuals( data, 'name.givn', 'Eileen', 'in' ), [1,4] )
 
-expected( 'not Eileen', readgedcom.find_individuals( data, 'name.givn', 'Eileen', 'not in' ), '2, 3 and 5' )
+expected( 'not Eileen', readgedcom.find_individuals( data, 'name.givn', 'Eileen', 'not in' ), [2,3,5] )
