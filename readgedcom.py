@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.3
+v1.15.4
 """
 
 import sys
@@ -1909,9 +1909,9 @@ def match_individual( indi_data, tag, subtag, search_value, operation, only_best
     def compare( have, want, op ):
         # these are for string objects
         result = False
-        if op in ['=','==']:
+        if op == '=':
            result = have == want
-        elif op in ['!','!=','not =','not=']:
+        elif op == '!=':
            result = have != want
         elif op == '<':
            result = have < want
@@ -1923,7 +1923,7 @@ def match_individual( indi_data, tag, subtag, search_value, operation, only_best
            result = have >= want
         elif op == 'in':
            result = want in have
-        elif op in ['!in','not in']:
+        elif op == '!in':
            result = want not in have
         return result
 
@@ -1935,20 +1935,28 @@ def match_individual( indi_data, tag, subtag, search_value, operation, only_best
            return compare( have, want, op )
         return False
 
+    def compare_name( name_data, subtag, search_value, op ):
+        result = False
+        if subtag:
+           if subtag in name_data:
+              result = compare( name_data[subtag], search_value, op )
+        else:
+           result = compare( name_data['value'], search_value, op )
+        return result
+
 
     found = False
     value = None
 
     if tag == 'name':
-       # ignore any subtag
        # name will always have a "best" setting
        # or should names be a special case and always search all of them
        if only_best:
           best = find_best( tag )
-          found = compare( indi_data[tag][best]['value'], search_value, operation )
+          found = compare_name( indi_data[tag][best], subtag, search_value, operation )
        else:
           for contents in indi_data[tag]:
-              if compare( contents['value'], search_value, operation ):
+              if compare_name( contents, subtag, search_value, operation ):
                  found = True
                  break
 
@@ -2094,7 +2102,8 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
                     Must be a string. but this assumes data keys (as used for family matches: childrenof, etc.) makes use of strings.
                     For dates specify as "yyyymmdd".
         operation: (default "=") matching condition, one of
-                    "=", "!=", ">", ">=", "<", "<=", "in", "not in", "exist", "not exist".
+                    "=", "!=", ">", ">=", "<", "<=", "in", "not in", "exist", "not exist",
+                    "is not", "not".
         only_best: (default True) tags which have a "best" setting try to match only
                    those marked best. I.e. name, birth, death, etc.
 
@@ -2103,9 +2112,9 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
 
     def compare_int( have, want, op ):
         result = False
-        if op in ['=','==','in']:
+        if op in ['=','in']:
            result = have == want
-        elif op in ['!','!=','not =','not=','!in','not in']:
+        elif op in ['!=','!in']:
            result = have != want
         elif op == '<':
            result = have < want
@@ -2158,7 +2167,7 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
                if existance_match( data[PARSED_INDI][indi], search_tag, search_subtag ):
                   result.append( indi )
 
-        elif operation == 'not exist':
+        elif operation == '!exist':
            for indi in data[PARSED_INDI]:
                if not existance_match( data[PARSED_INDI][indi], search_tag, search_subtag ):
                   result.append( indi )
@@ -2232,13 +2241,32 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
     assert isinstance(search_value,(str,int)), 'Object passed as search_value'
     assert isinstance(operation,str), 'Non-string passed as comparison operator'
 
-    OPERATORS = ['=', '!=', '<', '<=', '>', '=>', 'in', 'not in', 'exist', 'not exist']
-    ALT_OPERATORS = {'==':'=', 'not=':'!=', 'not =':'!=', '=<':'<=', '>=':'=>', '!in':'not in', 'exists':'exist', 'not exists':'not exist', '!exist':'not exist', '!exists':'not exist' }
+    # note the inclusion of removed spaces in the alt-operators
+
+    OPERATORS = ['=', '!=', '<', '<=', '>', '=>', 'in', '!in', 'exist', '!exist']
+    alt_operators = dict()
+    for op in ['==','= =','is']:
+        alt_operators[op] = '='
+    for op in ['not =','not=','not','is not','isnot','<>']:
+        alt_operators[op] = '!='
+    for op in ['> =','=<','= <']:
+        alt_operators[op] = '>='
+    for op in ['= >','>=','> =']:
+        alt_operators[op] = '=>'
+    for op in ['! in','not in','notin']:
+        alt_operators[op] = '!in'
+    for op in ['exists']:
+        alt_operators[op] = 'exist'
+    for op in ['! exist','not exists','notexists','notexist','! exists']:
+        alt_operators[op] = '!exist'
 
     search_tag = search_tag.lower().strip()
     operation = operation.lower().strip()
 
-    assert operation not in OPERATORS or operation not in ALT_OPERATORS, 'Invalid comparison operator "' + operation + '" not one of ' + str(OPERATORS)
+    if operation in alt_operators:
+       operation = alt_operators[operation]
+
+    assert operation in OPERATORS, 'Invalid comparison operator "' + operation + '"'
 
     # its more difficult to check that the search_tag is ok, there are many variations
     # should it fail or just return an empty list
@@ -2297,6 +2325,8 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
     if search_tag in ALT_TAG:
        search_tag = ALT_TAG[search_tag]
 
+    # this is too complex, what's going on
+
     # Default to date
     if not search_subtag:
        if search_tag in INDI_EVENT_TAGS:
@@ -2307,9 +2337,6 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
 
     if search_subtag in ALT_SUBTAG:
        search_tag = ALT_SUBTAG[search_subtag]
-
-    if operation in ALT_OPERATORS:
-       operation = ALT_OPERATORS[operation]
 
     if search_type == 'relation':
        return relation_search()
