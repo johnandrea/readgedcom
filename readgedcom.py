@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.5
+v1.15.6
 """
 
 import sys
@@ -2257,7 +2257,7 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
         alt_operators[op] = '!in'
     for op in ['exists']:
         alt_operators[op] = 'exist'
-    for op in ['! exist','not exists','notexists','notexist','! exists']:
+    for op in ['! exist','not exists','notexists','not exist','notexist','! exists']:
         alt_operators[op] = '!exist'
 
     search_tag = search_tag.lower().strip()
