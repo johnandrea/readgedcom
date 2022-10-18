@@ -1,0 +1,26 @@
+﻿0 HEAD
+1 SOUR RootsMagic
+2 NAME RootsMagic
+2 VERS 7.6.5.0
+1 FILE various-events.ged
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME John A Andrea
+0 @I1@ INDI
+1 NAME Born 1930 Toronto
+1 BIRT
+2 DATE 18 OCT 1930
+2 PLAC Toronto
+0 @I2@ INDI
+1 NAME Born Montreal
+1 BIRT
+2 PLAC Montreal
+0 @I3@ INDI
+1 NAME Born 1940
+1 BIRT
+2 DATE 03 NOV 1940
+0 TRLR
