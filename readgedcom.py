@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.4
+v1.15.5
 """
 
 import sys
@@ -2273,9 +2273,6 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
 
     assert search_tag != '', 'Passed an empty search tag'
 
-    ## could be used where only equality is possible
-    #SAME_AS_EQUAL = ['=','in','exist']
-
     search_type = 'value'
 
     # full words
@@ -2300,10 +2297,6 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
     # but so many partnerships can exist without a date
     #ALT_SUBTAG = {'marriage':'marr', 'divorce':'div' }
 
-    # Use this to skip an event defaulting the the date subtag
-    # for example when checking existance of any birth tag rather than just birth.date
-    IGNORE_SUBTAG_VALUE = '_'
-
     # The selection tag might be a sub-section,
     # such as a date or birth: passed as birt.date
     # or place of death passed as deat.plac
@@ -2317,26 +2310,15 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
           raise ValueError( 'Empty search tag start part.' )
        if parts[1]:
           search_subtag = parts[1]
-          if search_subtag in ALT_SUBTAG:
-             search_subtag = ALT_SUBTAG[search_subtag]
        else:
           raise ValueError( 'Empty search sub-tag.' )
 
-    if search_tag in ALT_TAG:
-       search_tag = ALT_TAG[search_tag]
-
-    # this is too complex, what's going on
-
-    # Default to date
-    if not search_subtag:
-       if search_tag in INDI_EVENT_TAGS:
-          search_subtag = 'date'
-       # but, check for the ignore value after the default is set
-       if search_subtag == IGNORE_SUBTAG_VALUE:
-          search_subtag = None
-
-    if search_subtag in ALT_SUBTAG:
-       search_tag = ALT_SUBTAG[search_subtag]
+    if search_tag:
+       if search_tag in ALT_TAG:
+          search_tag = ALT_TAG[search_tag]
+    if search_subtag:
+       if search_subtag in ALT_SUBTAG:
+          search_subtag = ALT_SUBTAG[search_subtag]
 
     if search_type == 'relation':
        return relation_search()
