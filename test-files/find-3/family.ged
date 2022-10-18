@@ -1,0 +1,33 @@
+﻿0 HEAD
+1 SOUR RootsMagic
+2 NAME RootsMagic
+2 VERS 7.6.5.0
+1 FILE various-events.ged
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME John A Andrea
+0 @I1@ INDI
+1 NAME Eileen /Smith/
+2 GIVN Eileen
+2 SURN Smith
+0 @I2@ INDI
+1 NAME Jim /Smith/
+2 GIVN Jim
+2 SURN Smith
+0 @I3@ INDI
+1 NAME Oliver /Jones/
+2 GIVN Oliver
+2 SURN Jones
+0 @I4@ INDI
+1 NAME Eileen /Jones/
+2 GIVN Eileen
+2 SURN Jones
+0 @I5@ INDI
+1 NAME Smith Henry /Piperr/
+2 GIVN Smith Henry
+2 SURN Piper
+0 TRLR
