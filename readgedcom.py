@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.7
+v1.15.8
 """
 
 import sys
@@ -2290,6 +2290,10 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
     # parents-of is not parent-of
     # partners-of is partner-of, but don't allow it because of the above
     # and childs-of is not proper english.
+
+    # Siblings-of doesn't work because there is no single family for step-siblings.
+    if search_tag.startswith( 'sibling' ):
+       raise ValueError( 'Invalid search: ' + search_tag )
 
     ALT_SUBTAG = { 'place':'plac', 'surname':'surn', 'given':'givn', 'forname':'givn' }
 
