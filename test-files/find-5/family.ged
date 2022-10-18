@@ -1,0 +1,77 @@
+﻿0 HEAD
+1 SOUR RootsMagic
+2 NAME RootsMagic
+2 VERS 7.6.5.0
+1 FILE various-events.ged
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME John A Andrea
+0 @I1@ INDI
+1 NAME Jane /Smith/
+2 SURN Smith
+2 GIVN Jane
+1 FAMC @F1@
+1 FAMS @F2@
+1 FAMS @F3@
+0 @I2@ INDI
+1 NAME John /Smith/
+2 SURN Smith
+2 GIVN John
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Susan /Birch/
+2 SURN Birch
+2 GIVN Susan
+1 FAMS @F1@
+0 @I4@ INDI
+1 NAME Fred /Jones/
+2 SURN Jones
+2 GIVN Fred
+1 FAMS @F2@
+1 FAMS @F4@
+0 @I5@ INDI
+1 NAME Billy /Jones/
+2 SURN Jones
+2 GIVN Billy
+1 FAMC @F2@
+0 @I6@ INDI
+1 NAME Sam /Wirth/
+2 SURN Wirth
+2 GIVN Sam
+1 FAMS @F3@
+0 @I7@ INDI
+1 NAME Betty /Wirth/
+2 SURN Wirth
+2 GIVN Betty
+1 FAMC @F3@
+0 @I8@ INDI
+1 NAME Cheryl /Jones/
+2 SURN Jones
+2 GIVN Cheryl
+1 FAMC @F4@
+0 @I9@ INDI
+1 NAME Bonnie /Brown/
+2 SURN Brown
+2 GIVN Bonnie
+1 FAMS @F4@
+0 @F1@ FAM
+1 HUSB @I2@
+1 WIFE @I3@
+1 CHIL @I1@
+0 @F2@ FAM
+1 HUSB @I4@
+1 WIFE @I1@
+1 CHIL @I5@
+0 @F3@ FAM
+1 HUSB @I6@
+1 WIFE @I1@
+1 CHIL @I7@
+0 @F4@ FAM
+1 HUSB @I4@
+1 WIFE @I9@
+1 CHIL @I8@
+0 TRLR
