@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.6
+v1.15.7
 """
 
 import sys
@@ -2291,7 +2291,9 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
     # partners-of is partner-of, but don't allow it because of the above
     # and childs-of is not proper english.
 
-    ALT_SUBTAG = { 'place':'plac' }
+    ALT_SUBTAG = { 'place':'plac', 'surname':'surn', 'given':'givn', 'forname':'givn' }
+
+    # could possibly allow  lastname -> name.surn, firstname -> name.givn
 
     # possibly handle marriage lookups in a future version
     # but so many partnerships can exist without a date
