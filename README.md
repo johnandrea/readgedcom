@@ -453,7 +453,7 @@ Operations: "=", "not =", "<", "<=", ">", ">=", "in", "not in", "exist", "not ex
 
 When selecting dates use a full date as a string in the format "yyyymmdd". Though a day of "00" or month of "00" can be used for less or greater comparisons.
 
-Search tag: Use the name of an individuals fact/event such as "birt", "deat", "name", etc. Sub-tags can be selected like "birt.date", "deat.plac", etc. By default the "date" is the sub-tag, but using underscore as a sub-tag is useful for testing the existance of a tag like "birt.\_" If a custom event is required, use the prefix "even." as in "even.dnamatch".
+Search tag: Use the name of an individuals fact/event such as "birt", "deat", "name", etc. Sub-tags can be selected like "birt.date", "deat.plac", etc. If a custom event is required, use the prefix "even." as in "even.dnamatch".
 
 Finding relatives: the search tag can be one of "partnersof", "parentsof", "childrenof". The operator is ignored and the search value should be a single identifier for an individual in the data.
 
