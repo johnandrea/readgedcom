@@ -455,7 +455,7 @@ When selecting dates use a full date as a string in the format "yyyymmdd". Thoug
 
 Search tag: Use the name of an individuals fact/event such as "birt", "deat", "name", etc. Sub-tags can be selected like "birt.date", "deat.plac", etc. If a custom event is required, use the prefix "even." as in "even.dnamatch".
 
-Finding relatives: the search tag can be one of "partnersof", "parentsof", "childrenof". The operator is ignored and the search value should be a single identifier for an individual in the data.
+Finding relatives: the search tag can be one of "partnersof", "parentsof", "childrenof", "siblingsof" and "step-siblingsof". The operator is ignored and the search value should be a single identifier for an individual in the data.
 
 ### Examples
 
@@ -464,7 +464,7 @@ Finding relatives: the search tag can be one of "partnersof", "parentsof", "chil
 list_a = find_individuals( data, 'surn', 'Smith', '=' )
 list_b = find_individuals( data, 'givn', 'Ellen", 'in' )
 list_c = find_individuals( data, 'birt.date', '18491231', '>' )
-list_d = find_individuals( data, 'birt', '18760101', '<' )
+list_d = find_individuals( data, 'birt.date', '18760101', '<' )
 # Note: use "in" for "givn" rather than "=" because givn might contain a middle name
 smiths = list_intersection( list_a, list_b, list_c, list_d )
 for indi in smiths:
