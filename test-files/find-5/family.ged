@@ -58,6 +58,11 @@
 2 SURN Brown
 2 GIVN Bonnie
 1 FAMS @F4@
+0 @I10@ INDI
+1 NAME Veronica /Jones/
+2 SURN Jones
+2 GIVN Veronica
+1 FAMC @F4@
 0 @F1@ FAM
 1 HUSB @I2@
 1 WIFE @I3@
@@ -74,4 +79,5 @@
 1 HUSB @I4@
 1 WIFE @I9@
 1 CHIL @I8@
+1 CHIL @I10@
 0 TRLR

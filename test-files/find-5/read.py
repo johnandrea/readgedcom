@@ -7,6 +7,14 @@ options = { 'display-gedcom-warnings': False, 'show-settings': False }
 
 data = readgedcom.read_file( sys.argv[1], options )
 
+def list_subtract( first, subtract ):
+    result = []
+    for x in first:
+        if x not in subtract:
+           result.append( x )
+    return result
+
+
 def expected( title, got, wanted ):
     print( '' )
     print( title )
@@ -21,23 +29,40 @@ def expected( title, got, wanted ):
 
 l1 = readgedcom.find_individuals( data, 'name.surname', 'Smith', 'in' )
 l2 = readgedcom.find_individuals( data, 'name.given', 'Jane', 'in' )
-l3 = readgedcom.list_intersection( l1, l2 )
-if not expected( 'Jane Smith', l3, [1] ):
+jane = readgedcom.list_intersection( l1, l2 )
+if not expected( 'Jane Smith', jane, [1] ):
    sys.exit(1)
 
-l4 = readgedcom.find_individuals( data, 'parents-of', l3[0], 'exist' )
+l4 = readgedcom.find_individuals( data, 'parents-of', jane[0], 'exist' )
 expected( 'parents of Jane', l4, [2,3] )
 
-l5 = readgedcom.find_individuals( data, 'partnersof', l3[0], 'exist' )
+l5 = readgedcom.find_individuals( data, 'partnersof', jane[0], 'exist' )
 expected( 'partners of Jane', l5, [4,6] )
 
-l6 = readgedcom.find_individuals( data, 'children of', l3[0], 'exist' )
-expected( 'children of Jane', l6, [5,7] )
+jane_children = readgedcom.find_individuals( data, 'children of', jane[0], 'exist' )
+expected( 'children of Jane', jane_children, [5,7] )
 
-l7 = readgedcom.find_individuals( data, 'name.givn', 'Fred' )
-expected( 'Fred', l7, [4] )
+fred = readgedcom.find_individuals( data, 'name.givn', 'Fred' )
+expected( 'Fred', fred, [4] )
 
-l8 = readgedcom.find_individuals( data, 'children of', l7[0], 'exist' )
-expected( 'children of Fred', l8, [5,8] )
+fred_children = readgedcom.find_individuals( data, 'children of', fred[0], 'exist' )
+expected( 'children of Fred', fred_children, [5,8,10] )
 
-expected( 'children of Jane+Fred',readgedcom.list_intersection(l6,l8), [5] )
+children_of_jane_and_fred = readgedcom.list_intersection( jane_children, fred_children )
+expected( 'children of Jane+Fred', children_of_jane_and_fred, [5] )
+
+expected( 'parents of Billy', readgedcom.find_individuals( data, 'parents of', children_of_jane_and_fred[0] ), [1,4] )
+
+partners_of_fred = readgedcom.find_individuals( data, 'partners of', fred[0] )
+bonnie = list_subtract( partners_of_fred, jane[0] )
+
+expected( 'other partner of Fred', bonnie, [9] )
+
+bonnie_children = readgedcom.find_individuals( data, 'children of', bonnie[0] )
+
+children_of_fred_and_bonnie = readgedcom.list_intersection( fred_children, bonnie_children )
+expected( 'children of Fred+Bonnie', children_of_fred_and_bonnie, [8,10] )
+
+# this will fail, no method for finding siblings
+# expected( 'siblings of Cheryl', readgedcom.find_individuals( data, 'siblings of', children_of_fred_and_bonnie[0] ), [10] )
+ 
