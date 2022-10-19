@@ -495,3 +495,4 @@ This code is provided with neither support nor warranty.
 - Consider using encode/decode for better unicode conversion.
 - Consider reading stdin via: for line in io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8'):
 - Add option to skip non-biological relationships (adoption, ceremonial, etc.)
+- Add ability to locate adoptees.
