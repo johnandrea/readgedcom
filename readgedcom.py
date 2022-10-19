@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.8
+v1.15.9
 """
 
 import sys
@@ -2197,14 +2197,17 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
         return result
 
     def relation_search():
-        def get_families( fam_key ):
+        def get_families_of( person, fam_key ):
             # return the families in which the searh value is
             # a parent or a child using "fams" or "famc"
             result = []
-            if fam_key in data[PARSED_INDI][search_value]:
-               for fam in data[PARSED_INDI][search_value][fam_key]:
+            if fam_key in data[PARSED_INDI][person]:
+               for fam in data[PARSED_INDI][person][fam_key]:
                    result.append( fam )
             return result
+
+        def get_families( fam_key ):
+            return get_families_of( search_value, fam_key )
 
         result = []
 
@@ -2231,6 +2234,26 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
                          # the other partner in the family
                          if partner_id != search_value:
                             result.append( partner_id )
+
+           elif search_tag == 'siblingsof':
+              for fam in get_families( 'famc' ):
+                  for child in data[PARSED_FAM][fam]['chil']:
+                      # skip self
+                      if search_value != child:
+                         for child_fam in get_families( 'famc' ):
+                             if fam == child_fam:
+                                result.append( child )
+
+           elif search_tag == 'step-siblingsof':
+              for fam in get_families( 'famc' ):
+                  for parent in ['wife','husb']:
+                      if parent in data[PARSED_FAM][fam]:
+                         parent_id = data[PARSED_FAM][fam][parent][0]
+                         for parent_fam in get_families_of( parent_id, 'fams' ):
+                             # skip same family
+                             if fam != parent_fam:
+                                for child in data[PARSED_FAM][parent_fam]['chil']:
+                                    result.append( child )
 
         return result
 
@@ -2279,7 +2302,7 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
     ALT_TAG = {'birth':'birt', 'born':'birt', 'death':'deat', 'died':'deat', 'event':'even' }
 
     # or for the relationships
-    for prefix in ['partners','parents','children']:
+    for prefix in ['partners','parents','children','siblings','step-siblings']:
         for suffix in [' of','-of','_of']:
             alt_name = prefix + suffix
             name = prefix + 'of'
@@ -2290,10 +2313,6 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
     # parents-of is not parent-of
     # partners-of is partner-of, but don't allow it because of the above
     # and childs-of is not proper english.
-
-    # Siblings-of doesn't work because there is no single family for step-siblings.
-    if search_tag.startswith( 'sibling' ):
-       raise ValueError( 'Invalid search: ' + search_tag )
 
     ALT_SUBTAG = { 'place':'plac', 'surname':'surn', 'given':'givn', 'forname':'givn' }
 
