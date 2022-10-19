@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.9
+v1.15.10
 """
 
 import sys
@@ -2344,6 +2344,14 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
     if search_subtag:
        if search_subtag in ALT_SUBTAG:
           search_subtag = ALT_SUBTAG[search_subtag]
+
+    # special case for some events, allow missing subtag to be "date"
+    if search_subtag is None and search_tag in ['birt','deat']:
+       # but a date type search
+       if 'exist' not in operation:
+          # and searching for yyyymmdd
+          if string_like_int( search_value ) and len( search_value ) == 8:
+             search_subtag = 'date'
 
     if search_type == 'relation':
        return relation_search()
