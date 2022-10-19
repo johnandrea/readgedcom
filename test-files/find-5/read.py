@@ -19,10 +19,10 @@ def expected( title, got, wanted ):
     print( '' )
     print( title )
     readgedcom.print_individuals( data, got )
-    print( 'expected', wanted )
     test_wanted = ['i' + str(i) for i in wanted]
+    print( 'expected', test_wanted )
     if collections.Counter( got ) != collections.Counter( test_wanted ):
-       print( 'WRONG answer', got, test_wanted )
+       print( 'WRONG answer', got )
        return False
     return True
 
@@ -63,6 +63,6 @@ bonnie_children = readgedcom.find_individuals( data, 'children of', bonnie[0] )
 children_of_fred_and_bonnie = readgedcom.list_intersection( fred_children, bonnie_children )
 expected( 'children of Fred+Bonnie', children_of_fred_and_bonnie, [8,10] )
 
-# this will fail, no method for finding siblings
-# expected( 'siblings of Cheryl', readgedcom.find_individuals( data, 'siblings of', children_of_fred_and_bonnie[0] ), [10] )
- 
+expected( 'siblings of Cheryl', readgedcom.find_individuals( data, 'siblings of', children_of_fred_and_bonnie[0] ), [10] )
+
+expected( 'step-siblings of Cheryl', readgedcom.find_individuals( data, 'step-siblings of', children_of_fred_and_bonnie[0] ), [5] )
