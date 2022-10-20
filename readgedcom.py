@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.10
+v1.15.11
 """
 
 import sys
@@ -202,18 +202,26 @@ unicode_table = dict()
 def list_intersection( *lists ):
     """ For use with find_individuals results.
         Return the intersection of all the given lists. """
-    result = []
-    first_time = True
+    result = set()
+    first_loop = True
     for l in lists:
         if isinstance( l, Iterable ):
-           if first_time:
-              result = [item for item in l]
-              first_time = False
+           if first_loop:
+              result = set( l )
+              first_loop = False
            else:
-              r = result
-              result = [item for item in l if item in r]
+              result.intersection_update( set(l) )
+    return list( result )
 
-    return result
+
+def list_difference( original, *subtract ):
+    """ For use with find_individuals results.
+        Return the list "original" with other lists removed. """
+    result = set( original )
+    for l in subtract:
+        if isinstance( l, Iterable ):
+           result.difference_update( set(l) )
+    return list( result )
 
 
 def setup_unicode_table():
