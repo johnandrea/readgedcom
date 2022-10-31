@@ -41,7 +41,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.11
+v1.15.12
 """
 
 import sys
@@ -2167,6 +2167,49 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
 
         return result
 
+    def could_be_search_typo( tag, subtag ):
+        # Might be a tag typo, report as an error.
+        # But don't exit because it might just be a custom tag
+        # which id not in use.
+
+        found = False
+        if tag == 'even':
+           for indi in data[PARSED_INDI]:
+               if tag in data[PARSED_INDI][indi]:
+                  for event in data[PARSED_INDI][indi][tag]:
+                      if 'type' in event and event['type'] == subtag:
+                         found = True
+                         break
+               if found:
+                  break
+
+        else:
+           # not perfect: allows for sex.place, famc.date, etc.
+           found = tag in INDI_EVENT_TAGS and tag in OTHER_INDI_TAGS
+           if found and subtag:
+              # should check for other valid subtags
+              found = subtag in ['date','plac']
+           if not found:
+              for indi in data[PARSED_INDI]:
+                  found = tag in data[PARSED_INDI][indi]
+                  if found:
+                     if subtag:
+                        found = False
+                        for event in data[PARSED_INDI][indi][tag]:
+                            if subtag in event:
+                               found = True
+                               break
+                  if found:
+                     break
+
+        if not found:
+           # maybe the message should indicate its for individual searches
+           message = 'Could the search tag be a typo; it wasnt found anywhere:'
+           show_tag = tag
+           if subtag:
+              show_tag += '.' + subtag
+           print( message, show_tag, file=sys.stderr )
+
     def value_search():
         result = []
 
@@ -2363,6 +2406,9 @@ def find_individuals( data, search_tag, search_value, operation='=', only_best=T
 
     if search_type == 'relation':
        return relation_search()
+
+    could_be_search_typo( search_tag, search_subtag )
+
     return value_search()
 
 
