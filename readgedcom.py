@@ -20,6 +20,8 @@ Public functions:
 
     report_descendant_report( data )
 
+    report_counts( data )
+
     id_list = find_individuals( data, search_tag, search_value, operation='=', only_best=True )
 
     print_individuals( data, id_list )
@@ -41,7 +43,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.15.12
+v1.16.0
 """
 
 import sys
@@ -2483,3 +2485,62 @@ def report_all_descendant_count( data ):
 
     for indi in counts:
         print_descendant_count( indi, data[PARSED_INDI][indi], counts[indi] )
+
+def report_counts( data ):
+    """
+    Print to stdout some counts.
+    """
+
+    assert isinstance( data, dict ), 'Non-dict passed as data'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
+
+    def count_events( section, tags, counts ):
+        for tag in tags:
+            if tag == 'even':
+               if tag in section:
+                  for events in section[tag]:
+                      sub_count = tag + '.' + events['type']
+                      if sub_count not in counts:
+                         counts[sub_count] = 0
+                      counts[sub_count] += 1
+            else:
+               if tag in section:
+                  if tag not in counts:
+                     counts[tag] = 0
+                  counts[tag] += 1
+                  for subtag in ['date','plac']:
+                      if subtag in section[tag][0]:
+                         sub_count = tag + '.' + subtag
+                         if sub_count not in counts:
+                            counts[sub_count] = 0
+                         counts[sub_count] += 1
+
+    def count_indi_events( person, counts ):
+        count_events( person, INDI_EVENT_TAGS + OTHER_INDI_TAGS, counts )
+
+
+    def count_fam_events( fam, counts ):
+        count_events( fam, FAM_EVENT_TAGS + OTHER_FAM_TAGS, counts )
+
+    def show_counts( title, n, counts ):
+        print( n, title )
+        for tag in sorted(counts):
+            print( counts[tag], tag )
+
+    n = 0
+    counts = dict()
+    for indi in data[PARSED_INDI]:
+        n += 1
+        count_indi_events( data[PARSED_INDI][indi], counts )
+
+    show_counts( 'individuals', n, counts )
+
+    print( '' )
+
+    n = 0
+    counts = dict()
+    for fam in data[PARSED_FAM]:
+        n += 1
+        count_fam_events( data[PARSED_FAM][fam], counts )
+
+    show_counts( 'families', n, counts )
