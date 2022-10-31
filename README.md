@@ -70,6 +70,8 @@ unset_privatize_flag( data )
 
 output_privatized( data, out_file_name )
 
+report_counts( data )
+
 report_individual_double_facts( data )
 
 report_family_double_facts( data )
@@ -78,11 +80,13 @@ report_all_descendant_count( data )
 
 report_indi_descendant_count( indi, data )
 
-list_of_indi = find_individuals( data, search_tag, search_value, operation )
-
 print_individuals( data, list_of_indi )
 
-new_list = list_intersection( list1, list2, ... )
+list_of_indi = find_individuals( data, search_tag, search_value, operation )
+
+list_of_indi = list_intersection( list1, list2, ... )
+
+list_of_indi = list_difference( original, subtract1, subtract2, ... )
 
 ```
 
