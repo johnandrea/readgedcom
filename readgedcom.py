@@ -24,6 +24,10 @@ Public functions:
 
     id_list = find_individuals( data, search_tag, search_value, operation='=', only_best=True )
 
+    list_of_indi = list_intersection( list1, [list2, ...] )
+
+    list_of_indi = list_difference( original, subtract1, [subtract2, ,,,] )
+
     print_individuals( data, id_list )
 
 
@@ -43,7 +47,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.16.0
+v1.16.1
 """
 
 import sys
@@ -2495,6 +2499,24 @@ def report_counts( data ):
     assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
 
     def count_events( section, tags, counts ):
+        # not bothering to check the "best" item
+
+        def add_event_dates( tag, date_data ):
+            def add_date_range( limit, title ):
+                value = date_data[limit]['value']
+                key = title + '-' + tag
+                if key in counts:
+                   if limit == 'min':
+                      counts[key] = min( value, counts[key] )
+                   else:
+                      counts[key] = max( value, counts[key] )
+                else:
+                   counts[key] = value
+
+            if date_data['is_known']:
+               add_date_range( 'min', 'oldest' )
+               add_date_range( 'max', 'newest' )
+
         for tag in tags:
             if tag == 'even':
                if tag in section:
@@ -2514,13 +2536,19 @@ def report_counts( data ):
                          if sub_count not in counts:
                             counts[sub_count] = 0
                          counts[sub_count] += 1
+                         if tag in ['birt','deat','marr'] and subtag == 'date':
+                            add_event_dates( tag, section[tag][0]['date'] )
 
-    def count_indi_events( person, counts ):
-        count_events( person, INDI_EVENT_TAGS + OTHER_INDI_TAGS, counts )
 
+    def count_indi_events( person_data, counts ):
+        count_events( person_data, INDI_EVENT_TAGS + OTHER_INDI_TAGS, counts )
+        if 'name' in person_data and len( person_data['name'] ) > 1:
+           counts['alt-names'] += 1
 
-    def count_fam_events( fam, counts ):
-        count_events( fam, FAM_EVENT_TAGS + OTHER_FAM_TAGS, counts )
+    def count_fam_events( fam_data, counts ):
+        count_events( fam_data, FAM_EVENT_TAGS + OTHER_FAM_TAGS, counts )
+        if 'chil' in fam_data and len( fam_data['chil'] ) > 0:
+           counts['with-children'] += 1
 
     def show_counts( title, n, counts ):
         print( n, title )
@@ -2529,6 +2557,7 @@ def report_counts( data ):
 
     n = 0
     counts = dict()
+    counts['alt-names'] = 0 # guarantee reported even if doesn't exist
     for indi in data[PARSED_INDI]:
         n += 1
         count_indi_events( data[PARSED_INDI][indi], counts )
@@ -2539,6 +2568,7 @@ def report_counts( data ):
 
     n = 0
     counts = dict()
+    counts['with-children'] = 0 # guarantee report
     for fam in data[PARSED_FAM]:
         n += 1
         count_fam_events( data[PARSED_FAM][fam], counts )
