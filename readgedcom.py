@@ -47,7 +47,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.16.1
+v1.16.2
 """
 
 import sys
@@ -55,6 +55,7 @@ import copy
 import re
 import datetime
 from collections.abc import Iterable
+from collections import defaultdict
 
 # GEDCOM v7.0 requires this character sequence at the start of the file.
 # It may also be present in older versions (RootsMagic does include it).
@@ -2505,6 +2506,7 @@ def report_counts( data ):
             def add_date_range( limit, title ):
                 value = date_data[limit]['value']
                 key = title + '-' + tag
+                # don't use the "defaultdict[key]=0" here, where the dates are like counters
                 if key in counts:
                    if limit == 'min':
                       counts[key] = min( value, counts[key] )
@@ -2522,19 +2524,13 @@ def report_counts( data ):
                if tag in section:
                   for events in section[tag]:
                       sub_count = tag + '.' + events['type']
-                      if sub_count not in counts:
-                         counts[sub_count] = 0
                       counts[sub_count] += 1
             else:
                if tag in section:
-                  if tag not in counts:
-                     counts[tag] = 0
                   counts[tag] += 1
                   for subtag in ['date','plac']:
                       if subtag in section[tag][0]:
                          sub_count = tag + '.' + subtag
-                         if sub_count not in counts:
-                            counts[sub_count] = 0
                          counts[sub_count] += 1
                          if tag in ['birt','deat','marr'] and subtag == 'date':
                             add_event_dates( tag, section[tag][0]['date'] )
@@ -2556,7 +2552,7 @@ def report_counts( data ):
             print( counts[tag], tag )
 
     n = 0
-    counts = dict()
+    counts = defaultdict(int)
     counts['alt-names'] = 0 # guarantee reported even if doesn't exist
     for indi in data[PARSED_INDI]:
         n += 1
@@ -2567,7 +2563,7 @@ def report_counts( data ):
     print( '' )
 
     n = 0
-    counts = dict()
+    counts = defaultdict(int)
     counts['with-children'] = 0 # guarantee report
     for fam in data[PARSED_FAM]:
         n += 1
