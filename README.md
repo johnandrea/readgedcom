@@ -104,6 +104,20 @@ readgedcom.set_privatize_flag( data )
 readgedcom.output_privatized( data, sys.argv[1] + '.new' )
 ```
 
+A script to report the number of individuals, families, and some of their records so long as no errors detected
+```
+#!/usr/bin/python3
+
+import sys
+import readgedcom
+
+opts = dict()
+opts['display-gedcom-warnings'] = True
+
+data = readgedcom.read_file( sys.argv[1], opts )
+readgedcom.report_counts( data )
+```
+
 A script to display the structure and contents of the data.
 ```
 #!/usr/bin/python3
