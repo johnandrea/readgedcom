@@ -113,6 +113,8 @@ import readgedcom
 
 opts = dict()
 opts['display-gedcom-warnings'] = True
+opts['exit-on-bad-date'] = True
+opts['exit-on-unknown-section'] = True
 
 data = readgedcom.read_file( sys.argv[1], opts )
 readgedcom.report_counts( data )
