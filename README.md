@@ -144,7 +144,8 @@ import readgedcom
 
 data = readgedcom.read_file( sys.argv[1] )
 
-found_name = readgedcom.find_individuals( data, 'name', 'Anne ', 'in' )
+# "in" will also get middle name, but not nicknames
+found_name = readgedcom.find_individuals( data, 'name.givn', 'Anne', 'in' )
 found_age = readgedcom.find_individuals( data, 'birt.date', '19600101', '<' )
 
 # people who exist in both lists
