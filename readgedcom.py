@@ -28,6 +28,8 @@ Public functions:
 
     list_of_indi = list_difference( original, subtract1, [subtract2, ,,,] )
 
+    list_of_indi = list_combine( list1, [list2, ...] )
+
     print_individuals( data, id_list )
 
 
@@ -47,7 +49,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.16.2
+v1.16.3
 """
 
 import sys
@@ -207,7 +209,7 @@ unicode_table = dict()
 
 
 def list_intersection( *lists ):
-    """ For use with find_individuals results.
+    """ For use with results of find_individuals.
         Return the intersection of all the given lists. """
     result = set()
     first_loop = True
@@ -222,12 +224,22 @@ def list_intersection( *lists ):
 
 
 def list_difference( original, *subtract ):
-    """ For use with find_individuals results.
+    """ For use with results of find_individuals.
         Return the list "original" with other lists removed. """
     result = set( original )
     for l in subtract:
         if isinstance( l, Iterable ):
            result.difference_update( set(l) )
+    return list( result )
+
+
+def list_combine( *lists ):
+    """ For use with results of find_individuals.
+        Return as one list with no duplicates. """
+    result = set()
+    for l in lists:
+        if isinstance( l, list ):
+           result.update( set(l) )
     return list( result )
 
 
