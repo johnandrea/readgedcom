@@ -88,6 +88,8 @@ list_of_indi = list_intersection( list1, list2, ... )
 
 list_of_indi = list_difference( original, subtract1, subtract2, ... )
 
+list_of_indi = list_combine( list1, list2, ... )
+
 ```
 
 ### Basic usage
