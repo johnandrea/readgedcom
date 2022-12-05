@@ -49,7 +49,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.16.3
+v1.17.0
 """
 
 import sys
@@ -74,11 +74,14 @@ SECT_HEAD = 'head'
 SECT_INDI = 'indi'
 SECT_FAM = 'fam'
 SECT_TRLR = 'trlr'
-SECTION_NAMES = [SECT_HEAD, 'subm', SECT_INDI, SECT_FAM, 'obje', 'repo', 'snote', 'sour', '_evdef', '_todo', '_plac_defn', '_event_defn', SECT_TRLR]
+NON_STD_SECTIONS = ['_evdef', '_todo', '_plac_defn', '_event_defn']
+SECTION_NAMES = [SECT_HEAD, 'subm', SECT_INDI, SECT_FAM, 'obje', 'repo', 'snote', 'sour'] + NON_STD_SECTIONS + [SECT_TRLR]
 
 # Sections to be created by the parsing
 PARSED_INDI = 'individuals'
 PARSED_FAM = 'families'
+PARSED_MESSAGES = 'messages'
+PARSED_SECTIONS = [PARSED_INDI, PARSED_FAM, PARSED_MESSAGES]
 
 # From GEDCOM 7.0.1 spec pg 40
 FAM_EVENT_TAGS = ['anul','cens','div','divf','enga','marb','marc','marl','mars','marr','even']
@@ -468,12 +471,18 @@ def output_original( data, file ):
 
     global version
 
-    with open( file, 'w' ) as outf:
+    with open( file, 'w', encoding='utf-8' ) as outf:
          if not version.startswith( '5' ):
             print( FILE_LEAD_CHAR, end='' )
          for sect in SECTION_NAMES:
-             if sect in data:
+             if sect in data and sect != SECT_TRLR:
                 output_section( data[sect], outf )
+         # unknown sections
+         for sect in data:
+             if sect not in SECTION_NAMES + PARSED_SECTIONS:
+                output_section( data[sect], outf )
+         # finally the trailer
+         output_section( data[SECT_TRLR], outf )
 
 
 def get_parsed_year( data ):
@@ -614,12 +623,12 @@ def output_privatized( data, file ):
     isect = PARSED_INDI
     fsect = PARSED_FAM
 
-    with open( file, 'w' ) as outf:
+    with open( file, 'w', encoding='utf-8' ) as outf:
          if not version.startswith( '5' ):
             print( FILE_LEAD_CHAR, end='' )
 
          for sect in SECTION_NAMES:
-             if sect in data:
+             if sect in data and sect != SECT_TRLR:
                 if sect == SECT_INDI:
                    for section in data[sect]:
                        indi = extract_indi_id( section['tag'] )
@@ -640,6 +649,13 @@ def output_privatized( data, file ):
 
                 else:
                    output_section( data[sect], outf )
+
+         # unknown sections
+         for sect in data:
+             if sect not in SECTION_NAMES + PARSED_SECTIONS:
+                output_section( data[sect], outf )
+         # finally the trailer
+         output_section( data[SECT_TRLR], outf )
 
 
 def confirm_gedcom_version( data ):
@@ -1725,18 +1741,21 @@ def read_in_data( inf, data ):
               else:
                  sect = lc_line.replace( '0 ', '', 1 )
 
+                 # Is the first word in the line one of the non-std sections
+                 sect_parts = sect.split()
+                 if sect_parts[0] not in NON_STD_SECTIONS:
+                    message = concat_things( UNK_SECTION_WARN, line )
+                    if run_settings['exit-on-unknown-section']:
+                       raise ValueError( message )
+                    print_warn( message )
+                 # even if unknown it will be collected
+                 if sect not in data:
+                    data[sect] = []
+
               if sect != SECT_HEAD:
                  # Test for version as soon as header is finished
                  if not version:
                     version = confirm_gedcom_version( data )
-
-              if sect not in SECTION_NAMES:
-                 message = concat_things( UNK_SECTION_WARN, line )
-                 if run_settings['exit-on-unknown-section']:
-                    raise ValueError( message )
-                 print_warn( message )
-                 if sect not in data:
-                    data[sect] = []
 
               if not ignore_line:
                  data[sect].append( line_values( line ) )
@@ -1807,7 +1826,7 @@ def read_file( datafile, given_settings=None ):
     # Except the self-consistency checks: they are important enough to throw exceptions.
     # Also except the gedcom header and trailer errors.
     # Also file i/o errors which will throw system exceptions.
-    data['messages'] = []
+    data[PARSED_MESSAGES] = []
 
     if SELF_CONSISTENCY_CHECKS:
        # Ensure no conflict between the section names.
@@ -1857,7 +1876,7 @@ def read_file( datafile, given_settings=None ):
     check_parsed_sections( data )
 
     # Capture the messages before returning
-    data['messages'] = all_messages
+    data[PARSED_MESSAGES] = all_messages
 
     return data
 
