@@ -68,6 +68,8 @@ set_privatize_flag( data )
 
 unset_privatize_flag( data )
 
+output_reordered( data, person_to-reorder, out_file_name )
+
 output_privatized( data, out_file_name )
 
 report_counts( data )
