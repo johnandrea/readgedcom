@@ -12,6 +12,8 @@ Public functions:
 
     unset_privatize_flag( data )
 
+    output_reordered( data, person_id, out_file_name )
+
     output_privatized( data, out_file_name )
 
     report_individual_double_facts( data )
@@ -49,7 +51,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.17.0
+v1.17.1
 """
 
 import sys
@@ -478,6 +480,69 @@ def output_original( data, file ):
              if sect in data and sect != SECT_TRLR:
                 output_section( data[sect], outf )
          # unknown sections
+         for sect in data:
+             if sect not in SECTION_NAMES + PARSED_SECTIONS:
+                output_section( data[sect], outf )
+         # finally the trailer
+         output_section( data[SECT_TRLR], outf )
+
+
+def output_reordered( data, person_to_reorder, file ):
+    """
+    Output the original data to the given file handle with selected person
+    moved to the front of the file to become the root person.
+
+    Parameters:
+        data: data structure retured from the function read_file.
+        person_to_reorder: individual id of person to move.
+        file: name of the output file.
+    """
+
+    assert isinstance( data, dict ), 'Non-dict passed as the data parameter.'
+    assert isinstance( file, str ), 'Non-string passed as the filename parameter.'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
+
+    global version
+
+    def output_individual_sub( person_section ):
+        if 'sub' in person_section:
+           for sub_section in person_section['sub']:
+               print( sub_section['in'], file=outf )
+               output_individual_sub( sub_section )
+
+    def output_individual( person_data ):
+        print( person_data['in'], file=outf )
+        output_individual_sub( person_data )
+
+    # if not found, complain but continue
+    do_reorder = True
+    file_index = None
+    if person_to_reorder is None:
+       do_reorder = False
+       print( 'Selected individual to reorder is not found', file=sys.stderr )
+    else:
+       if person_to_reorder in data[PARSED_INDI]:
+          # maybe the person is already at the front
+          file_index = data[PARSED_INDI][person_to_reorder]['file_record']['index']
+          if file_index == 0:
+             do_reorder = False
+       else:
+          do_reorder = False
+          print( 'Selected individual to reorder is not found', file=sys.stderr )
+
+    with open( file, 'w', encoding='utf-8' ) as outf:
+         if not version.startswith( '5' ):
+            print( FILE_LEAD_CHAR, end='' )
+         for sect in SECTION_NAMES:
+             if sect in data and sect != SECT_TRLR:
+                if sect == SECT_INDI and do_reorder:
+                   output_individual( data[SECT_INDI][file_index] )
+                   for indi, indi_section in enumerate( data[SECT_INDI] ):
+                       if indi != file_index:
+                          output_individual( indi_section )
+                else:
+                   output_section( data[sect], outf )
+         # the ones which have been known
          for sect in data:
              if sect not in SECTION_NAMES + PARSED_SECTIONS:
                 output_section( data[sect], outf )
