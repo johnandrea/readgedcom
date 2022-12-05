@@ -158,6 +158,21 @@ found_both = readgedcom.list_intersection( found_name, found_age )
 readgedcom.print_individuals( data, found_both )
 ```
 
+A script which will make a new gedfile with the selected person as the first person in the file. For programs which set the root person on import. None of the xref values are changed.
+
+```
+#!/usr/bin/python3
+
+import sys
+import readgedcom
+
+data = readgedcom.read_file( sys.argv[1] )
+root_person = readgedcom.find_individuals( data, 'xref', sys.argv[2] )
+if len( root_person ) != 1:
+   print( 'Didnt match person', file=sys.stderr )
+   sys.exit(1)
+readgedcom.output_reordered( data, root_person[0], sys.argv[1] + '.new' )
+```
 
 A script to output the descendants of a selected individual (by EXID)
 into a JSON file.
