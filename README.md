@@ -527,6 +527,7 @@ This code is provided with neither support nor warranty.
 
 ## Future enhancements
 
+- Better checking of malformed family records.
 - Collect alternate name parts (aka, etc.) into the individual parsed section.
 - Find people based on family events.
 - Handle non-biological relationship tags from programs other than RootsMagic (if they exist).
