@@ -1,0 +1,86 @@
+﻿0 HEAD
+1 SOUR manual
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME John Andrea
+0 @I1@ INDI
+1 NAME Dad //
+2 GIVN Dad
+1 SEX M
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Mom //
+2 GIVN Mom
+1 SEX F
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Blood //
+2 GIVN Blood
+1 FAMC @F1@
+0 @I4@ INDI
+1 NAME Adopted //
+2 GIVN Adopted
+2 NOTE using RootsMagic tags
+1 FAMC @F1@
+0 @I5@ INDI
+1 NAME Adopted2 //
+2 GIVN Adopted2
+2 NOTE using ADOP flag in indi record
+1 ADOP
+2 DATE 1950
+1 FAMC @F1@
+0 @I6@ INDI
+1 NAME Fostered //
+2 GIVN Fostered
+1 FAMC @F1@
+0 @I7@ INDI
+1 NAME Related //
+2 GIVN Related
+1 FAMC @F1@
+0 @I8@ INDI
+1 NAME Guardian //
+2 GIVN Guardian
+1 FAMC @F1@
+0 @I9@ INDI
+1 NAME Sealed //
+2 GIVN Sealed
+1 FAMC @F1@
+0 @I10@ INDI
+1 NAME Unknown //
+2 GIVN Unknown
+1 FAMC @F1@
+0 @I11@ INDI
+1 NAME Adopted3 //
+2 GIVN Adopted3
+2 NOTE using FAMC subtag
+1 FAMC @F1@
+2 ADOP BOTH
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 CHIL @I4@
+2 _FREL adopted
+2 _MREL adopted
+1 CHIL @I5@
+1 CHIL @I6@
+2 _FREL foster
+2 _MREL foster
+1 CHIL @I7@
+2 _FREL related
+2 _MREL related
+1 CHIL @I8@
+2 _FREL guardian
+2 _MREL guardian
+1 CHIL @I9@
+2 _FREL sealed
+2 _MREL sealed
+1 CHIL @I10@
+2 _FREL unknown
+2 _MREL unknown
+1 CHIL @I11@
+0 TRLR
