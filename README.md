@@ -41,6 +41,7 @@ messages in data['messages'].
 | exit-on-no-families | False | Raise exception if no families found in the input. |
 | exit-on-missing-individuals | False | Raise exception if an expected individual not found. |
 | exit-on-missing-families | False | Raise exception if an expected family not found. |
+| only-birth | False | Skip non-birth relationships.  |
 
 
 ### Example Settings
@@ -535,5 +536,4 @@ This code is provided with neither support nor warranty.
 - Try harder to fix a malformed date. Perhaps fuzzy date parsing.
 - Consider using encode/decode for better unicode conversion.
 - Consider reading stdin via: for line in io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8'):
-- Add option to skip non-biological relationships (adoption, ceremonial, etc.)
 - Add ability to locate adoptees.
