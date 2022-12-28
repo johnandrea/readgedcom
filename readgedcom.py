@@ -51,7 +51,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.17.1
+v1.18
 """
 
 import sys
@@ -363,6 +363,7 @@ def setup_settings( settings=None ):
     defaults['exit-on-no-families'] = False
     defaults['exit-on-missing-individuals'] = False
     defaults['exit-on-missing-families'] = False
+    defaults['only-birth'] = False
 
     for item in defaults:
         setting = defaults[item]
@@ -1314,6 +1315,7 @@ def parse_family( level0, out_data ):
 
         # producing a result like
         # 'rel': {'child-id': {'wife':'adopted', 'husb':'adopted'}}
+        # a regular would be "birth"
 
         for level2 in level1['sub']:
             tag2 = level2['tag']
@@ -1864,6 +1866,44 @@ def read_in_data( inf, data ):
        raise ValueError( concat_things(DATA_ERR,'Final section was not the trailer.' ) )
 
 
+def remove_non_blood( individuals, families ):
+    # Remove family references for all non-blood relationships
+
+    def blood_family( indi, family ):
+        # The family with both blood parents is the blood-family
+        # If the "rel" key is missing then its assumed to be "blood"
+        result = True
+
+        if 'rel' in family and indi in family['rel']:
+           for parent in ['husb','wife']:
+               if parent in family['rel'][indi]:
+                  # expect "birt" or "birth"
+                  if ! family['rel'][indi][parent].startswith('birt'):
+                     result = False
+
+        if result:
+           # also check the other more standard options for adoptions
+           if 'adop' in individuals[indi]:
+              result = False
+           #else:
+           # the adop sub-record of famc, but its not yet parsed
+
+        return result
+
+    for indi in individuals:
+        if 'famc' in individuals[indi]:
+           for fam in individuals[indi]['famc']:
+               if fam in families:
+                  if not blood_family( indi, families[fam] ):
+                     # remove this family from the individual
+                     # and remove the individual from the family
+                     # leave the 'rel' record if it does exist
+                     individuals[indi]['famc'].remove( fam ) # this is a list
+                     if len(individuals[indi]['famc']) < 1:
+                        del individuals[indi]['famc'] # this is a dict
+                     families[fam]['chil'].remove( indi ) # this is a list
+
+
 def read_file( datafile, given_settings=None ):
     """
     Return a dict containing the GEDCOM data in the file.
@@ -1939,6 +1979,9 @@ def read_file( datafile, given_settings=None ):
 
     # and do some checking
     check_parsed_sections( data )
+
+    if run_settings['only-birth']:
+       remove_non_blood( data[PARSED_INDI], data[PARSED_FAM] )
 
     # Capture the messages before returning
     data[PARSED_MESSAGES] = all_messages
