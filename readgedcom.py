@@ -51,7 +51,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.18
+v1.18.1
 """
 
 import sys
@@ -66,7 +66,7 @@ from collections import defaultdict
 FILE_LEAD_CHAR = '\ufeff'
 
 # The "x" becomes a "startwsith" comparison
-SUPPORTED_VERSIONS = [ '5.5', '5.5.1', '7.0.x' ]
+SUPPORTED_VERSIONS = [ '5.5.1', '7.0.x' ]
 
 # Section types, listed in order or at least header first and trailer last.
 # Some are not valid in GEDCOM 5.5.x, but that's ok if they are not found.
@@ -730,7 +730,6 @@ def confirm_gedcom_version( data ):
 
     # This should be called as soon as a non-header section is found
     # to ensure the remainder of the file can be handled.
-    # The old versions (pre 5.5) have less well defined structures.
 
     version = None
 
