@@ -1877,7 +1877,7 @@ def remove_non_blood( individuals, families ):
            for parent in ['husb','wife']:
                if parent in family['rel'][indi]:
                   # expect "birt" or "birth"
-                  if ! family['rel'][indi][parent].startswith('birt'):
+                  if not family['rel'][indi][parent].startswith('birt'):
                      result = False
 
         if result:
