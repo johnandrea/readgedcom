@@ -51,7 +51,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.18.1
+v1.18.2
 """
 
 import sys
@@ -371,6 +371,17 @@ def setup_settings( settings=None ):
            if isinstance( settings[item], type(setting) ):
               setting = settings[item]
         new_settings[item] = setting
+
+    # report any typos
+    mistakes = []
+    for item in settings:
+        if item not in defaults:
+           mistakes.append( item )
+    if mistakes:
+       print( 'Invalid setting(s):', mistakes, file=sys.stderr )
+       print( 'Expecting one of:', file=sys.stderr )
+       for item in defaults:
+           print( item, 'default', defaults[item], file=sys.stderr )
 
     if new_settings['show-settings']:
        for item in new_settings:
