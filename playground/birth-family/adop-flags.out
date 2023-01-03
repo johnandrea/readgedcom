@@ -21,7 +21,8 @@ all children
         'privatized': 0,
         'sex': ['F'],
         'xref': 2},
- 'i3': {'best-events': {'name': 0},
+ 'i3': {'all-famc': ['f1'],
+        'best-events': {'name': 0},
         'birth-famc': ['f1'],
         'famc': ['f1'],
         'file_record': {'index': 2, 'key': 'indi'},
@@ -32,7 +33,8 @@ all children
                   'value': 'Birth1 //'}],
         'privatized': 0,
         'xref': 3},
- 'i4': {'best-events': {'name': 0},
+ 'i4': {'all-famc': ['f1'],
+        'best-events': {'name': 0},
         'birth-famc': ['f1'],
         'famc': ['f1'],
         'file_record': {'index': 3, 'key': 'indi'},
@@ -43,7 +45,9 @@ all children
                   'value': 'Birth2 //'}],
         'privatized': 0,
         'xref': 4},
- 'i5': {'best-events': {'name': 0},
+ 'i5': {'all-famc': ['f1'],
+        'best-events': {'name': 0},
+        'birth-famc': [],
         'famc': ['f1'],
         'file_record': {'index': 4, 'key': 'indi'},
         'name': [{'display': 'Fostered1 ',
@@ -54,7 +58,9 @@ all children
         'privatized': 0,
         'xref': 5},
  'i6': {'adop': [{'date': {'is_known': False}}],
+        'all-famc': ['f1'],
         'best-events': {'name': 0},
+        'birth-famc': [],
         'famc': ['f1'],
         'file_record': {'index': 5, 'key': 'indi'},
         'name': [{'display': 'Adopted1 ',
@@ -65,7 +71,9 @@ all children
         'privatized': 0,
         'xref': 6},
  'i7': {'adop': [{'date': {'is_known': False}}],
+        'all-famc': ['f1'],
         'best-events': {'name': 0},
+        'birth-famc': [],
         'famc': ['f1'],
         'file_record': {'index': 6, 'key': 'indi'},
         'name': [{'display': 'Adopted3 ',
@@ -85,7 +93,9 @@ all children
                            'min': {'modifier': '',
                                    'value': '19200907',
                                    'year': 1920}}}],
+        'all-famc': ['f1'],
         'best-events': {'name': 0},
+        'birth-famc': ['f1'],
         'famc': ['f1'],
         'file_record': {'index': 7, 'key': 'indi'},
         'name': [{'display': 'Adopted3 ',
@@ -98,8 +108,9 @@ all children
 
 family
 
-{'f1': {'best-events': {},
-        'birth-chil': ['i3', 'i4'],
+{'f1': {'all-chil': ['i3', 'i4', 'i5', 'i6', 'i7', 'i8'],
+        'best-events': {},
+        'birth-chil': ['i3', 'i4', 'i8'],
         'chil': ['i3', 'i4', 'i5', 'i6', 'i7', 'i8'],
         'file_record': {'index': 0, 'key': 'fam'},
         'husb': ['i1'],
@@ -158,8 +169,10 @@ birth children
                   'value': 'Birth2 //'}],
         'privatized': 0,
         'xref': 4},
- 'i5': {'best-events': {'name': 0},
-        'famc': ['f1'],
+ 'i5': {'all-famc': ['f1'],
+        'best-events': {'name': 0},
+        'birth-famc': [],
+        'famc': [],
         'file_record': {'index': 4, 'key': 'indi'},
         'name': [{'display': 'Fostered1 ',
                   'givn': 'Fostered1',
@@ -169,8 +182,10 @@ birth children
         'privatized': 0,
         'xref': 5},
  'i6': {'adop': [{'date': {'is_known': False}}],
+        'all-famc': ['f1'],
         'best-events': {'name': 0},
-        'famc': ['f1'],
+        'birth-famc': [],
+        'famc': [],
         'file_record': {'index': 5, 'key': 'indi'},
         'name': [{'display': 'Adopted1 ',
                   'givn': 'Adopted1',
@@ -180,8 +195,10 @@ birth children
         'privatized': 0,
         'xref': 6},
  'i7': {'adop': [{'date': {'is_known': False}}],
+        'all-famc': ['f1'],
         'best-events': {'name': 0},
-        'famc': ['f1'],
+        'birth-famc': [],
+        'famc': [],
         'file_record': {'index': 6, 'key': 'indi'},
         'name': [{'display': 'Adopted3 ',
                   'givn': 'Adopted3',
@@ -200,7 +217,9 @@ birth children
                            'min': {'modifier': '',
                                    'value': '19200907',
                                    'year': 1920}}}],
+        'all-famc': ['f1'],
         'best-events': {'name': 0},
+        'birth-famc': ['f1'],
         'famc': ['f1'],
         'file_record': {'index': 7, 'key': 'indi'},
         'name': [{'display': 'Adopted3 ',
@@ -215,8 +234,8 @@ family
 
 {'f1': {'all-chil': ['i3', 'i4', 'i5', 'i6', 'i7', 'i8'],
         'best-events': {},
-        'birth-chil': ['i3', 'i4'],
-        'chil': ['i3', 'i4'],
+        'birth-chil': ['i3', 'i4', 'i8'],
+        'chil': ['i3', 'i4', 'i8'],
         'file_record': {'index': 0, 'key': 'fam'},
         'husb': ['i1'],
         'privatized': 0,
@@ -229,15 +248,15 @@ family
 
 method 1
 all children ['i3', 'i4', 'i5', 'i6', 'i7', 'i8']
-birth children ['i3', 'i4']
-non-birth ['i5', 'i6', 'i7', 'i8']
+birth children ['i3', 'i4', 'i8']
+non-birth ['i5', 'i6', 'i7']
 
 method 2
 all children ['i3', 'i4', 'i5', 'i6', 'i7', 'i8']
-birth children ['i3', 'i4']
-non-birth ['i5', 'i6', 'i7', 'i8']
+birth children ['i3', 'i4', 'i8']
+non-birth ['i5', 'i6', 'i7']
 
 method 3
 all children ['i3', 'i4', 'i5', 'i6', 'i7', 'i8']
-birth children ['i3', 'i4']
-non-birth ['i5', 'i6', 'i7', 'i8']
+birth children ['i3', 'i4', 'i8']
+non-birth ['i5', 'i6', 'i7']
