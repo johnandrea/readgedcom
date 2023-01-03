@@ -283,6 +283,7 @@
                                                     'value': '19260421',
                                                     'year': 1926}},
                                    'plac': 'London'}],
+                         'birth-family': ['f12'],
                          'even': [{'date': {'in': '2 JUN 1953',
                                             'is_known': True,
                                             'is_range': False,
