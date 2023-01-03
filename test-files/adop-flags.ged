@@ -21,26 +21,40 @@
 1 NAME Birth1 //
 2 GIVN Birth1
 2 NOTE birth, no tags
+1 FAMC @F1@
 0 @I4@ INDI
 1 NAME Birth2 //
 2 GIVN Birth2
 2 NOTE birth, pedidree tag
 1 FAMC @F1@
 2 PEDI BIRTH
-1 FAMC @F1@
 0 @I5@ INDI
+1 NAME Fostered1 //
+2 GIVN Fostered1
+2 NOTE fostered, pedigree tag
+1 FAMC @F1@
+2 PEDI FOSTER
+0 @I6@ INDI
 1 NAME Adopted1 //
 2 GIVN Adopted1
-2 NOTE adopted, pedigree tag
-1 FAMC @F1@
-2 PEDI ADOPTED
-0 @I6@ INDI
-1 NAME Adopted2 //
-2 GIVN Adopted2
 2 NOTE adopted, adop tag
 1 ADOP
 2 FAMC @F1@
 3 ADOP BOTH
+0 @I7@ INDI
+1 NAME Adopted3 //
+2 GIVN Adopted3
+2 NOTE adopted, one parent
+1 ADOP
+2 FAMC @F1@
+3 ADOP husb
+0 @I8@ INDI
+1 NAME Adopted3 //
+2 GIVN Adopted3
+2 NOTE adopted, just plain flag
+1 ADOP
+2 DATE 7 SEP 1920
+1 FAMC @F1@
 0 @F1@ FAM
 1 HUSB @I1@
 1 WIFE @I2@
@@ -48,4 +62,6 @@
 1 CHIL @I4@
 1 CHIL @I5@
 1 CHIL @I6@
+1 CHIL @I7@
+1 CHIL @I8@
 0 TRLR
