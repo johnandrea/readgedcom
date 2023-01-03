@@ -423,7 +423,7 @@ If the family record contains relationship tags between a child and a parent the
   'best-events': {'marr':0}
 }
 ```
-Those relationships are currently extracted from RootsMagic specific tags which can take values of "birth", "adopted", "step", "foster", "related", "guardian", "sealed", and "unknown".
+Those relationships are currently extracted from RootsMagic specific tags which can take values of "birth", "adopted", "step", "foster", "related", "guardian", "sealed", and "unknown". Also extracted are the adoption and pedigree tags.
 
 
 ## "Best" events
@@ -501,9 +501,18 @@ though not every child will be listed there due to the use of a single ADOP tag.
 
 For individuals which have an explicit or assumed birth family, they will have a list structure of:
 ```
-'birth-family': [ fam-id ]
+'birth-famc': [ fam-id ]
 ```
+in addition to the regular 'famc' structure. And the associated family structure will contain:
+```
+'birt-chil': [ id1, id2, ... ]
+```
+in addition to the regular 'chil' structure.
+
 Where a birth family requires that neither parent is marked as a non-birth relationship.
+
+If the 'only-birth' setting is passed (default is False) then those above structures are modified so that for individuals
+'famc' will contain only birth families (so it may be empty). And for families the 'chil' list will be only the birth children.
 
 ## Using find_individuals
 
