@@ -51,7 +51,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.19
+v1.20
 """
 
 import sys
@@ -66,9 +66,6 @@ PARSED_INDI = 'individuals'
 PARSED_FAM = 'families'
 PARSED_MESSAGES = 'messages'
 PARSED_SECTIONS = [PARSED_INDI, PARSED_FAM, PARSED_MESSAGES]
-
-# Tag used to identity the
-BIRTH_FAM_KEY = 'birth-family'
 
 # GEDCOM v7.0 requires this character sequence at the start of the file.
 # It may also be present in older versions (RootsMagic does include it).
@@ -366,6 +363,7 @@ def setup_settings( settings=None ):
     defaults['exit-on-no-families'] = False
     defaults['exit-on-missing-individuals'] = False
     defaults['exit-on-missing-families'] = False
+    defaults['only-birth'] = False
 
     for item in defaults:
         setting = defaults[item]
@@ -1957,8 +1955,8 @@ def read_in_data( inf, data ):
        raise ValueError( concat_things(DATA_ERR,'Final section was not the trailer.' ) )
 
 
-def setup_birth_families( individuals, families ):
-    # Add the birth-family yag
+def setup_birth_families( only_birth, individuals, families ):
+    # Add the birth-family tag
 
     def is_birth_family( indi, family ):
         # The family with both birth parents is the blood-family
@@ -1987,14 +1985,35 @@ def setup_birth_families( individuals, families ):
 
     # Is it possible to have a list of birth families.
     # Maybe if research is inconclusive, so make it list.
+    # Similar setup for the families
+
+    indi_tag = 'birth-famc'
+    fam_tag = 'birth-chil'
+
     for indi in individuals:
         if 'famc' in individuals[indi]:
            for fam in individuals[indi]['famc']:
                if fam in families:
                   if is_birth_family( indi, families[fam] ):
-                     if BIRTH_FAM_KEY not in individuals[indi]:
-                        individuals[indi][BIRTH_FAM_KEY] = []
-                     individuals[indi][BIRTH_FAM_KEY].append( fam )
+                     if indi_tag not in individuals[indi]:
+                        individuals[indi][indi_tag] = []
+                     if fam not in individuals[indi][indi_tag]:
+                        individuals[indi][indi_tag].append( fam )
+                     if fam_tag not in families[fam]:
+                        families[fam][fam_tag] = []
+                     if indi not in families[fam][fam_tag]:
+                        families[fam][fam_tag].append( indi )
+
+    if only_birth:
+       # Flip the contents of the lists
+       for indi in individuals:
+           if indi_tag in individuals[indi]:
+              individuals[indi]['all-famc'] = individuals[indi]['famc']
+              individuals[indi]['famc'] = individuals[indi][indi_tag]
+       for fam in families:
+           if fam_tag in families[fam]:
+              families[fam]['all-chil'] = families[fam]['chil']
+              families[fam]['chil'] = families[fam][fam_tag]
 
 
 def read_file( datafile, given_settings=None ):
@@ -2073,7 +2092,7 @@ def read_file( datafile, given_settings=None ):
     # and do some checking
     check_parsed_sections( data )
 
-    setup_birth_families( data[PARSED_INDI], data[PARSED_FAM] )
+    setup_birth_families( run_settings['only-birth'], data[PARSED_INDI], data[PARSED_FAM] )
 
     # Capture the messages before returning
     data[PARSED_MESSAGES] = all_messages
