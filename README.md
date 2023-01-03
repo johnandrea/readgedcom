@@ -497,22 +497,22 @@ The data can include information on adoptions, fostering, etc. In these cases th
         'i6': {'husb': 'adopted', 'wife': 'adopted'},
         'i7': {'husb': 'adopted'}},
 ```
-though not every child will be listed there due to the use of a single ADOP tag.
 
 For individuals which have an explicit or assumed birth family, they will have a list structure of:
 ```
 'birth-famc': [ fam-id ]
 ```
-in addition to the regular 'famc' structure. And the associated family structure will contain:
+in addition to the regular 'famc' and 'all-famc' structures. And the associated family structure will contain:
 ```
 'birt-chil': [ id1, id2, ... ]
 ```
-in addition to the regular 'chil' structure.
+in addition to the regular 'chil' and 'all-chil' structures.
 
 Where a birth family requires that neither parent is marked as a non-birth relationship.
 
 If the 'only-birth' setting is passed (default is False) then those above structures are modified so that for individuals
-'famc' will contain only birth families (so it may be empty). And for families the 'chil' list will be only the birth children.
+'famc' will contain only birth families (may be empty). And for families the 'chil' list will be the same as the 'birth-chil' list (may be empty).
+This enables the same tree scanning code via 'famc' and 'chil' with either all-children or only birth children. Note that individuals and families are not removed from the data, only the family linkages are reemoved. 
 
 ## Using find_individuals
 
