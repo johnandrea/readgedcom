@@ -51,7 +51,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.18.2
+v1.19
 """
 
 import sys
@@ -60,6 +60,15 @@ import re
 import datetime
 from collections.abc import Iterable
 from collections import defaultdict
+
+# Sections to be created by the parsing
+PARSED_INDI = 'individuals'
+PARSED_FAM = 'families'
+PARSED_MESSAGES = 'messages'
+PARSED_SECTIONS = [PARSED_INDI, PARSED_FAM, PARSED_MESSAGES]
+
+# Tag used to identity the
+BIRTH_FAM_KEY = 'birth-family'
 
 # GEDCOM v7.0 requires this character sequence at the start of the file.
 # It may also be present in older versions (RootsMagic does include it).
@@ -78,12 +87,6 @@ SECT_FAM = 'fam'
 SECT_TRLR = 'trlr'
 NON_STD_SECTIONS = ['_evdef', '_todo', '_plac_defn', '_event_defn']
 SECTION_NAMES = [SECT_HEAD, 'subm', SECT_INDI, SECT_FAM, 'obje', 'repo', 'snote', 'sour'] + NON_STD_SECTIONS + [SECT_TRLR]
-
-# Sections to be created by the parsing
-PARSED_INDI = 'individuals'
-PARSED_FAM = 'families'
-PARSED_MESSAGES = 'messages'
-PARSED_SECTIONS = [PARSED_INDI, PARSED_FAM, PARSED_MESSAGES]
 
 # From GEDCOM 7.0.1 spec pg 40
 FAM_EVENT_TAGS = ['anul','cens','div','divf','enga','marb','marc','marl','mars','marr','even']
@@ -363,7 +366,6 @@ def setup_settings( settings=None ):
     defaults['exit-on-no-families'] = False
     defaults['exit-on-missing-individuals'] = False
     defaults['exit-on-missing-families'] = False
-    defaults['only-birth'] = False
 
     for item in defaults:
         setting = defaults[item]
@@ -1395,8 +1397,30 @@ def setup_parsed_families( sect, psect, data ):
         parse_family( level0, data[psect][fam] )
 
 
-def parse_individual( level0, out_data ):
+def parse_individual( level0, out_data, relation_data ):
     """ Parse an individual record from the input section to the parsed individuals section."""
+
+    def handle_adop_tag( level1_data ):
+        for level2 in level1_data['sub']:
+            if level2['tag'] == 'famc':
+               fam_id = extract_fam_id( level2['value'] )
+               # ok to add this again, duplicates will be cleaned up
+               if 'famc' not in out_data:
+                  out_data['famc'] = []
+               out_data['famc'].append( fam_id )
+               if 'sub' in level2:
+                  for level3 in level2['sub']:
+                      if level3['tag'] == 'adop':
+                         l3_value = level3['value'].lower().strip()
+                         relation_data[fam_id] = {'value': 'adopted', 'parent': l3_value }
+
+    def handle_pedigree_tag( level1_data ):
+        # Possible pedigree options, applies to both parents
+        for level2 in level1_data['sub']:
+            if level2['tag'] == 'pedi':
+               if level2['value']:
+                  adop_value = level2['value'].lower().strip()
+                  relation_data[fam_id] = {'value': adop_value, 'parent':'both' }
 
     # Use this flag on output of modified data
     out_data[PRIVATIZE_FLAG] = PRIVATIZE_OFF
@@ -1421,7 +1445,18 @@ def parse_individual( level0, out_data ):
         elif tag in ['fams', 'famc']:
            # These two broken out specially because they use the id extraction
            # must be handled before the test for other-indi-tags.
-           out_data[tag].append( extract_fam_id( value ) )
+           fam_id = extract_fam_id( value )
+           out_data[tag].append( fam_id )
+
+           if tag == 'famc':
+              handle_pedigree_tag( level1 )
+
+        elif tag == 'adop':
+           # might be a date, etc in this flag
+           handle_event_tag( tag, level1, out_data )
+
+           # and specalized family relation data
+           handle_adop_tag( level1 )
 
         elif tag in ['even','fact']:
            # This one broken out specially because its a custom event
@@ -1449,11 +1484,17 @@ def parse_individual( level0, out_data ):
        extra_name_parts( UNKNOWN_NAME, names )
        out_data[tag].append( names )
 
+    # due to family relation tags double xrefs might have been created
+    # so duplicates should be removed
+    for tag in ['famc']:
+        if tag in out_data and len(out_data[tag]) > 1:
+           out_data[tag] = list( set( out_data[tag] ) )
+
     ensure_not_twice( ONCE_INDI_TAGS, 'Individual', level0['tag'], out_data )
     set_best_events( INDI_SINGLE_EVENTS, out_data )
 
 
-def setup_parsed_individuals( sect, psect, data ):
+def setup_parsed_individuals( sect, psect, data, relationships ):
     """ Parse all individuals. """
     for i, level0 in enumerate( data[sect] ):
         indi = extract_indi_id( level0['tag'] )
@@ -1461,13 +1502,53 @@ def setup_parsed_individuals( sect, psect, data ):
         data[psect][indi]['xref'] = int( indi.replace('I','').replace('i','') )
         add_file_back_ref( sect, i, data[psect][indi] )
 
-        parse_individual( level0, data[psect][indi] )
+        indi_relations = dict()
+
+        parse_individual( level0, data[psect][indi], indi_relations )
+
+        if indi_relations:
+           relationships[indi] = indi_relations
 
 
 def setup_parsed_sections( data ):
     """ Parse input records into the parsed sections of the data structure."""
+
+    def setup_relationship( indi, relationship, family ):
+
+        def add_parent( value, parent ):
+            # leave any existing values as-is
+            if parent not in family['rel'][indi]:
+               family['rel'][indi][parent] = value
+
+        if 'rel' not in family:
+           family['rel'] = dict()
+
+        if indi not in family['rel']:
+           family['rel'][indi] = {}
+        rel = relationship['value'].lower().strip()
+        parents = relationship['parent'].lower().strip()
+
+        if parents == 'both':
+           add_parent( rel, 'husb' )
+           add_parent( rel, 'wife' )
+        else:
+           add_parent( rel, parents )
+
+    family_relations = dict()
+
     setup_parsed_families( SECT_FAM, PARSED_FAM, data )
-    setup_parsed_individuals( SECT_INDI, PARSED_INDI, data )
+    setup_parsed_individuals( SECT_INDI, PARSED_INDI, data, family_relations )
+
+    # Copy the relations section from individuals to families
+    # These structures are on the assumption that a child is attached only once
+    # to a family. Conceivably during research that assumption might not be true
+    # for instance it could be unknown if a child is birth or adopted and somehow
+    # both are added. This structure is not that complex and handles only one.
+
+    for indi in family_relations:
+        for fam in family_relations[indi]:
+            if fam in data[PARSED_FAM]:
+               setup_relationship( indi, family_relations[indi][fam], data[PARSED_FAM][fam] )
 
 
 def check_parsed_sections( data ):
@@ -1876,42 +1957,44 @@ def read_in_data( inf, data ):
        raise ValueError( concat_things(DATA_ERR,'Final section was not the trailer.' ) )
 
 
-def remove_non_blood( individuals, families ):
-    # Remove family references for all non-blood relationships
+def setup_birth_families( individuals, families ):
+    # Add the birth-family yag
 
-    def blood_family( indi, family ):
-        # The family with both blood parents is the blood-family
+    def is_birth_family( indi, family ):
+        # The family with both birth parents is the blood-family
         # If the "rel" key is missing then its assumed to be "blood"
         result = True
 
+        has_family_rel = False
+
         if 'rel' in family and indi in family['rel']:
+           has_family_rel = True
            for parent in ['husb','wife']:
                if parent in family['rel'][indi]:
                   # expect "birt" or "birth"
                   if not family['rel'][indi][parent].startswith('birt'):
                      result = False
 
-        if result:
-           # also check the other more standard options for adoptions
+        if result and not has_family_rel:
+           # keep checking if there is no family relation data,
+           # but the person does have an adoption flag,
+           # and the person is only a child of one family
            if 'adop' in individuals[indi]:
-              result = False
-           #else:
-           # the adop sub-record of famc, but its not yet parsed
+              if len(individuals[indi]['famc']) < 2:
+                 result = False
 
         return result
 
+    # Is it possible to have a list of birth families.
+    # Maybe if research is inconclusive, so make it list.
     for indi in individuals:
         if 'famc' in individuals[indi]:
            for fam in individuals[indi]['famc']:
                if fam in families:
-                  if not blood_family( indi, families[fam] ):
-                     # remove this family from the individual
-                     # and remove the individual from the family
-                     # leave the 'rel' record if it does exist
-                     individuals[indi]['famc'].remove( fam ) # this is a list
-                     if len(individuals[indi]['famc']) < 1:
-                        del individuals[indi]['famc'] # this is a dict
-                     families[fam]['chil'].remove( indi ) # this is a list
+                  if is_birth_family( indi, families[fam] ):
+                     if BIRTH_FAM_KEY not in individuals[indi]:
+                        individuals[indi][BIRTH_FAM_KEY] = []
+                     individuals[indi][BIRTH_FAM_KEY].append( fam )
 
 
 def read_file( datafile, given_settings=None ):
@@ -1990,8 +2073,7 @@ def read_file( datafile, given_settings=None ):
     # and do some checking
     check_parsed_sections( data )
 
-    if run_settings['only-birth']:
-       remove_non_blood( data[PARSED_INDI], data[PARSED_FAM] )
+    setup_birth_families( data[PARSED_INDI], data[PARSED_FAM] )
 
     # Capture the messages before returning
     data[PARSED_MESSAGES] = all_messages
