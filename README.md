@@ -41,6 +41,7 @@ messages in data['messages'].
 | exit-on-no-families | False | Raise exception if no families found in the input. |
 | exit-on-missing-individuals | False | Raise exception if an expected individual not found. |
 | exit-on-missing-families | False | Raise exception if an expected family not found. |
+| only-birth | False | Skip non-birth relationships. |
 
 
 ### Example Settings
