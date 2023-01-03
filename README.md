@@ -41,7 +41,6 @@ messages in data['messages'].
 | exit-on-no-families | False | Raise exception if no families found in the input. |
 | exit-on-missing-individuals | False | Raise exception if an expected individual not found. |
 | exit-on-missing-families | False | Raise exception if an expected family not found. |
-| only-birth | False | Skip non-birth relationships.  |
 
 
 ### Example Settings
@@ -487,6 +486,23 @@ for indi in data[readgedcom.PARSED_INDI]:
 
 The handling of non-single events with proven/disproved markers will have to be checked in your
 own code.
+
+## Birth families
+
+The data can include information on adoptions, fostering, etc. In these cases there are relation keys added to the parsed family data in for form of a 'rel' dictionary structure with sub dictionaries for each child which might look like this:
+```
+'rel': {'i4': {'husb': 'birth', 'wife': 'birth'},
+        'i5': {'husb': 'foster', 'wife': 'foster'},
+        'i6': {'husb': 'adopted', 'wife': 'adopted'},
+        'i7': {'husb': 'adopted'}},
+```
+though not every child will be listed there due to the use of a single ADOP tag.
+
+For individuals which have an explicit or assumed birth family, they will have a list structure of:
+```
+'birth-family': [ fam-id ]
+```
+Where a birth family requires that neither parent is marked as a non-birth relationship.
 
 ## Using find_individuals
 
