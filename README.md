@@ -489,7 +489,7 @@ own code.
 
 ## Birth families
 
-The data can include information on adoptions, fostering, etc. In these cases there are relation keys added to the parsed family data in for form of a 'rel' dictionary structure with sub dictionaries for each child which might look like this:
+The data can include information on adoptions, fostering, etc. In these cases there are relation keys added to the parsed family data in form of a 'rel' dictionary structure with sub dictionaries for each child which might look like this:
 ```
 'rel': {'i4': {'husb': 'birth', 'wife': 'birth'},
         'i5': {'husb': 'foster', 'wife': 'foster'},
