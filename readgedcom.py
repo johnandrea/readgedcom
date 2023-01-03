@@ -1963,58 +1963,79 @@ def setup_birth_families( only_birth, individuals, families ):
         # If the "rel" key is missing then its assumed to be "blood"
         result = True
 
-        has_family_rel = False
+        #has_family_rel = False
 
         if 'rel' in family and indi in family['rel']:
-           has_family_rel = True
+           #has_family_rel = True
            for parent in ['husb','wife']:
                if parent in family['rel'][indi]:
                   # expect "birt" or "birth"
                   if not family['rel'][indi][parent].startswith('birt'):
                      result = False
 
-        if result and not has_family_rel:
-           # keep checking if there is no family relation data,
-           # but the person does have an adoption flag,
-           # and the person is only a child of one family
-           if 'adop' in individuals[indi]:
-              if len(individuals[indi]['famc']) < 2:
-                 result = False
+        # Skip this test. Can't assume this is the adoption family, might be
+        # the adopt out-of family.
+        ##if result and not has_family_rel:
+        ##   # keep checking if there is no family relation data,
+        ##   # but the person does have an adoption flag,
+        ##   # and the person is only a child of one family
+        ##   if 'adop' in individuals[indi]:
+        ##      if len(individuals[indi]['famc']) < 2:
+        ##         result = False
 
         return result
 
+    # No matter which setting, the full list gets stored.
+    # Perform a simple deep copy, because the reference lists might change later
+    # At the same time, setup for birth only lists.
+
+    famc = 'famc'
+    all_tag = 'all-' + famc
+    birth_indi_tag = 'birth-' + famc
+    for indi in individuals:
+        if famc in individuals[indi]:
+           individuals[indi][birth_indi_tag] = []
+           individuals[indi][all_tag] = []
+           for fam in individuals[indi][famc]:
+               individuals[indi][all_tag].append( fam )
+
+    chil = 'chil'
+    all_tag = 'all-' + chil
+    birth_fam_tag = 'birth-' + chil
+    for fam in families:
+        if chil in families[fam]:
+           families[fam][birth_fam_tag] = []
+           families[fam][all_tag] = []
+           for indi in families[fam][chil]:
+               families[fam][all_tag].append( indi )
+
     # Is it possible to have a list of birth families.
     # Maybe if research is inconclusive, so make it list.
-    # Similar setup for the families
-
-    indi_tag = 'birth-famc'
-    fam_tag = 'birth-chil'
+    # Similar setup for the families.
 
     for indi in individuals:
-        if 'famc' in individuals[indi]:
-           for fam in individuals[indi]['famc']:
+        if famc in individuals[indi]:
+           for fam in individuals[indi][famc]:
                if fam in families:
                   if is_birth_family( indi, families[fam] ):
-                     if indi_tag not in individuals[indi]:
-                        individuals[indi][indi_tag] = []
-                     if fam not in individuals[indi][indi_tag]:
-                        individuals[indi][indi_tag].append( fam )
-                     if fam_tag not in families[fam]:
-                        families[fam][fam_tag] = []
-                     if indi not in families[fam][fam_tag]:
-                        families[fam][fam_tag].append( indi )
+                     if fam not in individuals[indi][birth_indi_tag]:
+                        individuals[indi][birth_indi_tag].append( fam )
+                     if indi not in families[fam][birth_fam_tag]:
+                        families[fam][birth_fam_tag].append( indi )
 
     if only_birth:
-       # Flip the contents of the lists
+       # Change the contents of the lists
+       # Simple deep copy
        for indi in individuals:
-           if indi_tag in individuals[indi]:
-              individuals[indi]['all-famc'] = individuals[indi]['famc']
-              individuals[indi]['famc'] = individuals[indi][indi_tag]
+           if famc in individuals[indi]:
+              individuals[indi][famc] = []
+              for fam in individuals[indi][birth_indi_tag]:
+                  individuals[indi][famc].append( fam )
        for fam in families:
-           if fam_tag in families[fam]:
-              families[fam]['all-chil'] = families[fam]['chil']
-              families[fam]['chil'] = families[fam][fam_tag]
-
+           if chil in families[fam]:
+              families[fam][chil] = []
+              for indi in families[fam][birth_fam_tag]:
+                  families[fam][chil].append( indi )
 
 def read_file( datafile, given_settings=None ):
     """
