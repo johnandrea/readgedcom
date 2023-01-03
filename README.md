@@ -512,7 +512,9 @@ Where a birth family requires that neither parent is marked as a non-birth relat
 
 If the 'only-birth' setting is passed (default is False) then those above structures are modified so that for individuals
 'famc' will contain only birth families (may be empty). And for families the 'chil' list will be the same as the 'birth-chil' list (may be empty).
-This enables the same tree scanning code via 'famc' and 'chil' with either all-children or only birth children. Note that individuals and families are not removed from the data, only the family linkages are reemoved. 
+This enables the same tree scanning code via 'famc' and 'chil' with either all-children or only birth children. Note that individuals and families are not removed from the data, only the family linkages are reemoved.
+
+Look in playground/birth-family for example data structures.
 
 ## Using find_individuals
 
