@@ -51,7 +51,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.20
+v1.20.1
 """
 
 import sys
@@ -370,6 +370,8 @@ def setup_settings( settings=None ):
         if item in settings:
            if isinstance( settings[item], type(setting) ):
               setting = settings[item]
+           else:
+              print( 'Ignoring invalid setting for', item, 'expecting', type(setting), file=sys.stderr )
         new_settings[item] = setting
 
     # report any typos
