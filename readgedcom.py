@@ -51,7 +51,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.20.2
+v1.20.3
 """
 
 import sys
@@ -1400,7 +1400,9 @@ def setup_parsed_families( sect, psect, data ):
 def parse_individual( level0, out_data, relation_data ):
     """ Parse an individual record from the input section to the parsed individuals section."""
 
-    def handle_birth_into( tag, level1_data ):
+    def handle_birth_into( tag, level1_data )
+        # GEDCOM v5.5.1 pg 34
+        # GEDCOM v7.0.10 pg 51
         tag_name = tag
         if tag == 'adop':
            tag_name = 'adopted'
@@ -1430,6 +1432,8 @@ def parse_individual( level0, out_data, relation_data ):
 
     def handle_pedigree_tag( level1_data ):
         # Possible pedigree options, applies to both parents
+        # GEDCOM v5.5.1 pg 31
+        # GEDCOM v7.0.10 pg 39
         for level2 in level1_data['sub']:
             if level2['tag'] == 'pedi':
                if level2['value']:
