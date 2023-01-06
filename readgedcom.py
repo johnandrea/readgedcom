@@ -51,7 +51,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.20.1
+v1.20.2
 """
 
 import sys
@@ -1400,19 +1400,33 @@ def setup_parsed_families( sect, psect, data ):
 def parse_individual( level0, out_data, relation_data ):
     """ Parse an individual record from the input section to the parsed individuals section."""
 
-    def handle_adop_tag( level1_data ):
+    def handle_birth_into( tag, level1_data ):
+        tag_name = tag
+        if tag == 'adop':
+           tag_name = 'adopted'
+        elif tag == 'birt':
+           tag_name = 'birth'
+        elif tag == 'chr':
+           tag_name = 'chistened'
+
         for level2 in level1_data['sub']:
             if level2['tag'] == 'famc':
                fam_id = extract_fam_id( level2['value'] )
+
                # ok to add this again, duplicates will be cleaned up
                if 'famc' not in out_data:
                   out_data['famc'] = []
                out_data['famc'].append( fam_id )
-               if 'sub' in level2:
-                  for level3 in level2['sub']:
-                      if level3['tag'] == 'adop':
-                         l3_value = level3['value'].lower().strip()
-                         relation_data[fam_id] = {'value': 'adopted', 'parent': l3_value }
+
+               parent = 'both'
+
+               if tag == 'adop':
+                  if 'sub' in level2:
+                      for level3 in level2['sub']:
+                          if level3['tag'] == 'adop':
+                             parent = level3['value'].lower().strip()
+
+               relation_data[fam_id] = {'value': tag_name, 'parent': parent }
 
     def handle_pedigree_tag( level1_data ):
         # Possible pedigree options, applies to both parents
@@ -1451,13 +1465,6 @@ def parse_individual( level0, out_data, relation_data ):
            if tag == 'famc':
               handle_pedigree_tag( level1 )
 
-        elif tag == 'adop':
-           # might be a date, etc in this flag
-           handle_event_tag( tag, level1, out_data )
-
-           # and specalized family relation data
-           handle_adop_tag( level1 )
-
         elif tag in ['even','fact']:
            # This one broken out specially because its a custom event
            # must be handled before the below test for regular events.
@@ -1468,6 +1475,9 @@ def parse_individual( level0, out_data, relation_data ):
 
         elif tag in INDI_EVENT_TAGS:
            handle_event_tag( tag, level1, out_data )
+
+           if tag in ['adop','birt','chr']:
+              handle_birth_into( tag, level1 )
 
         if parsed:
            that_index = len(out_data[tag]) - 1
