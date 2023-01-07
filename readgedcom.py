@@ -1400,7 +1400,7 @@ def setup_parsed_families( sect, psect, data ):
 def parse_individual( level0, out_data, relation_data ):
     """ Parse an individual record from the input section to the parsed individuals section."""
 
-    def handle_birth_into( tag, level1_data )
+    def handle_birth_into( tag, level1_data ):
         # GEDCOM v5.5.1 pg 34
         # GEDCOM v7.0.10 pg 51
         tag_name = tag
