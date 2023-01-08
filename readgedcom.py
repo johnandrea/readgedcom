@@ -1504,7 +1504,7 @@ def parse_individual( level0, out_data, relation_data ):
     for tag in ['famc','fams']:
         for prefix in ['','birth-','all-']:
             test_tag = prefix + tag
-            if tag in out_data and len(out_data[test_tag]) > 1:
+            if test_tag in out_data and len(out_data[test_tag]) > 1:
                out_data[test_tag] = list( set( out_data[test_tag] ) )
 
     ensure_not_twice( ONCE_INDI_TAGS, 'Individual', level0['tag'], out_data )
