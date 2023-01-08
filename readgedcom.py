@@ -51,7 +51,7 @@ Specs at https://gedcom.io/specs/
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.20.3
+v1.20.4
 """
 
 import sys
@@ -368,6 +368,7 @@ def setup_settings( settings=None ):
     for item in defaults:
         setting = defaults[item]
         if item in settings:
+           # careful if a default is set to "None"
            if isinstance( settings[item], type(setting) ):
               setting = settings[item]
            else:
@@ -1500,9 +1501,11 @@ def parse_individual( level0, out_data, relation_data ):
 
     # due to family relation tags double xrefs might have been created
     # so duplicates should be removed
-    for tag in ['famc']:
-        if tag in out_data and len(out_data[tag]) > 1:
-           out_data[tag] = list( set( out_data[tag] ) )
+    for tag in ['famc','fams']:
+        for prefix in ['','birth-','all-']:
+            test_tag = prefix + tag
+            if tag in out_data and len(out_data[test_tag]) > 1:
+               out_data[test_tag] = list( set( out_data[test_tag] ) )
 
     ensure_not_twice( ONCE_INDI_TAGS, 'Individual', level0['tag'], out_data )
     set_best_events( INDI_SINGLE_EVENTS, out_data )
