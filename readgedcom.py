@@ -49,6 +49,15 @@ This code handles only the Gregorian calendar with optional epoch setting of BCE
 
 Specs at https://gedcom.io/specs/
 
+Some notes on limitations, etc.
+- Re-marriages should be additional FAM records
+https://www.tamurajones.net/MarriedDivorcedMarriedAgain.xhtml
+but it does complicate full siblings
+https://www.beholdgenealogy.com/blog/?p=1303
+- character sets
+https://www.tamurajones.net/GEDCOMCharacterEncodings.xhtml
+https://www.tamurajones.net/TheMinimalGEDCOM555File.xhtml
+
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
 v1.20.4
@@ -72,7 +81,7 @@ PARSED_SECTIONS = [PARSED_INDI, PARSED_FAM, PARSED_MESSAGES]
 FILE_LEAD_CHAR = '\ufeff'
 
 # The "x" becomes a "startwsith" comparison
-SUPPORTED_VERSIONS = [ '5.5.1', '7.0.x' ]
+SUPPORTED_VERSIONS = [ '5.5.1', '5.5.5', '7.0.x' ]
 
 # Section types, listed in order or at least header first and trailer last.
 # Some are not valid in GEDCOM 5.5.x, but that's ok if they are not found.
@@ -255,6 +264,9 @@ def setup_unicode_table():
     """
     # https://www.cl.cam.ac.uk/~mgk25/ucs/quotes.html
     # https://www.compart.com/en/unicode/block
+    # Other related conversions for ANSEL
+    # https://www.tamurajones.net/ANSELUnicodeConversion.xhtml
+    # https://www.tamurajones.net/GEDCOMANSELToUnicode.xhtml
 
     lookup_table = dict()
 
