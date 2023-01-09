@@ -10,7 +10,7 @@ A library for reading and parsing genealogy GEDCOM files.
 ## Limitations
 
 - Requires Python 3.6+
-- GEDCOM versions 5.5.1, 7.0.x
+- GEDCOM versions 5.5.1, 5.5.5, 7.0.x
 - UTF-8 or ASCII character set
   https://gedcom.io/specs/
 - Does not support GEDCOM ZIP or split files
