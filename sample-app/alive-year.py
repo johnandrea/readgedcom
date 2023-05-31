@@ -31,7 +31,7 @@ DEBUG_SIMPLE = False
 
 
 def show_version():
-    print( '1.0' )
+    print( '1.1' )
 
 
 def load_my_module( module_name, relative_path ):
@@ -69,6 +69,7 @@ def get_program_options():
     results['infile'] = None
     results['year'] = 1931
     results['libpath'] = '.'
+    results['spouse estimate'] = False
 
     arg_help = 'List people in the gedcom who are estimated to be alive in the given year.'
     parser = argparse.ArgumentParser( description=arg_help )
@@ -78,6 +79,9 @@ def get_program_options():
 
     arg_help = 'Year to consider. Default: ' + str(results['year'])
     parser.add_argument( '--year', default=results['year'], type=int, help=arg_help )
+
+    arg_help = 'Skip the estimate based spouse tests. Default is to not skip.'
+    parser.add_argument( '--skip-spouse-estimate', default=False, action='store_true', help=arg_help )
 
     # maybe this should be changed to have a type which better matched a directory
     arg_help = 'Location of the gedcom library. Default is current directory.'
@@ -91,6 +95,9 @@ def get_program_options():
     results['year'] = args.year
     results['infile'] = args.infile.name
     results['libpath'] = args.libpath
+
+    # reverse the test from skip to include
+    results['spouse estimate'] = not args.skip_spouse_estimate
 
     return results
 
@@ -211,7 +218,7 @@ data = readgedcom.read_file( options['infile'], data_opts )
 check_year = options['year']
 
 if DEBUG:
-   print( 'Using', check_year, file=sys.stderr )
+   print( 'Year', check_year, file=sys.stderr )
    if not DEBUG_SIMPLE:
       print( 'Not showing simple tests.', file=sys.stderr )
 
@@ -299,19 +306,20 @@ for indi in people:
 # depends on results already computed
 # but are the least reliable
 
-for indi in people:
-    if people[indi]['keep']:
-       # no dates, assume similar to spouse
-       if not people[indi]['birth'] and not people[indi]['death']:
-          partners = get_partners( indi )
-          for partner in partners:
-              if not people[partner]['keep']:
-                 if not people[partner][because_of_death_date]:
-                    # otherwise assume birth/ancestors/descendants are similar to spouse
-                    people[indi]['keep'] = False
-                    if DEBUG:
-                       print( people[indi]['name'], 'spouse of removed person', file=sys.stderr )
-                       break
+if options['spouse estimate']:
+   for indi in people:
+       if people[indi]['keep']:
+          # no dates, assume similar to spouse
+          if not people[indi]['birth'] and not people[indi]['death']:
+             partners = get_partners( indi )
+             for partner in partners:
+                 if not people[partner]['keep']:
+                    if not people[partner][because_of_death_date]:
+                       # otherwise assume birth/ancestors/descendants are similar to spouse
+                       people[indi]['keep'] = False
+                       if DEBUG:
+                          print( people[indi]['name'], 'spouse of removed person', file=sys.stderr )
+                          break
 
 n = 0
 ok = 0
