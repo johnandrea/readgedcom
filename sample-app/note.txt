@@ -1,1 +1,4 @@
 A program to call the library
+
+The alive-year.py is an estimator of who was alive. Use like this:
+alive-year.py --year=1931 family.ged >results.out 2>results.err
