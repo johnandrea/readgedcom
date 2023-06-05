@@ -557,6 +557,7 @@ This code is provided with neither support nor warranty.
 
 ## Future enhancements
 
+- Add loop detectopn function/
 - Handle GEDCOM v7 STAT (PROVEN,DISPROVED,etc.) records.
 - Better checking of malformed family records.
 - Collect alternate name parts (aka, etc.) into the individual parsed section.
