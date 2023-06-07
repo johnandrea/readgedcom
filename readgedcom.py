@@ -6,6 +6,8 @@ HTML pages, JSON data, etc.
 Public functions:
     data = read_file( gedcom_file_name [, settings ] )
 
+    detect_loops( data, report_to_stderr )
+
     output_original( data, out_file_name )
 
     set_privatize_flag( data )
@@ -60,7 +62,7 @@ https://www.tamurajones.net/TheMinimalGEDCOM555File.xhtml
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.20.4
+v1.21.0
 """
 
 import sys
@@ -375,6 +377,7 @@ def setup_settings( settings=None ):
     defaults['exit-on-no-families'] = False
     defaults['exit-on-missing-individuals'] = False
     defaults['exit-on-missing-families'] = False
+    defaults['exit-if-loop'] = False
     defaults['only-birth'] = False
 
     for item in defaults:
@@ -440,6 +443,122 @@ def month_name_to_number( month_name ):
     if month_name and month_name.lower() in MONTH_NUMBERS:
        return MONTH_NUMBERS[month_name.lower()]
     return 0
+
+
+def detect_loops( data, print_report=True ):
+    """ Check that every individual cannot be their own sporse,
+    sibling, or ancestor.
+    Return 'true' if such a loop is detected, and print to output
+    for any such conditions if output is selected.
+
+    Note that birth and adoption relationships are treated the same.
+    """
+
+    result = False
+
+    assert isinstance( data, dict ), 'Non-dict passed as the data parameter.'
+    assert PARSED_INDI in data, 'Passed data appears to not be from read_file'
+
+    i_key = PARSED_INDI
+    f_key = PARSED_FAM
+
+    def get_info( indi ):
+        info = get_indi_display( data[i_key][indi] )
+        out = str(data[i_key][indi]['xref']) + '/ '
+        out += info['name']
+        out += '(' + info['birt'] + '-' + info['deat'] + ')'
+        return out
+
+    def show_fam( indi, fam, message ):
+        if print_report:
+           fam_info = data[f_key][fam]['xref']
+           print( get_info(indi), message + ' in family', fam_info, file=sys.stderr )
+
+    def show_path( path ):
+        if print_report:
+           print( 'People involved in a loop:', file=sys.stderr )
+           for indi in path:
+               print( '  ', get_info(indi), file=sys.stderr )
+
+    def check_partners():
+        result = False
+        tag = 'fams'
+        for indi in data[i_key]:
+            if tag in data[i_key][indi]:
+               for fam in data[i_key][indi][tag]:
+                   partners = []
+                   for partner in ['wife','husb']:
+                       if partner in data[f_key][fam]:
+                          partners.append( data[f_key][fam][partner][0] )
+                   if len( partners ) == 2 and partners[0] == partners[1]:
+                       result = True
+                       show_fam( indi, fam, 'Double partners' )
+        return result
+
+    def check_siblings():
+        result = False
+        tag = 'famc'
+        for indi in data[i_key]:
+            if tag in data[i_key][indi]:
+               for fam in data[i_key][indi][tag]:
+                   count = 0
+                   for child in data[f_key][fam]['chil']:
+                       if child == indi:
+                          count += 1
+                   if count > 1:
+                      result = True
+                      show_fam( indi, fam, 'Double child' )
+        return result
+
+    def check_self_ancestor( start_indi, fam, path, all_loopers ):
+        result = False
+
+        for partner_type in ['wife','husb']:
+            if partner_type in data[f_key][fam]:
+               partner = data[f_key][fam][partner_type][0]
+               # skip if already confirmed
+               if partner not in all_loopers:
+                  if partner in path:
+                     # have we come back to the beginning
+                     if partner == start_indi:
+                        # and don't try to look back to more ancestors
+                        result = True
+                        show_path( path )
+                        all_loopers.extend( path )
+                  else:
+                     if 'famc' in data[i_key][partner]:
+                        for parent_fam in data[i_key][partner]['famc']:
+                            if check_self_ancestor( start_indi, parent_fam, path + [partner], all_loopers ):
+                               result = True
+
+        return result
+
+    def check_ancestors():
+        result = False
+
+        people_in_a_loop = []
+
+        for indi in data[i_key]:
+            if indi not in people_in_a_loop:
+               if 'famc' in data[i_key][indi]:
+                  for fam in data[i_key][indi]['famc']:
+                      if check_self_ancestor( indi, fam, [indi], people_in_a_loop ):
+                         result = True
+
+        return result
+
+    # don't stop if a true condition is met, check everywhere
+
+    if check_partners():
+       result = True
+
+    if check_siblings():
+       result = True
+
+    if check_ancestors():
+       result = True
+
+    return result
 
 
 def add_file_back_ref( file_tag, file_index, parsed_section ):
@@ -2145,6 +2264,11 @@ def read_file( datafile, given_settings=None ):
     check_parsed_sections( data )
 
     setup_birth_families( run_settings['only-birth'], data[PARSED_INDI], data[PARSED_FAM] )
+
+    if run_settings['exit-if-loop']:
+       if detect_loops( data, True ):
+          print( 'Exiting due to positive automatic loop detection', file=sys.stderr )
+          sys.exit(1)
 
     # Capture the messages before returning
     data[PARSED_MESSAGES] = all_messages
