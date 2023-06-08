@@ -2267,8 +2267,7 @@ def read_file( datafile, given_settings=None ):
 
     if run_settings['exit-if-loop']:
        if detect_loops( data, True ):
-          print( 'Exiting due to positive automatic loop detection', file=sys.stderr )
-          sys.exit(1)
+          raise ValueError( 'Loop detected automatically' )
 
     # Capture the messages before returning
     data[PARSED_MESSAGES] = all_messages
