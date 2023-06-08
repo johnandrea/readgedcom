@@ -42,6 +42,7 @@ messages in data['messages'].
 | exit-on-no-families | False | Raise exception if no families found in the input. |
 | exit-on-missing-individuals | False | Raise exception if an expected individual not found. |
 | exit-on-missing-families | False | Raise exception if an expected family not found. |
+| exit-if-loop | False | Raise exception if a relationship loop is found immediately after parsing. |
 | only-birth | False | Skip non-birth relationships. |
 
 
@@ -65,6 +66,8 @@ for mess in data['messages']:
 data = read_file( gedcom_file_name [, settings] )
 
 output_original( data, out_file_name )
+
+detect_loops( data, print_report_to_stderr )
 
 set_privatize_flag( data )
 
@@ -557,7 +560,6 @@ This code is provided with neither support nor warranty.
 
 ## Future enhancements
 
-- Add loop detectopn function/
 - Handle GEDCOM v7 STAT (PROVEN,DISPROVED,etc.) records.
 - Better checking of malformed family records.
 - Collect alternate name parts (aka, etc.) into the individual parsed section.
