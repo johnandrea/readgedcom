@@ -549,7 +549,7 @@ for indi in smiths:
    print_individuals( find_individuals( data, 'childrenof', indi )
 ```
 
-## Stats on a modest pc per individual count
+## Timing on a modest pc per individual count
 
 Parsing, no dates in input:
 - 200: much less than a second
