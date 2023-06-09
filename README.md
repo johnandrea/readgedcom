@@ -548,7 +548,20 @@ for indi in smiths:
    print( 'her children' )
    print_individuals( find_individuals( data, 'childrenof', indi )
 ```
-   
+
+## Stats on a modest pc per individual count
+
+Parsing, no dates in input:
+- 200: much less than a second
+- 1,000: less than a second
+- 10,000: 3 sec
+- 100,000: 570 sec = 9.5 minutes
+
+Loop detection, when none exist:
+- 200: a lot less than a second
+- 1,000: much less than a second
+- 10,000: less than a second
+- 100,000: just under a second
 
 ## Bugs
 
