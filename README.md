@@ -556,12 +556,14 @@ Parsing, no dates in input:
 - 1,000: less than a second
 - 10,000: 3 sec
 - 100,000: 570 sec = 9.5 minutes
+- 250,000: 3080 sec = 52 minutes
 
 Loop detection, when none exist:
 - 200: a lot less than a second
 - 1,000: much less than a second
 - 10,000: less than a second
-- 100,000: just under a second
+- 100,000: half under a second
+- 250,000: just under a second
 
 ## Bugs
 
