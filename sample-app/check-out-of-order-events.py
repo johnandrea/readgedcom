@@ -2,6 +2,8 @@ import sys
 import readgedcom
 
 # Check for events that occur before birth or after burial.
+# If there is no burial date, try to use death date.
+# Dates equal to birth or burial are ok.
 # Not checking for family events out of order (marriage before birth, etc.)
 
 
@@ -47,19 +49,25 @@ def check_person( person ):
         if 'date' in event and event['date']['is_known']:
            event_date = comparable_date( event['date']['min'] )
 
-           if birth_date and (event_type != 'birt'):
-              if event_date < birth_date:
-                 new_line = print_match( name, event_type + ' before birth', new_line )
-           if burial_date and (event_type != 'buri'):
-              if event_date > burial_date:
-                 new_line = print_match( name, event_type + ' after burial', new_line )
+           if first_date and (event_type != first_event):
+              if event_date < first_date:
+                 new_line = print_match( name, event_type+' before '+first_event, new_line )
+           if last_date and (event_type != last_event):
+              if event_date > last_date:
+                 new_line = print_match( name, event_type+' after '+last_event, new_line )
         return new_line
 
+    first_event = 'birt'
+    first_date = get_best_event_date( person, first_event, 'min' )
+    # possibly use baptism if no birth, but they usually go together
+    last_event = 'buri'
+    last_date = get_best_event_date( person, last_event, 'max' )
+    if not last_date:
+       # try death
+       last_event = 'deat'
+       last_date = get_best_event_date( person, last_event, 'max' )
 
-    birth_date = get_best_event_date( person, 'birt', 'min' )
-    burial_date = get_best_event_date( person, 'buri', 'max' )
-
-    if birth_date or burial_date:
+    if first_date or last_date:
        separator = True #a newline the first time a person is output
        name = 'xref:' + str( person['xref'] ) + ' ' + person['name'][0]['display']
 
