@@ -1,24 +1,101 @@
 import sys
 import readgedcom
 
+# Parameters:
+# 1 = GEDCOM file to test
+# Output:
+# messages on stdout
+#
 # Check for events that occur before birth or after burial.
 # If there is no burial date, try to use death date.
-# Dates equal to birth or burial are ok.
+# Event dates equal to birth or burial/death are ok.
+#
 # Not checking for family events out of order (marriage before birth, etc.)
 
+month_days = [ 0, #make indexes start at 1
+              31, 28, 31, 30,
+              31, 30, 31, 31,
+              30, 31, 30, 31]
+
+def is_leap_year( y ):
+    result = False
+    if y % 4 == 0:
+       result = True
+       if y % 100 == 0:
+          result = False
+          if y % 400 == 0:
+             result = True
+    return result
+
+def ymd_as_yyyymmdd( y, m, d ):
+    # integers into a single string and zero pad too
+    m = str( m )
+    if len( m ) == 1:
+       m = '0' + m
+    d = str( d )
+    if len( d ) == 1:
+       d = '0' + d
+    return str( y ) + m + d
+
+# I'm not afraid of doing these simple date calculations.
+# Besides, these are usable before the Unix epoch which
+# many date libraries can't handle.
+# I don't expect to worry about the Gregorian switchover.
+# But they do assume handled dates are valid.
+
+def subtract_one_day( s ):
+    # input and output is string yyyymmdd
+    year = int( s[0:4] )
+    month = int( s[4:6] )
+    day = int( s[6:8] )
+
+    day -= 1
+    if day < 1:
+       month -= 1
+       if month < 1:
+          # jump to prev year
+          day = month_days[12]
+          month = 12
+          year -= 1
+       else:
+          # same year
+          month_end = month_days[month]
+          if month == 2 and is_leap_year( year ):
+             month_end += 1
+          day = month_end
+
+    return ymd_as_yyyymmdd( year, month, day )
+
+def add_one_day( s ):
+    # input and output is string yyyymmdd
+    year = int( s[0:4] )
+    month = int( s[4:6] )
+    day = int( s[6:8] )
+
+    month_end = month_days[month]
+    if month == 2 and is_leap_year( year ):
+       month_end += 1
+
+    day += 1
+    if day > month_end:
+       day = 1
+       month += 1
+       if month > 12:
+          month = 1
+          year += 1
+
+    return ymd_as_yyyymmdd( year, month, day )
 
 def comparable_date( event_date ):
     # date values already are comparable as strings of "yyyymmdd"
-    # but the modifiers need to be considered to be correct
+    # but the modifiers need to be considered
 
     result = event_date['value']
 
     if event_date['modifier'].lower() == 'bef':
-       # naive
-       result = str( int(result) - 1 )
-    if event_date['modifier'].lower() == 'aft':
-       # naive
-       result = str( int(result) + 1 )
+       result = subtract_one_day( result )
+    elif event_date['modifier'].lower() == 'aft':
+       result = add_one_day( result )
 
     return result
 
