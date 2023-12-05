@@ -10,68 +10,62 @@
 1 SUBM @SUB1@
 0 @SUB1@ SUBM
 1 NAME John A Andrea
-0 @I1@ INDI
+0 @I200@ INDI
 1 NAME George /OK/
 2 GIVN George
 2 SURN OK
 1 BIRT
 2 DATE 14 DEC 1895
-2 NOTE ok
 1 BURI
 2 DATE AFT 1953
-2 NOTE ok
-0 @I2@ INDI
+0 @I1@ INDI
 1 NAME Elizabeth /1ERR/
 2 GIVN Elizabeth
 2 SURN 1ERR
 1 EVEN
 2 TYPE Living
 2 DATE 10 AUG 1800
+2 NOTE before birth
 1 BIRT
 2 DATE 4 AUG 1900
-2 NOTE before mistake
-1 BURI
-2 DATE 7 JUN 1948
-2 NOTE ok
-0 @I3@ INDI
+0 @I2@ INDI
 1 NAME Ruth /1ERR/
 2 GIVN Ruth
 2 SURN 1ERR
 1 BIRT
 2 DATE 21 APR 1926
-2 NOTE ok
 1 BURI
 2 DATE 7 OCT 1970
-2 NOTE after mistake
 1 EVEN
 2 TYPE Living
 2 DATE 8 OCT 1980
-0 @I4@ INDI
+2 NOTE after burial
+0 @I3@ INDI
 1 NAME Robert /2ERR/
 2 GIVN Robert
 2 SURN 2ERR
 1 EVEN
 2 TYPE Living
 2 DATE 21 JUL 1920
+2 NOTE before birth
 1 BIRT
 2 DATE 4 FEB 1930
-2 NOTE before mistake
 1 BURI 
 2 DATE 8 JUL 1950
-2 NOTE living after mistake
 1 EVEN
 2 TYPE Living
 2 DATE 21 JUL 1960
-0 @I5@ INDI
+2 NOTE after burial
+0 @I4@ INDI
 1 NAME Billy /1ERR/
 2 GIVN Billy
 2 SURN 1ERR
 1 CHR
 2 DATE 27 MAR 2001
+2 NOTE before birth
 1 BIRT
 2 DATE 1 APR 2001
-2 NOTE christened before birth
-0 @I6@ INDI
+0 @I5@ INDI
 1 NAME Sally /1ERR/
 2 GIVN Sally
 2 SURN 1ERR
@@ -80,16 +74,16 @@
 1 DEAT
 2 DATE 1 APR 2001
 2 NOTE death after burial
-0 @I7@ INDI
+0 @I6@ INDI
 1 NAME Darren /1ERR/
 2 GIVN Darren
 2 SURN 1ERR
 1 DEAT
 2 DATE 27 MAR 2001
+2 NOTE death before birth
 1 BIRT
 2 DATE 1 APR 2001
-2 NOTE death before birth
-0 @I8@ INDI
+0 @I7@ INDI
 1 NAME Lois /1ERR/
 2 GIVN Lois
 2 SURN 1ERR
@@ -98,7 +92,7 @@
 1 BIRT
 2 DATE 1 APR 2001
 2 NOTE birth after burial
-0 @I9@ INDI
+0 @I8@ INDI
 1 NAME Fred /2ERR/
 2 GIVN Fred
 2 SURN 2ERR
@@ -107,12 +101,12 @@
 2 NOTE grad before birth
 1 BIRT
 2 DATE 7 JUN 2000
-1 BURI
+1 DEAT
 2 DATE 27 MAR 2001
 1 IMMI
 2 DATE 1 APR 2001
-2 NOTE imm after burial
-0 @I10@ INDI
+2 NOTE imm after death
+0 @I201@ INDI
 1 NAME Chris /OK/
 2 GIVN Chris
 2 SURN OK
@@ -121,7 +115,7 @@
 1 DEAT
 2 DATE 7 NOV 2010
 2 NOTE same day as birth
-0 @I11@ INDI
+0 @I202@ INDI
 1 NAME Collin /OK/
 2 GIVN Collin
 2 SURN OK
@@ -129,8 +123,7 @@
 2 DATE 9 NOV 2011
 1 IMMI
 2 DATE AFT 9 NOV 2011
-2 NOTE ok, after birth
-0 @I12@ INDI
+0 @I9@ INDI
 1 NAME Debbie /1ERR/
 2 GIVN Debbie
 2 SURN 1ERR
@@ -139,7 +132,7 @@
 1 IMMI
 2 DATE BEF 9 NOV 2012
 2 NOTE before birth
-0 @I13@ INDI
+0 @I10@ INDI
 1 NAME Erin /1ERR/
 2 GIVN Erin
 2 SURN 1ERR
@@ -148,4 +141,39 @@
 1 IMMI
 2 DATE AFT 9 NOV 2013
 2 NOTE after burial
+0 @I11@ INDI
+1 NAME Sam /1ERR/
+2 GIVN Sam
+2 SURN 1ERR
+1 BIRT
+2 DATE 9 SEP 2014
+1 IMMI
+2 DATE BEF 9 SEP 2014
+2 NOTE could be before birth
+0 @I12@ INDI
+1 NAME Abe /1ERR/
+2 GIVN Abe
+2 SURN 1ERR
+1 DEAT
+2 DATE 9 SEP 2014
+1 GRAD
+2 DATE AFT 9 SEP 2014
+2 NOTE could be after death
+0 @I203@ INDI
+1 NAME Beth /OK/
+2 GIVN Beth
+2 SURN OK
+1 BIRT
+2 DATE BEF 15 SEP 2015
+1 IMMI
+2 DATE 14 SEP 2015
+0 @I13@ INDI
+1 NAME Caesar /1ERR/
+2 GIVN Caesar
+2 SURN 1ERR
+1 BIRT
+2 DATE BEF 15 SEP 2015
+1 IMMI
+2 DATE BEF 14 SEP 2015
+2 NOTE could be bebore birth
 0 TRLR
