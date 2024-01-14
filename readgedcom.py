@@ -62,7 +62,7 @@ https://www.tamurajones.net/TheMinimalGEDCOM555File.xhtml
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.21.0
+v1.21.1
 """
 
 import sys
@@ -100,7 +100,7 @@ SECTION_NAMES = [SECT_HEAD, 'subm', SECT_INDI, SECT_FAM, 'obje', 'repo', 'snote'
 FAM_EVENT_TAGS = ['anul','cens','div','divf','enga','marb','marc','marl','mars','marr','even']
 
 # From GEDCOM 7.0.1 spec pg 44
-INDI_EVENT_TAGS = ['bapm','barm','basm','bles','buri','cens','chra','conf','crem','deat','emig','fact','fcom','grad','immi','natu','ordn','prob','reti','will','adop','birt','chr','even']
+INDI_EVENT_TAGS = ['bapm','barm','basm','bles','buri','cens','chra','conf','crem','deat','emig','fact','fcom','grad','immi','natu','ordn','prob','reti','will','adop','birt','chr','even','resi']
 
 # Other individual tags of interest placed into the parsed section,
 # in addition to the event tags and of course the name(s)
