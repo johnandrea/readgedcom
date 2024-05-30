@@ -60,7 +60,7 @@ for mess in data['messages']:
 
 ## Usage
 
-### Functions:
+### Callable Functions:
 
 ```
 data = read_file( gedcom_file_name [, settings] )
@@ -355,18 +355,19 @@ Each one of the "min" and "max" dates themselves is a dict structure:
 {
   'modifier': empty string, or one of "abt", "bef", "aft", etc.,
   'value': 'yyyymmdd',
+  'sortable': string similar to yyyymmdd style,
   'year': only the year portion, as an int
 }
 ```
 
 A birth event could look like this:
 ```
-'birt': [{'date': {'in': '21 APR 1926',
+'birt': [{'date': {'in': 'AFT 21 APR 1926',
                    'is_known': True,
                    'is_range': False,
                    'malformed': False,
-                   'max': {'modifier': '', 'value': '19260421', 'year': 1926},
-                   'min': {'modifier': '', 'value': '19260421', 'year': 1926}},
+                   'max': {'modifier': 'aft', 'value': '19260421', 'year': 1926, 'sortable': '19260422'},
+                   'min': {'modifier': 'aft', 'value': '19260421', 'year': 1926, 'sortable': '19260422'}},
           'plac': 'London'}],
 ```
 
