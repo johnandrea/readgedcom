@@ -62,7 +62,7 @@ https://www.tamurajones.net/TheMinimalGEDCOM555File.xhtml
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.21.1
+v1.22.0
 """
 
 import sys
@@ -1186,8 +1186,21 @@ def date_to_structure( original ):
               value['max'][item] = value['min'][item]
 
        for item in ['min','max']:
-           if value[item]['value']:
-              value[item]['year'] = int( value[item]['value'][0:4] )
+           yyyymmdd = value[item]['value']
+           if yyyymmdd:
+              value[item]['year'] = int( yyyymmdd[0:4] )
+
+              # add another item for direct comparison from the yyyymmdd value
+              # also a string
+              # Note that it might create an impossible date (0th or 33rd day of month)
+              sortable_key = 'sortable'
+              modifier_value = value[item]['modifier'].lower()
+              value[item][sortable_key] = yyyymmdd
+              if modifier_value == 'bef':
+                 value[item][sortable_key] = str( int(yyyymmdd) - 1 )
+              if modifier_value == 'aft':
+                 value[item][sortable_key] = str( int(yyyymmdd) + 1 )
+
            else:
               value[item]['year'] = None
 
