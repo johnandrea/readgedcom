@@ -523,7 +523,7 @@ Look in playground/birth-family for example data structures.
 
 ## Using find_individuals
 
-Operations: "=", "not =", "<", "<=", ">", ">=", "in", "not in", "exist", "not exist". Default is "=" and in some cases the operator is ignored.
+Operations: "=", "not =", "<", "<=", ">", ">=", "in", "not in", "exist", "not exist". Default is "=". In the cases of "exist" and "not exist" the search value must is ignored but still must be included.
 
 When selecting dates use a full date as a string in the format "yyyymmdd". Though a day of "00" or month of "00" can be used for less or greater comparisons.
 
@@ -548,6 +548,11 @@ for indi in smiths:
    print_individuals( find_individuals( data, 'partnersof', indi ) )
    print( 'her children' )
    print_individuals( find_individuals( data, 'childrenof', indi )
+```
+
+```
+# anyone with a burial record
+known_burials = find_individuals( data, 'buri', '', 'exist' )
 ```
 
 ## Timing on a modest pc per individual count
