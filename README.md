@@ -523,7 +523,7 @@ Look in playground/birth-family for example data structures.
 
 ## Using find_individuals
 
-Operations: "=", "not =", "<", "<=", ">", ">=", "in", "not in", "exist", "not exist". Default is "=". In the cases of "exist" and "not exist" the search value must is ignored but still must be included.
+Operations: "=", "not =", "<", "<=", ">", ">=", "in", "not in", "exist", "not exist". Default is "=". In the cases of "exist" and "not exist" the search value is ignored but must be included.
 
 When selecting dates use a full date as a string in the format "yyyymmdd". Though a day of "00" or month of "00" can be used for less or greater comparisons.
 
