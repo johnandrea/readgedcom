@@ -62,7 +62,7 @@ https://www.tamurajones.net/TheMinimalGEDCOM555File.xhtml
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.22.0
+v1.23.0
 """
 
 import sys
@@ -1317,7 +1317,7 @@ def handle_event_tag( tag, level1, out_data ):
     for level2 in level1['sub']:
         tag2 = level2['tag']
         value = level2['value']
-        if tag2 in ['plac', EVENT_PRIMARY_TAG, EVENT_PROOF_TAG ]:
+        if tag2 in ['plac', 'addr', EVENT_PRIMARY_TAG, EVENT_PROOF_TAG ]:
            values[tag2] = value
         elif tag2 == 'date':
            values[tag2] = handle_event_dates( value )
