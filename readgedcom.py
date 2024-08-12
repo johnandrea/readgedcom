@@ -57,12 +57,12 @@ https://www.tamurajones.net/MarriedDivorcedMarriedAgain.xhtml
 but it does complicate full siblings
 https://www.beholdgenealogy.com/blog/?p=1303
 - character sets
-https://www.tamurajones.net/GEDCOMCharacterEncodings.xhtml
-https://www.tamurajones.net/TheMinimalGEDCOM555File.xhtml
+The input file should be UTF-8,not ANSEL
+but currently does not produce an error with the wrong set.
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.23.0
+v1.23.1
 """
 
 import sys
@@ -87,13 +87,13 @@ SUPPORTED_VERSIONS = [ '5.5.1', '5.5.5', '7.0.x' ]
 
 # Section types, listed in order or at least header first and trailer last.
 # Some are not valid in GEDCOM 5.5.x, but that's ok if they are not found.
-# Including a RootsMagic specific: _evdef, _todo
+# Including a RootsMagic specific: _evdef, _todo _plac
 # Including Legacy specific: _plac_defn, _event_defn
 SECT_HEAD = 'head'
 SECT_INDI = 'indi'
 SECT_FAM = 'fam'
 SECT_TRLR = 'trlr'
-NON_STD_SECTIONS = ['_evdef', '_todo', '_plac_defn', '_event_defn']
+NON_STD_SECTIONS = ['_evdef', '_todo', '_plac_defn', '_event_defn _plac']
 SECTION_NAMES = [SECT_HEAD, 'subm', SECT_INDI, SECT_FAM, 'obje', 'repo', 'snote', 'sour'] + NON_STD_SECTIONS + [SECT_TRLR]
 
 # From GEDCOM 7.0.1 spec pg 40
@@ -107,7 +107,7 @@ INDI_EVENT_TAGS = ['bapm','barm','basm','bles','buri','cens','chra','conf','crem
 # including some less common items which are identification items.
 OTHER_INDI_TAGS = ['sex', 'exid', 'fams', 'famc', 'refn', '_uid', 'uuid', '_uuid']
 
-# Other family tag of interest placed into the parsed section,
+# Other family tags of interest placed into the parsed section,
 # in addition to the event tags
 FAM_MEMBER_TAGS = ['husb', 'wife', 'chil']
 OTHER_FAM_TAGS = []
@@ -127,9 +127,10 @@ FAM_SINGLE_EVENTS = ['marr','div','anul']
 # Individual records which are only allowed to occur once.
 # However they will still be placed into an array to be consistent
 # with the other facts/events.
-# An exception will be thrown if a duplicate is found.
+# An exception will be thrown if a duplicate is found and processing will exit.
 # Use of a validator is recommended.
 # Not 100% sure EXID should be on this list.
+# Not 100% sure REFN should not be on this list.
 ONCE_INDI_TAGS = ['exid', '_uid', 'uuid', '_uuid']
 
 # Family items allowed only once.
@@ -173,7 +174,7 @@ ALT_DATE_MODIFIERS = {'about':'abt', 'after':'aft', 'before':'bef',
                       'abt.':'abt', 'aft.':'aft', 'bef.':'bef',
                       'ca.':'abt', 'cal.':'cal', 'est.':'est' }
 
-# The semi-standard replacement for an unknown name
+# The defacto-standard replacement for an unknown name
 UNKNOWN_NAME = '[-?-]'  #those are supposted to be en-dashes - will update later
 
 # Names. zero included in the zero'th index location for one-based indexing
@@ -185,7 +186,7 @@ MONTH_NUMBERS = {'jan':1, 'feb':2, 'mar':3, 'apr':4, 'may':5, 'jun':6,
 				'january':1, 'february':2, 'march':3, 'april':4, 'june':6,
 				'july':7, 'august':8, 'september':9, 'october':10, 'november':11, 'december':12}
 
-# Bad dates can be tried to be fixed or cause exit
+# Bad dates can be attempted to be fixed or cause exit
 DATE_ERR = 'Malformed date:'
 
 # The message for data file troubles
@@ -205,7 +206,7 @@ PRIVATIZE_OFF = 0
 PRIVATIZE_MIN = PRIVATIZE_OFF + 1
 PRIVATIZE_MAX = PRIVATIZE_MIN + 1
 
-# Some checking to help prevent typos. Failure will throw an exception.
+# Some checking to help prevent typos. Failure will throw an exception and exit processing.
 # I don't imagine the checking causes much of a performance hit.
 # This is not a passed in as a setting.
 SELF_CONSISTENCY_CHECKS = True
@@ -409,7 +410,7 @@ def setup_settings( settings=None ):
 
 
 def string_like_int( s ):
-    """ Given a string, return test if it contains only digits. """
+    """ Given a string, return true if it contains only digits. """
     if re.search( r'\D', s ):
        return False
     return True
