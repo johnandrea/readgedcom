@@ -40,6 +40,8 @@ Public functions:
 The input file should be well formed as this code only checks for
 a few structural errors. A verification program can be found here:
 https://chronoplexsoftware.com/gedcomvalidator/
+and
+http://ftanalyzer.com
    Fixable mistakes are corrected as the data is parsed into the data structure.
 If the option to output a privatized file is taken, the mistakes from the
 original input will also go into the new file.
