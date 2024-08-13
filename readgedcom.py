@@ -60,11 +60,10 @@ but it does complicate full siblings
 https://www.beholdgenealogy.com/blog/?p=1303
 - character sets
 The input file should be UTF-8,not ANSEL
-but currently does not produce an error with the wrong set.
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.23.1
+v1.24.0
 """
 
 import sys
@@ -77,6 +76,7 @@ from collections import defaultdict
 # Sections to be created by the parsing
 PARSED_INDI = 'individuals'
 PARSED_FAM = 'families'
+PARSED_PLACES = 'places'
 PARSED_MESSAGES = 'messages'
 PARSED_SECTIONS = [PARSED_INDI, PARSED_FAM, PARSED_MESSAGES]
 
@@ -89,14 +89,16 @@ SUPPORTED_VERSIONS = [ '5.5.1', '5.5.5', '7.0.x' ]
 
 # Section types, listed in order or at least header first and trailer last.
 # Some are not valid in GEDCOM 5.5.x, but that's ok if they are not found.
-# Including a RootsMagic specific: _evdef, _todo _plac
+# Including a RootsMagic specific: _evdef, _todo
 # Including Legacy specific: _plac_defn, _event_defn
+# GEDCOM 7 uses "plac" as the place section, handled below
 SECT_HEAD = 'head'
 SECT_INDI = 'indi'
 SECT_FAM = 'fam'
+SECT_PLAC = '_plac'
 SECT_TRLR = 'trlr'
-NON_STD_SECTIONS = ['_evdef', '_todo', '_plac_defn', '_event_defn _plac']
-SECTION_NAMES = [SECT_HEAD, 'subm', SECT_INDI, SECT_FAM, 'obje', 'repo', 'snote', 'sour'] + NON_STD_SECTIONS + [SECT_TRLR]
+NON_STD_SECTIONS = ['_evdef', '_todo', '_plac_defn', '_event_defn']
+SECTION_NAMES = [SECT_HEAD, 'subm', SECT_INDI, SECT_FAM, SECT_PLAC, 'obje', 'repo', 'snote', 'sour'] + NON_STD_SECTIONS + [SECT_TRLR]
 
 # From GEDCOM 7.0.1 spec pg 40
 FAM_EVENT_TAGS = ['anul','cens','div','divf','enga','marb','marc','marl','mars','marr','even']
@@ -1281,6 +1283,22 @@ def handle_event_dates( value ):
     return date_to_structure( value )
 
 
+def handle_address_details( addr_level, top_out_data ):
+    #print( 'in addr detail', addr_level, file=sys.stderr ) #debug
+    cont = ''
+    for record in addr_level:
+        tag = record['tag']
+        #print( tag, file=sys.stderr ) #debug
+        if tag == 'map':
+           top_out_data[tag] = dict()
+           parse_place_map( record, top_out_data[tag] )
+        elif tag in ['conc','cont']:
+           cont += ' ' + record['value']
+        else:
+           top_out_data[tag] = record['value']
+    return cont
+
+
 def handle_event_tag( tag, level1, out_data ):
     """ Parse an individual or family event record."""
 
@@ -1288,7 +1306,8 @@ def handle_event_tag( tag, level1, out_data ):
     #
     #1 BIRT
     #2 DATE 14 DEC 1895
-    #2 PLAC York Cottage, Sandringham, Norfolk, England
+    #2 PLAC Sandringham, Norfolk, England
+    #2 ADDR York Cottage
     #
     # Its also possible to have an event flagged as known without details
     #
@@ -1320,8 +1339,15 @@ def handle_event_tag( tag, level1, out_data ):
     for level2 in level1['sub']:
         tag2 = level2['tag']
         value = level2['value']
-        if tag2 in ['plac', 'addr', EVENT_PRIMARY_TAG, EVENT_PROOF_TAG ]:
+
+        if tag2 in ['plac', EVENT_PRIMARY_TAG, EVENT_PROOF_TAG ]:
            values[tag2] = value
+
+        elif tag2 == 'addr':
+           if level2['sub']:
+              value += handle_address_details( level2['sub'], values )
+           values[tag2] = value.replace( '  ', ' ' )
+
         elif tag2 == 'date':
            values[tag2] = handle_event_dates( value )
         elif tag2 == 'note':
@@ -1364,6 +1390,7 @@ def handle_custom_event( tag, level1, out_data ):
     # 1 EVEN 118 cM 2%
     # 2 TYPE dna
     # 2 DATE 1 Aug 2021
+    # 2 ADDR Place Name
 
     values = dict()
     values['value'] = level1['value']
@@ -1379,6 +1406,10 @@ def handle_custom_event( tag, level1, out_data ):
            values[tag2] = handle_event_dates( value )
         elif tag2 == 'note':
            values[tag2] = get_note( level2 )
+        elif tag2 == 'addr':
+           if level2['sub']:
+              value += handle_address_details( level2['sub'], values )
+           values[tag2] = value.replace( '  ', ' ' )
         else:
            values[tag2] = value
 
@@ -1548,7 +1579,7 @@ def setup_parsed_families( sect, psect, data ):
 def parse_individual( level0, out_data, relation_data ):
     """ Parse an individual record from the input section to the parsed individuals section."""
 
-    def handle_birth_into( tag, level1_data ):
+    def handle_birth_info( tag, level1_data ):
         # GEDCOM v5.5.1 pg 34
         # GEDCOM v7.0.10 pg 51
         tag_name = tag
@@ -1629,7 +1660,7 @@ def parse_individual( level0, out_data, relation_data ):
            handle_event_tag( tag, level1, out_data )
 
            if tag in ['adop','birt','chr']:
-              handle_birth_into( tag, level1 )
+              handle_birth_info( tag, level1 )
 
         if parsed:
            that_index = len(out_data[tag]) - 1
@@ -1658,6 +1689,34 @@ def parse_individual( level0, out_data, relation_data ):
     set_best_events( INDI_SINGLE_EVENTS, out_data )
 
 
+def parse_place_map( map_level, out_data ):
+    """ Assuming that the lat/lon values are valid numbers """
+    for record in map_level['sub']:
+        tag = record['tag']
+        value = record['value']
+        if tag in ['lati','long']:
+           factor = +1.0
+           # [N|S|E|W]number
+           if value[0].lower() in ['s','w']:
+              factor = -1.0
+           out_data[tag] = factor * float( value[1:] )
+        else:
+           out_data[tag] = value
+
+
+def parse_place( level0, out_data ):
+    for level1 in level0['sub']:
+        tag = level1['tag']
+        value = level1['value']
+        if tag == 'map':
+           out_data[tag] = dict()
+           parse_place_map( level1, out_data[tag] )
+        elif tag == 'note':
+           out_data[tag] = get_note( level1 )
+        else:
+           out_data[tag] = value
+
+
 def setup_parsed_individuals( sect, psect, data, relationships ):
     """ Parse all individuals. """
     for i, level0 in enumerate( data[sect] ):
@@ -1672,6 +1731,22 @@ def setup_parsed_individuals( sect, psect, data, relationships ):
 
         if indi_relations:
            relationships[indi] = indi_relations
+
+
+def setup_parsed_places( sect, psect, data ):
+    """ Parse the defined places. """
+
+    # unlike individuals and families, the places section is optional
+    # so create it now that there are some to parse
+
+    data[psect] = dict()
+
+    for i, level0 in enumerate( data[sect] ):
+        place_name = level0['value']
+        data[psect][place_name] = dict()
+        add_file_back_ref( sect, i, data[psect][place_name] )
+
+        parse_place( level0, data[psect][place_name] )
 
 
 def setup_parsed_sections( data ):
@@ -1700,8 +1775,12 @@ def setup_parsed_sections( data ):
 
     family_relations = dict()
 
-    setup_parsed_families( SECT_FAM, PARSED_FAM, data )
-    setup_parsed_individuals( SECT_INDI, PARSED_INDI, data, family_relations )
+    if SECT_FAM in data:
+       setup_parsed_families( SECT_FAM, PARSED_FAM, data )
+    if SECT_INDI in data:
+       setup_parsed_individuals( SECT_INDI, PARSED_INDI, data, family_relations )
+    if SECT_PLAC in data:
+       setup_parsed_places( SECT_PLAC, PARSED_PLACES, data )
 
     # Copy the relations section from individuals to families
     # These structures are on the assumption that a child is attached only once
@@ -2035,6 +2114,13 @@ def read_in_data( inf, data ):
                     print_warn( concat_things( DATA_WARN, 'Duplicate section ignored:', line ) )
                  lines_found.append( lc_line )
 
+              elif lc_line.startswith( '0 ' + SECT_PLAC ) or lc_line.startswith( '0 PLAC ' ):
+                 sect = SECT_PLAC
+                 if lc_line in lines_found:
+                    ignore_line = True
+                    print_warn( concat_things( DATA_WARN, 'Duplicate place being ignored:', line ) )
+                 lines_found.append( lc_line )
+
               elif lc_line.startswith( '0 @f' ) and lc_line.endswith( ' fam' ):
                  sect = SECT_FAM
                  if lc_line in lines_found:
@@ -2091,6 +2177,15 @@ def read_in_data( inf, data ):
                  data[sect][zero]['sub'].append( line_values( line ) )
                  one = len( data[sect][zero]['sub'] ) - 1
                  two = None
+
+              # check the character set as soon as its found
+              if sect == SECT_HEAD:
+                 if lc_line.startswith( '1 char' ):
+                    if lc_line not in ['1 char utf-8','1 char ascii']:
+                       print_warn( 'Unusable character set: ' + line )
+                       # quit right away
+                       raise ValueError( 'Unusable character set' )
+
 
            elif line.startswith( '2 ' ):
               if not ignore_line:
@@ -2202,6 +2297,7 @@ def setup_birth_families( only_birth, individuals, families ):
               families[fam][chil] = []
               for indi in families[fam][birth_fam_tag]:
                   families[fam][chil].append( indi )
+
 
 def read_file( datafile, given_settings=None ):
     """
@@ -2931,6 +3027,7 @@ def report_all_descendant_count( data ):
 
     for indi in counts:
         print_descendant_count( indi, data[PARSED_INDI][indi], counts[indi] )
+
 
 def report_counts( data ):
     """
