@@ -1,0 +1,33 @@
+﻿0 HEAD
+1 SOUR ManualEdited
+1 SUBM @S1@
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @S1@ SUBM
+1 NAME John Andrea
+0 @I1@ INDI
+1 NAME John /Tory/
+2 GIVN John
+2 SURN Tory
+1 EVEN
+2 TYPE Living
+2 DATE 1991
+2 PLAC Montreal, PQ
+1 EVEN
+2 TYPE Living
+2 DATE 1993
+2 PLAC Toronto, ON
+2 ADDR CN Tower
+3 CONT in Toronto, Canada
+3 MAP
+4 LATI N43.6425667
+4 LONG W79.3896306
+0 _PLAC Mississauga, ON
+1 MAP
+2 LATI N43.6
+2 LONG W79.65
+1 NOTE Not used in the data 
+2 CONT  and this is more of the note
+0 TRLR
