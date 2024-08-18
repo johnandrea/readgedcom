@@ -63,7 +63,7 @@ The input file should be UTF-8,not ANSEL
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.24.0
+v1.24.1
 """
 
 import sys
@@ -1284,11 +1284,10 @@ def handle_event_dates( value ):
 
 
 def handle_address_details( addr_level, top_out_data ):
-    #print( 'in addr detail', addr_level, file=sys.stderr ) #debug
+    # see the readme regarding places and maps
     cont = ''
     for record in addr_level:
         tag = record['tag']
-        #print( tag, file=sys.stderr ) #debug
         if tag == 'map':
            top_out_data[tag] = dict()
            parse_place_map( record, top_out_data[tag] )
