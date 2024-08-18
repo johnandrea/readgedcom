@@ -493,6 +493,15 @@ for indi in data[readgedcom.PARSED_INDI]:
 The handling of non-single events with proven/disproved markers will have to be checked in your
 own code.
 
+## Places
+
+GEDCOM handling of places is a bit of a mess, in particular when trying to use coordinates for mapping.
+See this posting: https://www.beholdgenealogy.com/blog/?p=899
+
+GEDCOM 5.5.1, 5.5.5. and 7.0.x specify separate place and address, with map (lati/long) only in the address structure. RootsMagic export takes an intermediate approach by helping address lookup and putting address with map coordinates inside place structures.
+
+This library parses address and map structures where ever they are found; converting lati/long values into numeric items (negative where marked as W/S).
+
 ## Birth families
 
 The data can include information on adoptions, fostering, etc. In these cases there are relation keys added to the parsed family data in form of a 'rel' dictionary structure with sub dictionaries for each child which might look like this:
@@ -591,4 +600,3 @@ This code is provided with neither support nor warranty.
 - Consider using encode/decode for better unicode conversion.
 - Consider reading stdin via: for line in io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8'):
 - Add ability to locate adoptees.
-- Pull in and parse place section.
