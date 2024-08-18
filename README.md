@@ -498,9 +498,9 @@ own code.
 GEDCOM handling of places is a bit of a mess, in particular when trying to use coordinates for mapping.
 See this posting: https://www.beholdgenealogy.com/blog/?p=899
 
-GEDCOM 5.5.1, 5.5.5. and 7.0.x specify separate place and address, with map (lati/long) only in the address structure. RootsMagic export takes an extra approach by creating a zero level _PLAC structures which might contain map coordinates without address records.
+GEDCOM 5.5.1, 5.5.5. and 7.0.x specify separate place and address, with map (lati/long) only in the place structure. RootsMagic export takes an extra approach by creating address detail records with a map, and zero level _PLAC structures which might contain map coordinates without address records.
 
-This library parses address and map structures where ever they are found; converting lati/long values into numeric items (negative where marked as W/S) inside a "map" dict.
+This library parses map records in any of those structures; converting lati/long values into numeric items (negative where marked as W/S) inside a "map" dict such as "map": { "lati": 45.123, "long": -75.432 }
 
 ## Birth families
 
