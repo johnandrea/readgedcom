@@ -63,7 +63,7 @@ The input file should be UTF-8, not ANSEL
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v2 beta 4
+v2.0
 """
 
 import sys
@@ -1248,6 +1248,9 @@ def date_to_structure( original ):
                  if form == 'yyyy':
                     # "aft yyyy" always sort after yyyy1232
                     sortable_value = yyyymmdd[0:4] + '1301'
+                 elif form == 'yyyymm':
+                    # "aft yyyymm" should be past end of month, no matter how many days
+                    sortable_value = yyyymmdd[0:6] + '32'
                  else:
                     sortable_value = str( int(yyyymmdd) + 1 )
 
