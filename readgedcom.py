@@ -59,11 +59,11 @@ https://www.tamurajones.net/MarriedDivorcedMarriedAgain.xhtml
 but it does complicate full siblings
 https://www.beholdgenealogy.com/blog/?p=1303
 - character sets
-The input file should be UTF-8,not ANSEL
+The input file should be UTF-8, not ANSEL
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v2 beta 3
+v2 beta 4
 """
 
 import sys
@@ -1159,6 +1159,8 @@ def date_to_structure( original ):
     If is_known is False, it is the only item in the returned dict.
     """
 
+    copy_date_items = ['value','modifier','form']
+
     value = dict()
     value['is_known'] = False
     given = None
@@ -1201,7 +1203,7 @@ def date_to_structure( original ):
           # why use this instead of 'before'
           date_comparable_results( given.replace( 'to ', '' ), 'min', value )
           value['min']['modifier'] = 'to'
-          for item in ['value','modifier']:
+          for item in copy_date_items:
               value['max'][item] = value['min'][item]
 
        else:
@@ -1216,13 +1218,15 @@ def date_to_structure( original ):
 
           date_comparable_results( given, 'min', value )
 
-          for item in ['value','modifier']:
+          for item in copy_date_items:
               value['max'][item] = value['min'][item]
 
        for item in ['min','max']:
+           # no value will mean that the "year" and "sortable" items will not exist
            yyyymmdd = value[item]['value']
            if yyyymmdd:
               value[item]['year'] = int( yyyymmdd[0:4] )
+              form = value[item]['form']
 
               # add another item for direct comparison from the yyyymmdd value
               # also a string
@@ -1234,10 +1238,18 @@ def date_to_structure( original ):
               modifier_value = value[item]['modifier'].lower()
 
               if modifier_value == 'bef':
-                 sortable_value = str( int(yyyymmdd) - 1 )
+                 if form == 'yyyy':
+                    # "bef yyyy" always sort before yyyy0100
+                    sortable_value = yyyymmdd[0:4] + '0001'
+                 else:
+                    sortable_value = str( int(yyyymmdd) - 1 )
 
               if modifier_value == 'aft':
-                 sortable_value = str( int(yyyymmdd) + 1 )
+                 if form == 'yyyy':
+                    # "aft yyyy" always sort after yyyy1232
+                    sortable_value = yyyymmdd[0:4] + '1301'
+                 else:
+                    sortable_value = str( int(yyyymmdd) + 1 )
 
               value[item][sortable_key] = sortable_value
 
