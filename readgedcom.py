@@ -63,7 +63,7 @@ The input file should be UTF-8,not ANSEL
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v1.24.2
+v2 beta 1
 """
 
 import sys
@@ -961,31 +961,35 @@ def date_to_comparable( original ):
     """
     Convert a date to a string of format 'yyyymmdd' for comparison with other dates.
     Returns a dict:
-       ( 'value':'yyyymmdd', 'malformed':boolean, 'add_abt_modifier':boolean )
+       ( 'value':'yyyymmdd', 'malformed':boolean, 'form':useful-format-specifier )
 
     where "malformed" is True if the original had to be repaired to be usable,
-    where "add_abt_modifier" means that "ABT" must be added because the
-    date was not full (only year, only month+year) or was malformed
+    where "form" is 'yyyy' or 'yyyymm' or 'yyyymmdd' or '' depending on how much
+          of the date is useful even though a whole date-like yyyymmdd is returned
 
     The prefix may contain 'gregorian',
     the suffix may contain 'bce',
     otherwise the date should be well formed, i.e. valid digits and valid month name.
     See the GEDCOM spec.
 
-    A malformed portion may be converted to a "1", or might throw an exception
+    A malformed portion may be converted to a "01", or might throw an exception
     if the crash_on_bad_date flag is True (default False).
 
     ValueError is thrown for a non-gregorian calendar.
     """
 
+    # reasonable range for years
+    min_year = 900
+    max_year = 2200
+
     # examples:
-    # '7 nov 1996' returns '19961107'
-    # 'nov 1996' returns 'ABT 19961101'
-    # '1996' returns 'ABT 19960101'
-    # '' returns ''
-    # 'seven nov 1996' returns 'ABT 19961101' or throws ValueError
-    # '7 never 1996' returns 'ABT 19960107' or throws ValueError
-    # '7 nov ninesix' returns 'ABT 00011107' or throws ValueError
+    # '7 nov 1996' returns '19961107' and form 'yyyymmdd'
+    # 'nov 1996' returns '19961101' and form 'yyyymm'
+    # '1996' returns '19960101' and form 'yyyy'
+    # '' returns '' and form ''
+    # 'seven nov 1996' returns '19961101' and form 'yyyymm' or throws ValueError
+    # '7 never 1996' returns '19960107' and form 'yyyy' or throws ValueError
+    # '7 nov ninesix' returns '00011107' and form '' and malformed=True or throws ValueError
 
     default_day = 1
     default_month = 1
@@ -995,7 +999,9 @@ def date_to_comparable( original ):
 
     result = None
     malformed = False
-    add_abt_modifier = False
+    year_form = ''
+    month_form = ''
+    day_form = ''
 
     date = original.lower().replace( '  ', ' ' ).replace( '  ', ' ' ).strip()
     date = re.sub( r'^gregorian', '', date ).strip() #ignore this calendar
@@ -1014,12 +1020,10 @@ def date_to_comparable( original ):
 
        if len( parts ) == 1:
           year = parts[0]
-          add_abt_modifier = True
 
        elif len( parts ) == 2:
           month = parts[0]
           year = parts[1]
-          add_abt_modifier = True
 
        elif len( parts ) == 3:
           day = parts[0]
@@ -1031,19 +1035,19 @@ def date_to_comparable( original ):
              raise ValueError( DATE_ERR + ':' + str(original) )
           malformed = True
           print_warn( concat_things( DATE_ERR, original, ':setting to', year, month, day ) )
-          add_abt_modifier = True
 
        if isinstance(day,str):
           #i.e. has been extracted from the given date string
           if string_like_int( day ):
              day = int( day )
-             if day < 1 or day > 31:
+             if 1 <= day <= 31:
+                day_form = 'dd'
+             else:
                 day = default_day
                 if exit_bad_date:
                    raise ValueError( DATE_ERR + ':' + str(original) )
                 malformed = True
                 print_warn( concat_things(DATE_ERR, original, ':setting day to', day ) )
-                add_abt_modifier = True
 
           else:
              if exit_bad_date:
@@ -1051,29 +1055,38 @@ def date_to_comparable( original ):
              day = default_day
              malformed = True
              print_warn( concat_things( DATE_ERR, original, ':setting day to', day ) )
-             add_abt_modifier = True
 
        if isinstance(month,str):
           #i.e. has been extracted from the given date string
           if month in MONTH_NUMBERS:
              month = month_name_to_number( month )
+             month_form = 'mm'
           else:
              malformed = True
              print( DATE_ERR, original, ': attempting to correct', file=sys.stderr )
              month = month.replace( '-', '' ).replace( '.', '' )
              if month in MONTH_NUMBERS:
                 month = month_name_to_number( month )
+                month_form = 'mm'
              else:
                 if exit_bad_date:
                    raise ValueError( DATE_ERR + ':' + str(original) )
                 month = default_month
                 print_warn( concat_things( DATE_ERR, original, ':setting month to number', month ) )
-             add_abt_modifier = True
 
        if isinstance(year,str):
           #i.e. has been extracted from the given date string
+          # also check for a reasonable range
           if string_like_int( year ):
              year = int( year )
+             if min_year <= year <= max_year:
+                year_form = 'yyyy'
+             else:
+                malformed = True
+                if exit_bad_date:
+                   raise ValueError( DATE_ERR + ': year range:' + str(original) )
+                year = default_year
+                print_warn( concat_things( DATE_ERR, original, ':setting year to:', year ) )
           else:
              malformed = True
              # don't throw an exception yet
@@ -1082,33 +1095,46 @@ def date_to_comparable( original ):
              year = year.replace( '-', '' ).replace( '.', '' )
              if string_like_int( year ):
                 year = int( year )
+                if min_year <= year <= max_year:
+                   year_form = 'yyyy'
+                else:
+                   if exit_bad_date:
+                      raise ValueError( DATE_ERR + ': year range:' + str(original) )
+                   year = default_year
+                   print_warn( concat_things( DATE_ERR, original, ':setting year to:', year ) )
+
              else:
                 if exit_bad_date:
                    raise ValueError( DATE_ERR + ':' + str(original) )
                 year = default_year
                 print_warn( concat_things( DATE_ERR, original, ':setting year to:', year ) )
-             add_abt_modifier = True
 
        result = '%04d%02d%02d' % ( year, month, day )
 
-    return { 'value':result, 'malformed':malformed, 'add_abt_modifier':add_abt_modifier }
+    date_form = ''
+    if year_form:
+       date_form += year_form
+       if month_form:
+          date_form += month_form
+          if day_form:
+             date_form += day_form
+
+    return { 'value':result, 'malformed':malformed, 'form':date_form }
 
 
 def date_comparable_results( original, key, date_data ):
     """ Get the results from the to-comparable conversion and set into the date data values."""
     results = date_to_comparable( original )
 
-    date_data[key]['value'] = results['value']
+    for item in ['value','form']:
+        date_data[key][item] = results[item]
 
-    # Set true if false
+    # if the date hasn't already been determined to be malformed at a higher level,
+    # then get the malformed-ness from the function that was just called
+    # and no use of key here ('min'/'max') because the malformed flag is on the
+    # larger date structure which contains the min and max portions.
     if not date_data['malformed']:
        date_data['malformed'] = results['malformed']
-
-    if results['add_abt_modifier']:
-       if not date_data['min']['modifier']:
-          date_data['min']['modifier'] = 'ABT'
-       if not date_data['max']['modifier']:
-          date_data['max']['modifier'] = 'ABT'
 
 
 def date_to_structure( original ):
@@ -1198,6 +1224,7 @@ def date_to_structure( original ):
               # add another item for direct comparison from the yyyymmdd value
               # also a string
               # Note that it might create an impossible date (0th or 33rd day of month)
+              # so it should not be used to create a human readable date.
               sortable_key = 'sortable'
               modifier_value = value[item]['modifier'].lower()
               value[item][sortable_key] = yyyymmdd
