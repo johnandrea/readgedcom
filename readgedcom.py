@@ -63,7 +63,7 @@ The input file should be UTF-8,not ANSEL
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v2 beta 1
+v2 beta 2
 """
 
 import sys
@@ -215,6 +215,11 @@ PRIVATIZE_MAX = PRIVATIZE_MIN + 1
 # This is not a passed in as a setting.
 SELF_CONSISTENCY_CHECKS = True
 SELF_CONSISTENCY_ERR = 'Program code inconsistency:'
+
+# complain or threw exception for years outside these,
+# but can be over-ridden with extend-years option
+min_valid_year = 1100
+max_valid_year = 2100
 
 # The detected version of the input file. Treat as a global.
 version = ''
@@ -384,6 +389,7 @@ def setup_settings( settings=None ):
     defaults['exit-on-missing-families'] = False
     defaults['exit-if-loop'] = False
     defaults['only-birth'] = False
+    defaults['extend-years'] = False
 
     for item in defaults:
         setting = defaults[item]
@@ -978,10 +984,6 @@ def date_to_comparable( original ):
     ValueError is thrown for a non-gregorian calendar.
     """
 
-    # reasonable range for years
-    min_year = 900
-    max_year = 2200
-
     # examples:
     # '7 nov 1996' returns '19961107' and form 'yyyymmdd'
     # 'nov 1996' returns '19961101' and form 'yyyymm'
@@ -1079,7 +1081,7 @@ def date_to_comparable( original ):
           # also check for a reasonable range
           if string_like_int( year ):
              year = int( year )
-             if min_year <= year <= max_year:
+             if min_valid_year <= year <= max_valid_year:
                 year_form = 'yyyy'
              else:
                 malformed = True
@@ -1095,7 +1097,7 @@ def date_to_comparable( original ):
              year = year.replace( '-', '' ).replace( '.', '' )
              if string_like_int( year ):
                 year = int( year )
-                if min_year <= year <= max_year:
+                if min_valid_year <= year <= max_valid_year:
                    year_form = 'yyyy'
                 else:
                    if exit_bad_date:
@@ -2339,6 +2341,8 @@ def read_file( datafile, given_settings=None ):
     """
     global run_settings
     global unicode_table
+    global min_valid_year
+    global max_valid_year
 
     assert isinstance( datafile, str ), 'Non-string passed as the filename.'
 
@@ -2374,6 +2378,11 @@ def read_file( datafile, given_settings=None ):
     # Other sections to be created.
     for sect in [PARSED_INDI, PARSED_FAM]:
         data[sect] = dict()
+
+    # Change global values for year range
+    if run_settings['extend-years']:
+       min_valid_year = 0
+       max_valid_year = 9999
 
     with open( datafile, encoding='utf-8' ) as inf:
          read_in_data( inf, data )
