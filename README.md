@@ -356,10 +356,25 @@ Each one of the "min" and "max" dates themselves is a dict structure:
 {
   'modifier': empty string, or one of "abt", "bef", "aft", etc.,
   'value': 'yyyymmdd',
-  'sortable': string similar to yyyymmdd style,
+  'form': portion of the value string which should be used, one of blank, "yyyy", "yyyymm", "yyyymmdd",
+  'sortable': string similar to yyyymmdd style: for comparison of dates but should not be used for display,
   'year': only the year portion, as an int
 }
 ```
+
+This table shows the types of results for various given dates:
+| date | => | value | modifier | form | sortable |
+| :--- | :- | :----- | :------- | :----- | :------ |
+| 23 Jul 1985 | => | 19850723 | empty string | yyyymmdd | 19850723 |
+| BEF 23 Jul 1985 | => | 19850723 | bef | yyyymmdd | 19850722 |
+| AFT 23 Jul 1985 | => | 19850723 | aft | yyyymmdd | 19850724 |
+| Jul 1985 | => | 19850701 | empty string | yyyymm | 19850701 |
+| BEF Jul 1985 | => | 19850701 | bef | yyyymm | 19850700 |
+| AFT Jul 1985 | => | 19850701 | aft | yyyymm | 19850732 |
+| 1985 | => | 19850101 | empty string | yyyy | 19850101 |
+| BEF 1985 | => | 19850101 | bef | yyyy | 19850001 |
+| AFT 1985 | => | 19850101 | aft | yyyy | 19851301 |
+| invalid | => | 00010101 | empty string | empty string | 00010101 |
 
 A birth event could look like this:
 ```
