@@ -44,6 +44,7 @@ messages in data['messages'].
 | exit-on-missing-families | False | Raise exception if an expected family not found. |
 | exit-if-loop | False | Raise exception if a relationship loop is found immediately after parsing. |
 | only-birth | False | Skip non-birth relationships. |
+| extend-years | False | Change valid years in dates from 1100 - 2100 to 0 - 9999 |
 
 
 ### Example Settings
