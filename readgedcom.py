@@ -63,7 +63,7 @@ The input file should be UTF-8,not ANSEL
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v2 beta 2
+v2 beta 3
 """
 
 import sys
@@ -1039,7 +1039,8 @@ def date_to_comparable( original ):
           print_warn( concat_things( DATE_ERR, original, ':setting to', year, month, day ) )
 
        if isinstance(day,str):
-          #i.e. has been extracted from the given date string
+          # i.e. has been extracted from the given date string
+          # Note: not checking for number of days in month
           if string_like_int( day ):
              day = int( day )
              if 1 <= day <= 31:
@@ -1225,15 +1226,20 @@ def date_to_structure( original ):
 
               # add another item for direct comparison from the yyyymmdd value
               # also a string
-              # Note that it might create an impossible date (0th or 33rd day of month)
+              # Note that it might create an impossible date (0th or 32nd day of month)
               # so it should not be used to create a human readable date.
               sortable_key = 'sortable'
+              sortable_value = yyyymmdd
+
               modifier_value = value[item]['modifier'].lower()
-              value[item][sortable_key] = yyyymmdd
+
               if modifier_value == 'bef':
-                 value[item][sortable_key] = str( int(yyyymmdd) - 1 )
+                 sortable_value = str( int(yyyymmdd) - 1 )
+
               if modifier_value == 'aft':
-                 value[item][sortable_key] = str( int(yyyymmdd) + 1 )
+                 sortable_value = str( int(yyyymmdd) + 1 )
+
+              value[item][sortable_key] = sortable_value
 
            else:
               value[item]['year'] = None
