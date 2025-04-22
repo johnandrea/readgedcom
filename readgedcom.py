@@ -63,7 +63,7 @@ The input file should be UTF-8, not ANSEL
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v2.0
+v2.1
 """
 
 import sys
@@ -1510,6 +1510,13 @@ def handle_name_tag( tag, level1, out_data ):
                  print_warn( concat_things( DATA_WARN, 'Blank surname replaced with:', value ) )
 
            names[tag2] = value
+
+           # givn and surn should also have these conversions,
+           # but this turns out to be a messy hack
+           # proper way is to produce a structure like the larger bame total
+           names[tag2 + '_display'] = value
+           names[tag2 + '_html'] = convert_to_html( value )
+           names[tag2 + '_unicode'] = convert_to_unicode( value )
 
     # Form the display name from the parts (if exist) because they might look better
     value = ''
