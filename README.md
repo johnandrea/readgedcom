@@ -322,7 +322,13 @@ dict also contains other optional items and a few computed ones:
  'nick', etc. from the input file,
  'display': from the "value" without surname slashes,
  'html': "display" with "special" characters converted to html entities,
- 'unicode': "display" with "special" utf-8 chars converted to unicode representation
+ 'unicode': "display" with "special" utf-8 chars converted to unicode representation,
+ 'givn_display': from the input file,
+ 'givn_html': "display" with "special" characters converted to html entities,
+ 'givn_unicode': "display" with "special" utf-8 chars converted to unicode representation,
+ 'surn_display': from the input file,
+ 'surn_html': "display" with "special" characters converted to html entities,
+ 'surn_unicode': "display" with "special" utf-8 chars converted to unicode representation
 }
 ```
 
