@@ -63,7 +63,7 @@ The input file should be UTF-8, not ANSEL
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v2.1
+v2.1.1
 """
 
 import sys
