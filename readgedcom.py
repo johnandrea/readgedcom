@@ -63,7 +63,7 @@ The input file should be UTF-8, not ANSEL
 
 This code is released under the MIT License: https://opensource.org/licenses/MIT
 Copyright (c) 2022 John A. Andrea
-v2.1.1
+v2.3
 """
 
 import sys
@@ -1738,8 +1738,15 @@ def parse_individual( level0, out_data, relation_data ):
     for tag in ['famc','fams']:
         for prefix in ['','birth-','all-']:
             test_tag = prefix + tag
+            # only check if the list is larger than one item
             if test_tag in out_data and len(out_data[test_tag]) > 1:
-               out_data[test_tag] = list( set( out_data[test_tag] ) )
+               # don't use pythonic "out_data[test_tag] = list( set( out_data[test_tag] ) )"
+               # because that changes the ordering of the list
+               new_list = []
+               for item in out_data[test_tag]:
+                   if item not in new_list:
+                      new_list.append( item )
+               out_data[test_tag] = new_list
 
     ensure_not_twice( ONCE_INDI_TAGS, 'Individual', level0['tag'], out_data )
     set_best_events( INDI_SINGLE_EVENTS, out_data )
@@ -3102,6 +3109,7 @@ def report_counts( data ):
 
     def count_events( section, tags, counts ):
         # not bothering to check the "best" item
+        ignore = ['_uid']
 
         def add_event_dates( tag, date_data ):
             def add_date_range( limit, title ):
@@ -3121,6 +3129,9 @@ def report_counts( data ):
                add_date_range( 'max', 'newest' )
 
         for tag in tags:
+            if tag in ignore:
+               continue
+
             if tag == 'even':
                if tag in section:
                   for events in section[tag]:
@@ -3141,6 +3152,8 @@ def report_counts( data ):
         count_events( person_data, INDI_EVENT_TAGS + OTHER_INDI_TAGS, counts )
         if 'name' in person_data and len( person_data['name'] ) > 1:
            counts['alt-names'] += 1
+        if 'famc' not in person_data:
+           counts['no-parents'] += 1
 
     def count_fam_events( fam_data, counts ):
         count_events( fam_data, FAM_EVENT_TAGS + OTHER_FAM_TAGS, counts )
@@ -3155,6 +3168,7 @@ def report_counts( data ):
     n = 0
     counts = defaultdict(int)
     counts['alt-names'] = 0 # guarantee reported even if doesn't exist
+    counts['no-parents'] = 0
     for indi in data[PARSED_INDI]:
         n += 1
         count_indi_events( data[PARSED_INDI][indi], counts )
