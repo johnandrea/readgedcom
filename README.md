@@ -604,8 +604,6 @@ Loop detection, when none exist:
 
 ## Bugs
 
-Children and families are not guaranteed to be listed in birth and marriage order.
-
 Not every possible unicode character conversion is handled.
 
 ## Bug reports
